@@ -148,10 +148,13 @@ class Run_Process_Error(Exception):
         self.state = state
 
     def __str__(self):
+        state_str = str(self.state)
+        state_print = state_str[0:100] + '...' + state_str[:-100] if len(state_str) > 200 else state_str
         return f"""
         !! {self.message} !! \n
+        !! {str(self.error)}
          state:
-         \n{self.state}
+         \n{state_print}
         """
 
 
@@ -189,8 +192,8 @@ def run_process(
         new_state = reduce(update_state, output_map, prev_state)
         return new_state
 
-    except Exception as identifier:
-        raise Run_Process_Error(process, identifier, prev_state)
+    except Exception as e:
+        raise Run_Process_Error(process, e, prev_state) from e
 
 
 # Define the process runner
