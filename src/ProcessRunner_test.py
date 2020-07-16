@@ -1,57 +1,15 @@
+from src.tests.mocks import Mock_Config_Shape, Mock_External_State_Shape, \
+    Mock_Model_State_Shape, Mock_Nested_State, Mock_Parameters_Shape
 from src.ProcessRunnerCls import ProcessRunner
 from unittest.mock import patch
 import pytest
-from dataclasses import dataclass, field
 from vendor.helpers.list_helpers import flatten_list, filter_none
 
-from .ProcessRunner import Process, I, Run_Process_Error
+from .ProcessRunner import Process, I
 
 
 def process_add(x, y):
     return x + y
-
-
-@dataclass
-class Mock_Nested_State:
-    na: int = 7
-    nab: int = 7
-
-
-@dataclass
-class Mock_Model_State_Shape:
-    a: float
-    b: float
-    c: float = 0
-    d: float = 0
-    target: str = "a"
-    lst: list = None
-    nested: Mock_Nested_State = Mock_Nested_State()
-
-
-@dataclass
-class Mock_Config_Shape:
-    foo: int = 1
-    bar: int = 3
-    roo: dict = field(default_factory=lambda: {
-        'abc': 5
-    })
-    arr: list = field(default_factory=lambda: [1, 2, 3])
-
-
-@dataclass
-class Mock_Parameters_Shape:
-    foo: int = 1
-    bar: int = 3
-    roo: dict = field(default_factory=lambda: {
-        'abc': 5
-    })
-    arr: list = field(default_factory=lambda: [1, 2, 3])
-
-
-@dataclass
-class Mock_External_State_Shape:
-    data_a: int = 1
-    data_b: int = 5
 
 
 process_runner = ProcessRunner(
@@ -574,45 +532,3 @@ def test_setup_parameters():
     run_processes = process_runner.initialize_processes(processes)
     parameters_initialized = run_processes(initial_state=parameters)
     assert parameters_initialized.foo == 11
-
-
-def test_process_error():
-    state = Mock_Model_State_Shape(a=2.1, b=4.1)
-    processes = flatten_list([
-        Process(
-            func=process_add,
-            additional_inputs=[
-                I('x', as_=None),
-                I('y', as_=4),
-            ],
-            state_outputs=[
-                I('result', as_='c'),
-            ],
-        ),
-    ])
-    run_processes = process_runner.initialize_processes(processes)
-    with pytest.raises(Run_Process_Error) as exc:
-        run_processes(initial_state=state)
-    assert exc.value.message == 'Failed to run process_add'
-    assert exc.value.state == state
-
-
-def test_process_error_with_comment():
-    state = Mock_Model_State_Shape(a=2.1, b=4.1)
-    processes = flatten_list([
-        Process(
-            func=process_add,
-            comment="Demo Process",
-            additional_inputs=[
-                I('x', as_=None),
-                I('y', as_=4),
-            ],
-            state_outputs=[
-                I('result', as_='c'),
-            ],
-        ),
-    ])
-    run_processes = process_runner.initialize_processes(processes)
-    with pytest.raises(Run_Process_Error) as exc:
-        run_processes(initial_state=state)
-    assert exc.value.message == 'Failed to run Demo Process'
