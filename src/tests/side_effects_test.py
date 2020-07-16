@@ -86,7 +86,7 @@ def ______():
         yield _fixture
 
 
-def test_print():
+def test_side_effect_arg():
     state = Mock_Model_State_Shape(a=2.1, b=4.1)
     fn = MagicMock()
     processes = flatten_list([
@@ -98,5 +98,24 @@ def test_print():
     run_processes = process_runner.initialize_processes(processes)
     state_2 = run_processes(initial_state=state)
     fn.assert_called_with('hello')
+    assert state_2.a == 2.1
+    assert state_2.b == 4.1
+
+
+def test_side_effect_state_arg():
+    state = Mock_Model_State_Shape(a=2.1, b=4.1)
+    fn = MagicMock()
+    processes = flatten_list([
+        Process(
+            func=fn,
+            comment="fn",
+            state_inputs=[
+                I('a'),
+            ],
+        ),
+    ])
+    run_processes = process_runner.initialize_processes(processes)
+    state_2 = run_processes(initial_state=state)
+    fn.assert_called_with(2.1)
     assert state_2.a == 2.1
     assert state_2.b == 4.1

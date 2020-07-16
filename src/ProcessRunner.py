@@ -23,7 +23,7 @@ from .internal_state import Model_State_Shape
 class I(NamedTuple):  # noqa: E742
     """interface Named Tuple"""
     from_: str
-    as_: str
+    as_: str = None
 
 
 class Process(NamedTuple):
@@ -90,10 +90,11 @@ def get_key_values(
         f: Callable, get_val: Callable, input_keys: List[I]) -> List[tuple]:  # noqa: E741
     """gets the key value pairs from named tuples using the input keys from and keys as"""
     from_keys = [f(key.from_) for key in input_keys]
-    as_keys = [f(key.as_) for key in input_keys]
+    as_keys = [f(key.as_) if key.as_ else None for key in input_keys]
     input_values = [get_val(key) for key in from_keys]
-    key_values_pairs = list(zip(as_keys, input_values))
-    return key_values_pairs
+    key_values_pairs = [(k, v) for k, v in zip(as_keys, input_values) if k is not None]
+    args = [v for k, v in zip(as_keys, input_values) if k is None]
+    return key_values_pairs, args
 
 
 def get_process_inputs(
@@ -123,10 +124,10 @@ def get_process_inputs(
     get_e_state_val_fn = partial(get_nested_arg_from_dict, external_state)
 
     # get key value inputs to pass to function
-    key_values_config = get_key_values(f, get_config_val_fn, config_inputs)
-    key_values_parameters = get_key_values(f, get_parameters_val_fn, parameters_inputs)
-    key_values_state = get_key_values(f, get_state_val_fn, state_inputs)
-    key_values_e_state = get_key_values(f, get_e_state_val_fn, e_state_inputs)
+    key_values_config, args_config = get_key_values(f, get_config_val_fn, config_inputs)
+    key_values_parameters, args_parameters = get_key_values(f, get_parameters_val_fn, parameters_inputs)
+    key_values_state, args_state = get_key_values(f, get_state_val_fn, state_inputs)
+    key_values_e_state, args_e_state = get_key_values(f, get_e_state_val_fn, e_state_inputs)
     additional_inputs = process.additional_inputs
     # Merge inputs into a single dictionary that represents the kwargs of the process func
     kwrds = dict(
@@ -136,7 +137,8 @@ def get_process_inputs(
         + key_values_state  # noqa: W503
         + additional_inputs)  # noqa: W503
 
-    return kwrds
+    args = args_config + args_parameters + args_state + args_e_state
+    return kwrds, args
 
 
 class Run_Process_Error(Exception):
@@ -164,7 +166,7 @@ def run_process(
         and output targets.
     """
     try:
-        kwrds = get_process_inputs(
+        kwrds, args = get_process_inputs(
             process,
             prev_state,
             config,
@@ -172,10 +174,10 @@ def run_process(
             external_state,
         )
 
-        args = process.args or []
+        args_ = process.args + args
 
         # RUN PROCESS
-        result = process.func(*args, **kwrds)
+        result = process.func(*args_, **kwrds)
 
         # CREATE NEW STATE
         output_map = process.state_outputs
