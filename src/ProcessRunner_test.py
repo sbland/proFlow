@@ -56,7 +56,7 @@ class Mock_External_State_Shape:
 
 process_runner = ProcessRunner(
     Mock_Config_Shape(), Mock_External_State_Shape(), Mock_Parameters_Shape())
-print(process_runner.parameters)
+
 
 @pytest.fixture(scope="module", autouse=True)
 def _():
@@ -72,12 +72,6 @@ def __():
         yield _fixture
 
 
-# @pytest.fixture(scope="module", autouse=True)
-# def ___():
-#     with patch('src.ProcessRunner.get_config', return_value=Mock_Config_Shape()) as _fixture:
-#         yield _fixture
-
-
 @pytest.fixture(scope="module", autouse=True)
 def ____():
     with patch('src.ProcessRunner.Parameters_Shape', return_value=Mock_Parameters_Shape) \
@@ -85,25 +79,11 @@ def ____():
         yield _fixture
 
 
-# @pytest.fixture(scope="module", autouse=True)
-# def _____():
-#     with patch('src.ProcessRunner.get_parameters', return_value=Mock_Parameters_Shape()) \
-#             as _fixture:
-#         yield _fixture
-
-
 @pytest.fixture(scope="module", autouse=True)
 def ______():
     with patch('src.ProcessRunner.External_State_Shape', return_value=Mock_External_State_Shape) \
             as _fixture:
         yield _fixture
-
-
-# @pytest.fixture(scope="module", autouse=True)
-# def _______():
-#     with patch('src.ProcessRunner.get_external_state', return_value=Mock_External_State_Shape()) \
-#             as _fixture:
-#         yield _fixture
 
 
 def test_procces_runner():

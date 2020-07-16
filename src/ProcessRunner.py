@@ -35,6 +35,7 @@ class Process(NamedTuple):
     additional_inputs: List[tuple] = []
     state_inputs: List[I] = []
     state_outputs: List[I] = []
+    args: List[any] = []
     comment: str = ""
 
 
@@ -127,16 +128,15 @@ def get_process_inputs(
     key_values_state = get_key_values(f, get_state_val_fn, state_inputs)
     key_values_e_state = get_key_values(f, get_e_state_val_fn, e_state_inputs)
     additional_inputs = process.additional_inputs
-
     # Merge inputs into a single dictionary that represents the kwargs of the process func
-    all_inputs = dict(
+    kwrds = dict(
         key_values_e_state
         + key_values_config  # noqa: W503
         + key_values_parameters
         + key_values_state  # noqa: W503
         + additional_inputs)  # noqa: W503
 
-    return all_inputs
+    return kwrds
 
 
 class Run_Process_Error(Exception):
@@ -164,7 +164,7 @@ def run_process(
         and output targets.
     """
     try:
-        inputs = get_process_inputs(
+        kwrds = get_process_inputs(
             process,
             prev_state,
             config,
@@ -172,8 +172,10 @@ def run_process(
             external_state,
         )
 
+        args = process.args or []
+
         # RUN PROCESS
-        result = process.func(**inputs)
+        result = process.func(*args, **kwrds)
 
         # CREATE NEW STATE
         output_map = process.state_outputs
