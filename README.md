@@ -49,3 +49,41 @@ output_state = run_hour([
 ])(initial_state, hr)
 ```
 
+# Process Attributes:
+
+## func
+**Callable[[Model_State_Shape], Model_State_Shape]**
+
+The function to call
+
+## gate
+**bool = True**
+
+if False process is skipped
+
+## comment
+**str = ""**
+used for logging
+
+## config_inputs
+**List[I] = []**
+
+## parameters_inputs
+**List[I] = []**
+
+## external_state_inputs
+**List[I] = []**
+
+## additional_inputs
+**List[tuple] = []**
+
+## state_inputs
+**List[I] = []**
+
+## state_outputs
+**List[I] = []**
+
+## args
+**List[any] = []**
+
+additional args

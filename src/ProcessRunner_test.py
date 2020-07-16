@@ -1,7 +1,7 @@
 from src.tests.mocks import Mock_Config_Shape, Mock_External_State_Shape, \
     Mock_Model_State_Shape, Mock_Nested_State, Mock_Parameters_Shape
 from src.ProcessRunnerCls import ProcessRunner
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 import pytest
 from vendor.helpers.list_helpers import flatten_list, filter_none
 
@@ -532,3 +532,24 @@ def test_setup_parameters():
     run_processes = process_runner.initialize_processes(processes)
     parameters_initialized = run_processes(initial_state=parameters)
     assert parameters_initialized.foo == 11
+
+
+def test_process_using_gate():
+    state = Mock_Model_State_Shape(a=2.1, b=4.1)
+    fn_1 = MagicMock()
+    fn_2 = MagicMock()
+    processes = flatten_list([
+        Process(
+            func=fn_1,
+            gate=1 == 2,  # False
+        ),
+        Process(
+            func=fn_2,
+            gate=2 == 2,  # True
+        ),
+    ])
+    run_processes = process_runner.initialize_processes(processes)
+    run_processes(initial_state=state)
+
+    assert not fn_1.called
+    assert fn_2.called

@@ -28,15 +28,17 @@ class I(NamedTuple):  # noqa: E742
 
 class Process(NamedTuple):
     """Process object that stores the function and input and output targets."""
-    func: Callable[[Model_State_Shape], Model_State_Shape]
+    func: Callable[[Model_State_Shape], Model_State_Shape]  # The function to call
+    gate: bool = True  # if False process is skipped
+    comment: str = ""  # used for logging
+    # Inputs to function
     config_inputs: List[I] = []
     parameters_inputs: List[I] = []
     external_state_inputs: List[I] = []
     additional_inputs: List[tuple] = []
     state_inputs: List[I] = []
     state_outputs: List[I] = []
-    args: List[any] = []
-    comment: str = ""
+    args: List[any] = []  # additional args
 
 
 def format_with_variables(
@@ -125,7 +127,8 @@ def get_process_inputs(
 
     # get key value inputs to pass to function
     key_values_config, args_config = get_key_values(f, get_config_val_fn, config_inputs)
-    key_values_parameters, args_parameters = get_key_values(f, get_parameters_val_fn, parameters_inputs)
+    key_values_parameters, args_parameters = get_key_values(
+        f, get_parameters_val_fn, parameters_inputs)
     key_values_state, args_state = get_key_values(f, get_state_val_fn, state_inputs)
     key_values_e_state, args_e_state = get_key_values(f, get_e_state_val_fn, e_state_inputs)
     additional_inputs = process.additional_inputs
@@ -149,7 +152,8 @@ class Run_Process_Error(Exception):
 
     def __str__(self):
         state_str = str(self.state)
-        state_print = state_str[0:100] + '...' + state_str[:-100] if len(state_str) > 200 else state_str
+        state_print = state_str[0:100] + '...' + \
+            state_str[:-100] if len(state_str) > 200 else state_str
         return f"""
         !! {self.message} !! \n
         !! {str(self.error)}
@@ -168,6 +172,8 @@ def run_process(
         The process object contains the function along with all the input
         and output targets.
     """
+    if not process.gate:
+        return prev_state
     try:
         kwrds, args = get_process_inputs(
             process,
