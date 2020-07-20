@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import List
 
 
 @dataclass
@@ -16,6 +17,7 @@ class Mock_Model_State_Shape:
     target: str = "a"
     lst: list = None
     nested: Mock_Nested_State = Mock_Nested_State()
+    matrix: List[List] = field(default_factory=lambda: [[1, 2, 3], [4, 5, 6]])
 
 
 @dataclass

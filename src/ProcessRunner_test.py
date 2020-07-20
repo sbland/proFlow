@@ -141,6 +141,52 @@ def test_procces_runner_nested_args_list():
     assert state_2.a == 7.1
 
 
+def test_procces_runner_nested_args_list_out():
+    state = Mock_Model_State_Shape(a=2.1, b=4.1, lst=[1, 2, 3])
+    processes = flatten_list([
+        Process(
+            func=lambda i, j: [i, j],
+            config_inputs=[
+                I('foo', as_='i'),
+            ],
+            state_inputs=[
+                I('a', as_='j'),
+            ],
+            state_outputs=[
+                I('0', as_='lst.0'),
+                I('1', as_='lst.1'),
+            ],
+        ),
+    ])
+    run_processes = process_runner.initialize_processes(processes)
+    state_2 = run_processes(initial_state=state)
+    assert state_2.lst[0] == process_runner.config.foo
+    assert state_2.lst[1] == state.a
+
+def test_procces_runner_nested_args_matrix_out():
+    state = Mock_Model_State_Shape(a=2.1, b=4.1, lst=[1, 2, 3])
+    processes = flatten_list([
+        Process(
+            func=lambda i, j, k: [[i, j], [k, k]],
+            config_inputs=[
+                I('foo', as_='i'),
+            ],
+            state_inputs=[
+                I('a', as_='j'),
+                I('b', as_='k'),
+            ],
+            state_outputs=[
+                I('0.1', as_='lst.0'),
+                I('1.0', as_='lst.1'),
+            ],
+        ),
+    ])
+    run_processes = process_runner.initialize_processes(processes)
+    state_2 = run_processes(initial_state=state)
+    assert state_2.lst[0] == state.a
+    assert state_2.lst[1] == state.b
+
+
 def test_procces_runner_nested():
     state = Mock_Model_State_Shape(a=2.1, b=4.1)
 

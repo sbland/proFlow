@@ -66,6 +66,16 @@ def format_with_variables(
     })
 
 
+def get_result_from_list(lst: list, k: List[int]) -> any:
+    """Recursively gets the value from the input list using the ints in k"""
+    result = lst
+    for i in k:
+        if k == '_list':
+            break
+        result = result[int(i)]
+    return result
+
+
 def get_result(result, k):
     """Helper func that gets the result from process output
     This allows us to work with different outputs
@@ -79,7 +89,8 @@ def get_result(result, k):
         return result
     result_val = result
     result_val = result[k] if isinstance(result, dict) else result_val
-    result_val = result[int(k)] if isinstance(result, list) and k != '_list' else result_val
+    result_val = get_result_from_list(result, k.split('.')) if isinstance(
+        result, list) and k != '_list' else result_val
     result_val = result if isinstance(result, list) and k == '_list' else result_val
     result_val = result[int(k)] if isinstance(result, np.ndarray) and k != '_list' else result_val
     result_val = result if isinstance(result, np.ndarray) and k == '_list' else result_val
@@ -140,7 +151,7 @@ def get_process_inputs(
         + key_values_state  # noqa: W503
         + additional_inputs)  # noqa: W503
 
-    args = args_config + args_parameters + args_state + args_e_state
+    args = process.args + args_config + args_parameters + args_state + args_e_state
     return kwrds, args
 
 
@@ -171,6 +182,9 @@ def run_process(
     """ Run a single process and output the updated state.
         The process object contains the function along with all the input
         and output targets.
+
+
+        note: args from process are not garuanteed to be in the correct order
     """
     if not process.gate:
         return prev_state
@@ -183,10 +197,8 @@ def run_process(
             external_state,
         )
 
-        args_ = process.args + args
-
         # RUN PROCESS
-        result = process.func(*args_, **kwrds)
+        result = process.func(*args, **kwrds)
 
         # CREATE NEW STATE
         output_map = process.state_outputs
