@@ -18,6 +18,7 @@ class Mock_Model_State_Shape:
     lst: list = None
     nested: Mock_Nested_State = Mock_Nested_State()
     matrix: List[List] = field(default_factory=lambda: [[1, 2, 3], [4, 5, 6]])
+    nested_lst_obj: List[Mock_Nested_State] = field(default_factory=lambda: [Mock_Nested_State(1,2), Mock_Nested_State(3,4)])
 
 
 @dataclass
