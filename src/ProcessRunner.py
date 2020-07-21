@@ -19,30 +19,9 @@ from .parameters import Parameters_Shape
 from .external_state import External_State_Shape
 from .internal_state import Model_State_Shape
 
+from .Objects import Process, I
+
 from .errors import Run_Process_Error
-
-
-@dataclass(frozen=True)
-class I:  # noqa: E742
-    """interface Named Tuple"""
-    from_: str
-    as_: str = None
-
-
-@dataclass(frozen=True)
-class Process:
-    """Process object that stores the function and input and output targets."""
-    func: Callable[[Model_State_Shape], Model_State_Shape]  # The function to call
-    gate: bool = True  # if False process is skipped
-    comment: str = ""  # used for logging
-    # Inputs to function
-    config_inputs: List[I] = field(default_factory=list)
-    parameters_inputs: List[I] = field(default_factory=list)
-    external_state_inputs: List[I] = field(default_factory=list)
-    additional_inputs: List[tuple] = field(default_factory=list)
-    state_inputs: List[I] = field(default_factory=list)
-    state_outputs: List[I] = field(default_factory=list)
-    args: List[any] = field(default_factory=list)  # additional args
 
 
 def format_with_variables(
@@ -131,7 +110,6 @@ def get_process_inputs(
     additional_inputs = process.additional_inputs
 
     # convert additional inputs to key value tuples
-    print(additional_inputs)
     additional_inputs_tuples = [astuple(a) for a in additional_inputs]
 
     # create function that formats the key.as_ and key.from_
