@@ -7,12 +7,12 @@ updating the state at each step
 from dataclasses import is_dataclass
 from typing import NamedTuple, List, Callable
 from functools import reduce, partial
-from vendor.helpers.dictionary_helpers import get_nested_arg_from_dict
+from vendor.helpers.dictionary_helpers import get_nested_val
 
 import numpy as np
 
 from vendor.helpers.comparisons import isNamedTuple
-from vendor.helpers.named_tuple_helpers import _replace_recursive, get_val_from_tuple
+from vendor.helpers.named_tuple_helpers import _replace_recursive
 
 from .config import Config_Shape
 from .parameters import Parameters_Shape
@@ -100,11 +100,11 @@ def get_result(result, k):
 
 
 def get_key_values(
-        f: Callable, get_val: Callable, input_keys: List[I]) -> List[tuple]:  # noqa: E741
+        f: Callable, data: NamedTuple, input_keys: List[I]) -> List[tuple]:  # noqa: E741
     """gets the key value pairs from named tuples using the input keys from and keys as"""
     from_keys = [f(key.from_) for key in input_keys]
     as_keys = [f(key.as_) if key.as_ else None for key in input_keys]
-    input_values = [get_val(key) for key in from_keys]
+    input_values = [get_nested_val(data, key) for key in from_keys]
     key_values_pairs = [(k, v) for k, v in zip(as_keys, input_values) if k is not None]
     args = [v for k, v in zip(as_keys, input_values) if k is None]
     return key_values_pairs, args
@@ -125,24 +125,19 @@ def get_process_inputs(
     state_inputs: List[I] = process.state_inputs
     e_state_inputs: List[I] = process.external_state_inputs
     additional_inputs = process.additional_inputs
+
     # create function that formats the key.as_ and key.from_
     f = partial(
         format_with_variables,
         config, prev_state, external_state, parameters, dict(additional_inputs))
 
-    # helper functions that help getting values
-    get_config_val_fn = partial(get_nested_arg_from_dict, config)
-    get_parameters_val_fn = partial(get_nested_arg_from_dict, parameters)
-    get_state_val_fn = partial(get_nested_arg_from_dict, prev_state)
-    get_e_state_val_fn = partial(get_nested_arg_from_dict, external_state)
-
     # get key value inputs to pass to function
-    key_values_config, args_config = get_key_values(f, get_config_val_fn, config_inputs)
-    key_values_parameters, args_parameters = get_key_values(
-        f, get_parameters_val_fn, parameters_inputs)
-    key_values_state, args_state = get_key_values(f, get_state_val_fn, state_inputs)
-    key_values_e_state, args_e_state = get_key_values(f, get_e_state_val_fn, e_state_inputs)
+    key_values_config, args_config = get_key_values(f, config, config_inputs)
+    key_values_parameters, args_parameters = get_key_values(f, parameters, parameters_inputs)
+    key_values_state, args_state = get_key_values(f, prev_state, state_inputs)
+    key_values_e_state, args_e_state = get_key_values(f, external_state, e_state_inputs)
     additional_inputs = process.additional_inputs
+
     # Merge inputs into a single dictionary that represents the kwargs of the process func
     kwrds = dict(
         key_values_e_state

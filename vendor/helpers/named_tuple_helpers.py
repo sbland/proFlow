@@ -4,7 +4,7 @@ from copy import deepcopy
 from functools import reduce
 import numpy as np
 
-from .dictionary_helpers import get_nested_arg_from_dict
+from .dictionary_helpers import get_nested_val
 from .comparisons import isNamedTuple
 
 
@@ -126,7 +126,6 @@ def _replace_recursive(
 
     def set_vals(acc, leaf):
         # return (leaf[0], leaf[1]._replace(**dict([acc])))
-        print(leaf)
         return (leaf[0], set_next_val(leaf[1], acc))
     new_data = reduce(set_vals, tree_new_reversed)
     return new_data[1]
@@ -134,5 +133,5 @@ def _replace_recursive(
 
 def get_val_from_tuple(data_tuple: NamedTuple, location: str):
     """Helper class to get a nested value from a tuple
-    uses get_nested_arg_from_dict"""
-    return get_nested_arg_from_dict(data_tuple._asdict(), location)
+    uses get_nested_val"""
+    return get_nested_val(data_tuple._asdict(), location)

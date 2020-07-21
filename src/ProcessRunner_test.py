@@ -1,3 +1,5 @@
+import numpy as np
+
 from src.tests.mocks import Mock_Config_Shape, Mock_External_State_Shape, \
     Mock_Model_State_Shape, Mock_Nested_State, Mock_Parameters_Shape
 from src.ProcessRunnerCls import ProcessRunner
@@ -162,6 +164,7 @@ def test_procces_runner_nested_args_list_out():
     state_2 = run_processes(initial_state=state)
     assert state_2.lst[0] == process_runner.config.foo
     assert state_2.lst[1] == state.a
+
 
 def test_procces_runner_nested_args_matrix_out():
     state = Mock_Model_State_Shape(a=2.1, b=4.1, lst=[1, 2, 3])
@@ -599,3 +602,75 @@ def test_process_using_gate():
 
     assert not fn_1.called
     assert fn_2.called
+
+
+def test_process_runner_using_wildcard_list_index():
+    state = Mock_Model_State_Shape(a=2.1, b=4.1, matrix=[[1, 2, 3], [4, 5, 6]])
+    processes = flatten_list([
+        Process(
+            func=lambda values: values,
+            state_inputs=[
+                I('matrix._.1')
+            ],
+            state_outputs=[
+                I('_result', as_='c'),
+            ],
+        ),
+    ])
+    run_processes = process_runner.initialize_processes(processes)
+    state_2 = run_processes(initial_state=state)
+    assert state_2.c == [2, 5]
+
+
+def test_process_runner_using_wildcard_list_obj():
+    state = Mock_Model_State_Shape(a=2.1, b=4.1, matrix=[[1, 2, 3], [4, 5, 6]])
+    processes = flatten_list([
+        Process(
+            func=lambda out: out,
+            state_inputs=[
+                I('nested_lst_obj._.na'),
+            ],
+            state_outputs=[
+                I('_result', as_='d')
+            ]
+        )
+    ])
+    run_processes = process_runner.initialize_processes(processes)
+    state_2 = run_processes(initial_state=state)
+    assert state_2.d == [1, 3]
+
+
+def test_process_runner_using_wildcard_multiple():
+    state = Mock_Model_State_Shape(a=2.1, b=4.1, matrix=[[1, 2, 3], [4, 5, 6]])
+    processes = flatten_list([
+        Process(
+            func=lambda values: values,
+            state_inputs=[
+                I('matrix._._')
+            ],
+            state_outputs=[
+                I('_result', as_='c'),
+            ],
+        ),
+    ])
+    run_processes = process_runner.initialize_processes(processes)
+    state_2 = run_processes(initial_state=state)
+    assert state_2.c == [[1, 2, 3], [4, 5, 6]]
+
+
+def test_process_runner_using_wildcard_nparray():
+    state = Mock_Model_State_Shape(a=2.1, b=4.1, matrix=np.array([[1, 2, 3], [4, 5, 6]]))
+    processes = flatten_list([
+        Process(
+            func=lambda values: values,
+            state_inputs=[
+                I('matrix._.1')
+            ],
+            state_outputs=[
+                I('_result', as_='c'),
+            ],
+        ),
+    ])
+    run_processes = process_runner.initialize_processes(processes)
+    state_2 = run_processes(initial_state=state)
+    assert state_2.c == [2, 5]
