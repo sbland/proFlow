@@ -200,7 +200,7 @@ def test_procces_runner_nested():
                 I('bar', as_='y'),
             ],
             additional_inputs=[
-                ('x', i),
+                I('x', i),
             ],
             state_outputs=[
                 I('result', as_='c'),
@@ -235,7 +235,7 @@ def test_procces_b_optional():
         Process(
             func=process_add,
             additional_inputs=[
-                ('x', 10),
+                I('x', 10),
             ],
             state_inputs=[
                 I('a', as_='y'),
@@ -247,7 +247,7 @@ def test_procces_b_optional():
         Process(
             func=process_add,
             additional_inputs=[
-                ('x', 100),
+                I('x', 100),
             ],
             state_inputs=[
                 I('a', as_='y'),
@@ -271,7 +271,7 @@ def test_procces_b_complex():
             Process(
                 func=process_add,
                 additional_inputs=[
-                    ('x', i),
+                    I('x', i),
                 ],
                 state_inputs=[
                     I('a', as_='y'),
@@ -283,7 +283,7 @@ def test_procces_b_complex():
             Process(
                 func=process_add,
                 additional_inputs=[
-                    ('x', 100),
+                    I('x', 100),
                 ],
                 state_inputs=[
                     I('a', as_='y'),

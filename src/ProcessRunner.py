@@ -4,7 +4,7 @@ converts them into a process
 The process runner is then passed a list of processes that it runs in order
 updating the state at each step
 """
-from dataclasses import is_dataclass
+from dataclasses import asdict, astuple, is_dataclass, dataclass, field
 from typing import NamedTuple, List, Callable
 from functools import reduce, partial
 from vendor.helpers.dictionary_helpers import get_nested_val
@@ -19,26 +19,30 @@ from .parameters import Parameters_Shape
 from .external_state import External_State_Shape
 from .internal_state import Model_State_Shape
 
+from .errors import Run_Process_Error
 
-class I(NamedTuple):  # noqa: E742
+
+@dataclass(frozen=True)
+class I:  # noqa: E742
     """interface Named Tuple"""
     from_: str
     as_: str = None
 
 
-class Process(NamedTuple):
+@dataclass(frozen=True)
+class Process:
     """Process object that stores the function and input and output targets."""
     func: Callable[[Model_State_Shape], Model_State_Shape]  # The function to call
     gate: bool = True  # if False process is skipped
     comment: str = ""  # used for logging
     # Inputs to function
-    config_inputs: List[I] = []
-    parameters_inputs: List[I] = []
-    external_state_inputs: List[I] = []
-    additional_inputs: List[tuple] = []
-    state_inputs: List[I] = []
-    state_outputs: List[I] = []
-    args: List[any] = []  # additional args
+    config_inputs: List[I] = field(default_factory=list)
+    parameters_inputs: List[I] = field(default_factory=list)
+    external_state_inputs: List[I] = field(default_factory=list)
+    additional_inputs: List[tuple] = field(default_factory=list)
+    state_inputs: List[I] = field(default_factory=list)
+    state_outputs: List[I] = field(default_factory=list)
+    args: List[any] = field(default_factory=list)  # additional args
 
 
 def format_with_variables(
@@ -126,17 +130,20 @@ def get_process_inputs(
     e_state_inputs: List[I] = process.external_state_inputs
     additional_inputs = process.additional_inputs
 
+    # convert additional inputs to key value tuples
+    print(additional_inputs)
+    additional_inputs_tuples = [astuple(a) for a in additional_inputs]
+
     # create function that formats the key.as_ and key.from_
     f = partial(
         format_with_variables,
-        config, prev_state, external_state, parameters, dict(additional_inputs))
+        config, prev_state, external_state, parameters, dict(additional_inputs_tuples))
 
     # get key value inputs to pass to function
     key_values_config, args_config = get_key_values(f, config, config_inputs)
     key_values_parameters, args_parameters = get_key_values(f, parameters, parameters_inputs)
     key_values_state, args_state = get_key_values(f, prev_state, state_inputs)
     key_values_e_state, args_e_state = get_key_values(f, external_state, e_state_inputs)
-    additional_inputs = process.additional_inputs
 
     # Merge inputs into a single dictionary that represents the kwargs of the process func
     kwrds = dict(
@@ -144,28 +151,10 @@ def get_process_inputs(
         + key_values_config  # noqa: W503
         + key_values_parameters
         + key_values_state  # noqa: W503
-        + additional_inputs)  # noqa: W503
+        + additional_inputs_tuples)  # noqa: W503
 
     args = process.args + args_config + args_parameters + args_state + args_e_state
     return kwrds, args
-
-
-class Run_Process_Error(Exception):
-    def __init__(self, process: Process, error: Exception, state):
-        self.message = f'Failed to run {process.comment or process.func.__name__}'
-        self.error = error
-        self.state = state
-
-    def __str__(self):
-        state_str = str(self.state)
-        state_print = state_str[0:100] + '...' + \
-            state_str[:-100] if len(state_str) > 200 else state_str
-        return f"""
-        !! {self.message} !! \n
-        !! {str(self.error)}
-         state:
-         \n{state_print}
-        """
 
 
 def run_process(
