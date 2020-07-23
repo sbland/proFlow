@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from src.Logging import log_values, logger_add_row_process
 from typing import Callable, List
 import pytest
 from copy import copy
@@ -16,6 +17,7 @@ def add_to_logs(logs, **kwargs):
     for k, v in kwargs.items():
         logs_c[k] = logs_c[k] + [v]
     return logs_c
+
 
 @dataclass(frozen=True)
 class Logger(Process):
@@ -56,49 +58,29 @@ def ______():
 
 
 def test_logging():
-    state = Mock_Model_State_Shape(a=2.1, b=4.1, logs={'a': [], 'b': [], 't': []})
+    state = Mock_Model_State_Shape(a=2.1, b=4.1, logs=[])
 
     processes = flatten_list([[
+        # 1. add row to log
         Process(
-            func=add_to_logs,
+            func=lambda logs: logs + [{}],
             state_inputs=[
                 I('logs', as_='logs'),
-                I('a', as_='a'),
-                I('b', as_='b'),
-            ],
-            additional_inputs=[
-                I('t', i),
             ],
             state_outputs=[I('_result', as_='logs')]
         ),
+        # 2. add data to row
         Process(
-            func=lambda x: x + 1,
-            state_inputs=[I('a', as_='x')],
-            state_outputs=[I('_result', as_='a')],
-        ),
-
-    ] for i in range(3)])
-    run_processes = process_runner.initialize_processes(processes)
-    state_2 = run_processes(initial_state=state)
-    print(state_2.logs)
-    assert state_2.logs['a'][0] == 2.1
-    assert state_2.logs['a'][1] == 3.1
-    assert state_2.logs['t'] == [0, 1, 2]
-
-
-def test_logging_class():
-    state = Mock_Model_State_Shape(a=2.1, b=4.1, logs={'a': [], 'b': [], 't': []})
-
-    processes = flatten_list([[
-        Logger(
+            func=lambda logs, index, **kwargs: {**logs[index], **kwargs},
             state_inputs=[
                 I('logs', as_='logs'),
                 I('a', as_='a'),
                 I('b', as_='b'),
             ],
             additional_inputs=[
-                I('t', i),
+                I('index', i),
             ],
+            state_outputs=[I('_result', as_=f'logs.{i}')]
         ),
         Process(
             func=lambda x: x + 1,
@@ -109,7 +91,61 @@ def test_logging_class():
     ] for i in range(3)])
     run_processes = process_runner.initialize_processes(processes)
     state_2 = run_processes(initial_state=state)
-    print(state_2.logs)
-    assert state_2.logs['a'][0] == 2.1
-    assert state_2.logs['a'][1] == 3.1
-    assert state_2.logs['t'] == [0, 1, 2]
+    assert state_2.logs == [
+        {'a': 2.1, 'b': 4.1},
+        {'a': 3.1, 'b': 4.1},
+        {'a': 4.1, 'b': 4.1},
+    ]
+
+
+def test_logging_simplified():
+    state = Mock_Model_State_Shape(a=2.1, b=4.1, logs=[])
+
+    processes = flatten_list([[
+        # 1. add row to log
+        logger_add_row_process(),
+        # 2. add data to row
+        log_values(i, [I('a', as_='a'),I('b', as_='b')]),
+        Process(
+            func=lambda x: x + 1,
+            state_inputs=[I('a', as_='x')],
+            state_outputs=[I('_result', as_='a')],
+        ),
+
+    ] for i in range(3)])
+    run_processes = process_runner.initialize_processes(processes)
+    state_2 = run_processes(initial_state=state)
+    assert state_2.logs == [
+        {'a': 2.1, 'b': 4.1},
+        {'a': 3.1, 'b': 4.1},
+        {'a': 4.1, 'b': 4.1},
+    ]
+
+
+# def test_logging_class():
+#     state = Mock_Model_State_Shape(a=2.1, b=4.1, logs={'a': [], 'b': [], 't': []})
+
+#     processes = flatten_list([[
+#         Logger(
+#             state_inputs=[
+#                 I('logs', as_='logs'),
+#                 I('a', as_='a'),
+#                 I('b', as_='b'),
+#             ],
+#             additional_inputs=[
+#                 I('t', i),
+#             ],
+#         ),
+#         Process(
+#             func=lambda x: x + 1,
+#             state_inputs=[I('a', as_='x')],
+#             state_outputs=[I('_result', as_='a')],
+#         ),
+
+#     ] for i in range(3)])
+#     run_processes = process_runner.initialize_processes(processes)
+#     state_2 = run_processes(initial_state=state)
+#     print(state_2.logs)
+#     assert state_2.logs['a'][0] == 2.1
+#     assert state_2.logs['a'][1] == 3.1
+#     assert state_2.logs['t'] == [0, 1, 2]

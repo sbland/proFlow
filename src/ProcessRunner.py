@@ -166,8 +166,12 @@ def run_process(
         output_map = process.state_outputs
 
         # iterate over output map and replace all values in state
+        f = partial(
+            format_with_variables,
+            config, prev_state, external_state, parameters)
+
         def update_state(prev_state, out):
-            result_val = get_result(result, out.from_)
+            result_val = get_result(result, f(out.from_))
             return _replace_recursive(prev_state, out.as_, result_val)
         new_state = reduce(update_state, output_map, prev_state)
         return new_state
