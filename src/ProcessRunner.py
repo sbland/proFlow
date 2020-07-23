@@ -131,7 +131,6 @@ def get_process_inputs(
     additional_inputs = process.additional_inputs
 
     # convert additional inputs to key value tuples
-    print(additional_inputs)
     additional_inputs_tuples = [astuple(a) for a in additional_inputs]
 
     # create function that formats the key.as_ and key.from_
