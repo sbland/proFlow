@@ -124,5 +124,5 @@ def test_get_nested_val_time():
         assert get_nested_val(data, 'dataclass.bar') == 10
 
     time = min(repeat(test_all, number=15000, repeat=5))
-    print(1 - (time / 0.252))
-    assert 0.252 < time < 0.279
+    print(1 - (time / 0.158))
+    assert 0.158 < time < 0.170

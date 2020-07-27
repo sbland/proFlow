@@ -101,7 +101,7 @@ def test_get_process_inputs_time():
                                     )
     time = min(repeat(get_process_inputs_fn, number=20000, repeat=25))
     print(1 - (time / 0.15))
-    assert 0.138 < time < 0.151
+    assert 0.120 < time < 0.135
 
 
 def test_get_key_values_time():
@@ -120,4 +120,4 @@ def test_get_key_values_time():
                                     )
     time = min(repeat(get_process_inputs_fn, number=80000, repeat=5))
     print(1 - (time / 0.210))
-    assert 0.205 < time < 0.222
+    assert 0.156 < time < 0.160

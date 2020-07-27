@@ -53,19 +53,15 @@ def get_nested_val(data: dict, location_str: str):
     ```
     """
     loc_split = location_str.split('.')
-    # for each loc create a list of it and all the elements after
-    # loc_arr = ['nested.data.1', 'data.1', '1']
-    loc_arr = [loc_split[i:] for i in range(0, len(loc_split))]
     out = data
-    for i in range(len(loc_arr)):
-        k = loc_split[i]
-        # k = loc_arr[i][0]
+    for i, k in enumerate(loc_split):
         if k != '_':
             out = get_val_from_obj(out, k)
         if k == '_':
-            if i == len(loc_arr) - 1:
+            if i == len(loc_split) - 1:
                 out = out
             else:
-                out = [get_nested_val(o, '.'.join(loc_arr[i+1])) for o in out]
+                new_location_str = '.'.join(loc_split[i+1:])
+                out = [get_nested_val(o, new_location_str) for o in out]
             break
     return out
