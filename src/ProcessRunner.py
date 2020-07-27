@@ -71,7 +71,10 @@ def format_with_variables(
     }
 
     def _format(string: str) -> str:
-        return string.format(**format_data)
+        if '{' in string:
+            return string.format(**format_data)
+        else:
+            return string
     return _format
 
 

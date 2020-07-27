@@ -14,6 +14,7 @@ class Mock_Model_State_Shape:
     b: float
     c: float = 0
     d: float = 0
+    ind: int = 0
     target: str = "a"
     lst: list = None
     nested: Mock_Nested_State = Mock_Nested_State()
