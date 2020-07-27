@@ -6,14 +6,17 @@ from .comparisons import isNamedTuple
 
 
 def get_val_from_obj(obj, k):
-    # TODO: Check object type
-    val = None
-    val = obj[k] if isinstance(obj, dict) else val  # dictionary access
-    val = obj[int(k)] if isinstance(obj, list) else val  # list access
-    val = obj[int(k)] if isinstance(obj, np.ndarray) else val  # numpy array access
-    val = obj._asdict()[k] if isNamedTuple(obj) else val  # namedtuple access
-    val = getattr(obj, k) if is_dataclass(obj) else val  # dataclass access
-    return val
+    if isinstance(obj, dict):
+        return obj[k]   # dictionary access
+    if isinstance(obj, list):
+        return obj[int(k)]   # list access
+    if isinstance(obj, np.ndarray):
+        return obj[int(k)]   # numpy array access
+    if isNamedTuple(obj):
+        return obj._asdict()[k]   # namedtuple access
+    if is_dataclass(obj):
+        return getattr(obj, k)   # dataclass access
+    raise ValueError(f'Cannot parse {obj}')
 
 
 def get_nested_val(data: dict, location_str: str):
@@ -50,10 +53,13 @@ def get_nested_val(data: dict, location_str: str):
     ```
     """
     loc_split = location_str.split('.')
+    # for each loc create a list of it and all the elements after
+    # loc_arr = ['nested.data.1', 'data.1', '1']
     loc_arr = [loc_split[i:] for i in range(0, len(loc_split))]
     out = data
     for i in range(len(loc_arr)):
-        k = loc_arr[i][0]
+        k = loc_split[i]
+        # k = loc_arr[i][0]
         if k != '_':
             out = get_val_from_obj(out, k)
         if k == '_':
