@@ -9,7 +9,8 @@ class I:  # noqa: E742
     """interface Named Tuple"""
     from_: str
     as_: str = None
-
+    def __repr__(self) -> str:
+        return f'I(from_="{self.from_}" as_="{self.as_}")'
 
 @dataclass(frozen=True)
 class Process:
@@ -25,3 +26,18 @@ class Process:
     state_inputs: List[I] = field(default_factory=list)
     state_outputs: List[I] = field(default_factory=list)
     args: List[any] = field(default_factory=list)  # additional args
+
+    def __repr__(self) -> str:
+        return 'Process(' + '; '.join([
+            f'func={self.func.__name__}',
+            f'comment="{self.comment}"',
+            f'gate={self.gate}',
+            f'config_inputs={self.config_inputs}',
+            f'parameters_inputs={self.parameters_inputs}',
+            f'external_state_inputs={self.external_state_inputs}',
+            f'additional_inputs={self.additional_inputs}',
+            f'state_inputs={self.state_inputs}',
+            f'state_outputs={self.state_outputs}',
+            f'args={self.args}',
+
+        ]) + ')'
