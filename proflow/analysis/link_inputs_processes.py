@@ -1,11 +1,15 @@
 from collections import namedtuple
+from typing import List
 from vendor.polyviz.bezier import bezier_curve_4pt
+
+from proflow.Objects import Process
 
 
 def get_all_unique_inputs(processes):
-    inputs_list = list(set([inp.from_ for p in processes for inp in p.state_inputs] +
-                           [inp.as_ for p in processes for inp in p.state_outputs]))
-    return inputs_list
+    inputs_list = list(set([inp.from_ for p in processes for inp in p.state_inputs])) + \
+        list(set([inp.as_ for p in processes for inp in p.state_outputs]))
+    unique_inputs = list(set(inputs_list))
+    return unique_inputs[::-1]
 
 
 def get_inputs_map(inputs_list):
@@ -33,27 +37,51 @@ def bezier_curve_canvas(canvas, p_start, p_end):
     canvas.stroke()
 
 
-def link_processes_to_state(canvas, processes):
+def t_wrap(text: str, max_length: int = 4) -> str:
+    if len(text) <= max_length:
+        return text
+    chunk_count = len(text)//max_length
+    text_rows = [text[i * max_length: (i * max_length) + max_length] for i in range(chunk_count+1)]
+    return '\n-'.join(text_rows)
+
+
+def link_processes_to_state(
+        canvas,
+        processes: List[Process],
+        seperation: int = 300,
+        process_node_width: int = 200,
+        process_node_height: int = 70,
+        state_node_width: int = 200,
+        state_node_height: int = 100,
+        LP: int = 5,  # left padding
+        TP: int = 5,  # top padding
+        FONT_SIZE: int = 12,
+):
+    HALF_FONT_SIZE = FONT_SIZE // 2
+
+    canvas.font = f'{FONT_SIZE}px sans-serif'
     Rect_Params = namedtuple('Rect_Params', 'x y w h')
 
-    process_x_pos = 10
-    process_width = 100
-    process_height = 100
+    process_x_pos = LP
+    p_width = process_node_width
+    p_height = process_node_height
 
-    state_x_pos = 300
-    state_width = 100
-    state_height = 100
+    state_x_pos = process_x_pos + p_width + seperation
+    s_width = state_node_width
+    state_height = state_node_height
+
+    y_s_input_offset = (state_height / len(processes))
 
     unique_inputs = get_all_unique_inputs(processes)
     inputs_map = get_inputs_map(unique_inputs)
     links = [get_links(inputs_map, p) for p in processes]
 
     process_rects = [
-        Rect_Params(process_x_pos, ((process_height + 20) * i) +
-                    10, process_width, process_height) for i in range(len(processes))]
+        Rect_Params(process_x_pos, ((p_height + TP) * i) +
+                    TP, p_width, p_height) for i in range(len(processes))]
     state_item_rects = [
-        Rect_Params(state_x_pos, ((state_height + 20) * i) +
-                    10, state_width, state_height) for i in range(len(unique_inputs))]
+        Rect_Params(state_x_pos, ((state_height + TP) * i) +
+                    TP, s_width, state_height) for i in range(len(unique_inputs))]
 
     for p in process_rects:
         canvas.stroke_rect(*p)
@@ -62,11 +90,15 @@ def link_processes_to_state(canvas, processes):
 
     for i, p in enumerate(processes):
         process_rect = process_rects[i]
-        canvas.fill_text(p.comment, process_rect.x + 5, process_rect.y + 20)
+        text = p.func.__name__ + '\n' + t_wrap(p.comment, p_width//HALF_FONT_SIZE)
+        [canvas.fill_text(t, process_rect.x + LP, (process_rect.y + TP + FONT_SIZE) + FONT_SIZE * i)
+         for i, t in enumerate(text.split('\n'))]
 
     for i, p in enumerate(unique_inputs):
         state_item_rect = state_item_rects[i]
-        canvas.fill_text(p, state_item_rect.x + 5, state_item_rect.y + 20)
+        text = '\n'.join([t_wrap(t, p_width//HALF_FONT_SIZE) for t in p.split('.')])
+        [canvas.fill_text(t, state_item_rect.x + LP, (state_item_rect.y + TP + FONT_SIZE) + FONT_SIZE * i)
+         for i, t in enumerate(text.split('\n'))]
 
     for i, link in enumerate(links):
         process_rect = process_rects[i]
@@ -74,14 +106,108 @@ def link_processes_to_state(canvas, processes):
             state_rect = state_item_rects[j]
             canvas.stroke_style = 'blue'
             p_start = [process_rect.x + process_rect.w, process_rect.y + 10]
-            p_end = [state_rect.x, state_rect.y + 10*i]
+            p_end = [state_rect.x, state_rect.y + y_s_input_offset*i]
             bezier_curve_canvas(canvas, p_start, p_end)
 
         for j in link[2]:
             state_rect = state_item_rects[j]
             canvas.stroke_style = 'red'
             p_start = [process_rect.x + process_rect.w, process_rect.y + process_rect.h - 10]
-            p_end = [state_rect.x, state_rect.y + 10 * i]
+            p_end = [state_rect.x, state_rect.y + y_s_input_offset * i]
             bezier_curve_canvas(canvas, p_start, p_end)
 
     return canvas
+
+
+if __name__ == "__main__":
+    # Allow relative import
+    import os
+    import sys
+    print(os.path)
+    module_path = os.path.abspath(os.path.join('../../vendor'))
+    if module_path not in sys.path:
+        sys.path.append(module_path)
+    module_path = os.path.abspath(os.path.join('../..'))
+    if module_path not in sys.path:
+        sys.path.append(module_path)
+
+    from proflow.Objects import Process, I
+    from ipycanvas import Canvas
+
+    def demo_func(x, y):
+        """DEMO FUNC"""
+        return x - y
+
+    processes = [
+        Process(
+            func=lambda x, y, z: x + y + z,
+            comment="Demo process a",
+            config_inputs=[
+                I('foo.bar', as_='x'),
+            ],
+            state_inputs=[
+                I('info.today', as_='y'),
+                I('info.hour', as_='z')
+            ],
+            state_outputs=[
+                I('_result', as_='info.tomorrow'),
+            ]
+        ),
+        Process(
+            func=lambda x, y, z: x + y + z,
+            comment="Demo process a",
+            config_inputs=[
+                I('foo.bar', as_='x'),
+            ],
+            state_inputs=[
+                I('log.foo', as_='y'),
+                I('info.hour', as_='z')
+            ],
+            state_outputs=[
+                I('_result', as_='info.tomorrow'),
+            ]
+        ),
+        Process(
+            func=demo_func,
+            comment="Demo process b",
+            config_inputs=[
+                I('foo.bar', as_='x'),
+            ],
+            state_inputs=[
+                I('info.tomorrow', as_='y'),
+            ],
+            state_outputs=[
+                I('_result', as_='info.today'),
+            ]
+        ),
+        Process(
+            func=lambda x, y: x + y,
+            comment="Demo process c with a really long comment and info",
+            config_inputs=[
+                I('foo.bar', as_='x'),
+            ],
+            state_inputs=[
+                I('info.tomorrow', as_='y'),
+            ],
+            state_outputs=[
+                I('_result', as_='info.today'),
+            ]
+        ),
+        Process(
+            func=lambda x, y: x + y,
+            comment="Demo process d",
+            config_inputs=[
+                I('foo.bar', as_='x'),
+            ],
+            state_inputs=[
+                I('info.today', as_='y'),
+            ],
+            state_outputs=[
+                I('_result', as_='info.tomorrow'),
+                I('_result', as_='log.extra'),
+            ]
+        ),
+    ] * 5
+    canvas = Canvas(width=1200, height=800)
+    link_processes_to_state(canvas, processes, 600)
+canvas
