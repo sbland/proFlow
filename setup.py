@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="ProcessRunner",
+    name="proflow",
     version="0.0.1",
     author="Sam Bland",
     author_email="sbland.co.uk@gmail.com",
@@ -13,13 +13,16 @@ setuptools.setup(
         'pytest-cov',
         'pytest-runner',
         'numpy',
+        'scipy',
+        'ipycanvas'
     ],
     tests_require=['pytest'],
     extras_require={'test': ['pytest']},
     packages=setuptools.find_packages(),
-    package_dir={'src': 'src'},
+    package_dir={'proflow': 'src', 'vendor': 'vendor'},
     classifiers=[
         "Programming Language :: Python :: 3.7",
         "Operating System :: OS Independent",
     ],
+    python_requires='>=3.8',
 )
