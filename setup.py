@@ -19,7 +19,7 @@ setuptools.setup(
     tests_require=['pytest'],
     extras_require={'test': ['pytest']},
     packages=setuptools.find_packages(),
-    package_dir={'proflow': 'src', 'vendor': 'vendor'},
+    package_dir={'proflow': 'proflow', 'vendor': 'vendor'},
     classifiers=[
         "Programming Language :: Python :: 3.7",
         "Operating System :: OS Independent",
