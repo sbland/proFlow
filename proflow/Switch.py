@@ -1,6 +1,16 @@
-def switch(gate: str, comment: str = None, options: dict = None, **kwargs):
-    opts = {**options, **kwargs} if options else kwargs
-    return opts[gate]
+from .ProcessRunner import Process
+
+
+def switch(
+        gate: str,
+        comment: str = None,
+        options={},
+        default_option=None,
+        **kwargs
+) -> Process:
+    options = {**options, **kwargs}
+    return options.get(gate, default_option) \
+        if default_option is not None else options[gate]
 
 
 __s__ = switch
