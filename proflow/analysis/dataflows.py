@@ -1,5 +1,7 @@
 from collections import namedtuple
 from typing import List
+import re
+
 from vendor.polyviz.bezier import bezier_curve_4pt
 
 from proflow.Objects import Process
@@ -18,9 +20,9 @@ def get_inputs_map(inputs_list):
 
 def get_links(inputs_map, process):
     Output = namedtuple('Output', 'comment input_links output_links')
-    input_links = [inputs_map[ip.from_] for ip in process.state_inputs]
+    input_links = [inputs_map[ip.from_] for ip in process.state_inputs if ip.from_ in inputs_map]
     # input_links = [ip.from_ for ip in p.state_inputs]
-    output_links = [inputs_map[ip.as_] for ip in process.state_outputs]
+    output_links = [inputs_map[ip.as_] for ip in process.state_outputs if ip.as_ in inputs_map]
     # output_links = [ip.as_ for ip in p.state_outputs]
     return Output(process.comment, input_links, output_links)
 
@@ -56,6 +58,7 @@ def link_processes_to_state(
         LP: int = 5,  # left padding
         TP: int = 5,  # top padding
         FONT_SIZE: int = 12,
+        filter_state_string: str = '.*',
 ):
     HALF_FONT_SIZE = FONT_SIZE // 2
 
@@ -73,7 +76,10 @@ def link_processes_to_state(
     y_s_input_offset = (state_height / len(processes))
 
     unique_inputs = get_all_unique_inputs(processes)
-    inputs_map = get_inputs_map(unique_inputs)
+    filter_re = filter_state_string if type(filter_state_string) == re.Pattern \
+        else re.compile(f'.*{filter_state_string}.*' or '.*')
+    filtered_inputs = [i for i in unique_inputs if filter_re.match(i)]
+    inputs_map = get_inputs_map(filtered_inputs)
     links = [get_links(inputs_map, p) for p in processes]
 
     process_rects = [
@@ -81,7 +87,7 @@ def link_processes_to_state(
                     TP, p_width, p_height) for i in range(len(processes))]
     state_item_rects = [
         Rect_Params(state_x_pos, ((state_height + TP) * i) +
-                    TP, s_width, state_height) for i in range(len(unique_inputs))]
+                    TP, s_width, state_height) for i in range(len(filtered_inputs))]
 
     for p in process_rects:
         canvas.stroke_rect(*p)
@@ -94,7 +100,7 @@ def link_processes_to_state(
         [canvas.fill_text(t, process_rect.x + LP, (process_rect.y + TP + FONT_SIZE) + FONT_SIZE * i)
          for i, t in enumerate(text.split('\n'))]
 
-    for i, p in enumerate(unique_inputs):
+    for i, p in enumerate(filtered_inputs):
         state_item_rect = state_item_rects[i]
         text = '\n'.join([t_wrap(t, p_width//HALF_FONT_SIZE) for t in p.split('.')])
         [canvas.fill_text(t, state_item_rect.x + LP, (state_item_rect.y + TP + FONT_SIZE) + FONT_SIZE * i)
@@ -210,4 +216,4 @@ if __name__ == "__main__":
     ] * 5
     canvas = Canvas(width=1200, height=800)
     link_processes_to_state(canvas, processes, 600)
-canvas
+# canvas
