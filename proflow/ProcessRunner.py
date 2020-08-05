@@ -4,7 +4,7 @@ converts them into a process
 The process runner is then passed a list of processes that it runs in order
 updating the state at each step
 """
-from dataclasses import astuple, is_dataclass, dataclass, field
+from dataclasses import astuple, is_dataclass
 from typing import NamedTuple, List, Callable
 from functools import reduce
 
@@ -15,6 +15,7 @@ import numpy as np
 from vendor.helpers.comparisons import isNamedTuple
 from vendor.helpers.named_tuple_helpers import _replace_recursive
 
+from .Objects import Process, I
 from .config import Config_Shape
 from .parameters import Parameters_Shape
 from .external_state import External_State_Shape
