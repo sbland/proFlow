@@ -1,4 +1,7 @@
 
+# Build Steps
+1. `python setup.py sdist bdist_wheel`
+
 ## Process Runners to update state
 Pure functions should not modify the state. Instead they should return a copy of the state.
 
@@ -87,3 +90,12 @@ used for logging
 **List[any] = []**
 
 additional args
+
+
+# Analysis Of Processes
+In the experiments directory are some example of using the analysis tools
+
+## Link state and processes
+<img src="experiments/data_flow.png"
+     alt="Data flow diagram"
+     height=800 width=600 />
