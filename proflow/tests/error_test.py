@@ -1,9 +1,9 @@
 
 import pytest
 from vendor.helpers.list_helpers import flatten_list
-from src.ProcessRunnerCls import ProcessRunner
-from src.ProcessRunner import I, Process, Run_Process_Error
-from src.tests.mocks import Mock_Config_Shape, Mock_External_State_Shape, \
+from proflow.ProcessRunnerCls import ProcessRunner
+from proflow.ProcessRunner import I, Process, Run_Process_Error
+from proflow.tests.mocks import Mock_Config_Shape, Mock_External_State_Shape, \
     Mock_Model_State_Shape, Mock_Parameters_Shape
 
 

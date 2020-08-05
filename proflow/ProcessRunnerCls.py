@@ -1,7 +1,7 @@
 from functools import partial, reduce
-from src.parameters import Parameters_Shape
-from src.external_state import External_State_Shape
-from src.config import Config_Shape
+from proflow.parameters import Parameters_Shape
+from proflow.external_state import External_State_Shape
+from proflow.config import Config_Shape
 from typing import Callable, List, NamedTuple
 from .ProcessRunner import Process, run_process
 
