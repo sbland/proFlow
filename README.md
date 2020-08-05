@@ -52,6 +52,72 @@ output_state = run_hour([
 ])(initial_state, hr)
 ```
 
+# Example State
+...
+
+# Example Processes
+```Python
+from proflow.Objects import Process, I
+
+processes = [
+    Process(
+        func=lambda x, y, z: x + y + z,
+        comment="Demo process a",
+        config_inputs=[
+            I('foo.bar', as_='x'),
+        ],
+        state_inputs=[
+            I('info.today', as_='y'),
+            I('info.hour', as_='z')
+        ],
+        state_outputs=[
+            I('_result', as_='info.tomorrow'),
+        ]
+    ),
+    Process(
+        func=lambda x, y: x + y,
+        comment="Demo process b",
+        config_inputs=[
+            I('foo.bar', as_='x'),
+        ],
+        state_inputs=[
+            I('info.tomorrow', as_='y'),
+        ],
+        state_outputs=[
+            I('_result', as_='info.today'),
+        ]
+    ),
+    Process(
+        func=lambda x, y: x + y,
+        comment="Demo process c with a really long comment and info",
+        config_inputs=[
+            I('foo.bar', as_='x'),
+        ],
+        state_inputs=[
+            I('info.tomorrow', as_='y'),
+        ],
+        state_outputs=[
+            I('_result', as_='info.today'),
+        ]
+    ),
+    Process(
+        func=lambda x, y: x + y,
+        comment="Demo process d",
+        config_inputs=[
+            I('foo.bar', as_='x'),
+        ],
+        state_inputs=[
+            I('info.today', as_='y'),
+        ],
+        state_outputs=[
+            I('_result', as_='info.tomorrow'),
+            I('_result', as_='log.extra'),
+        ]
+    ),
+]
+
+```
+
 # Process Attributes:
 
 ## func
@@ -59,36 +125,47 @@ output_state = run_hour([
 
 The function to call
 
+---
 ## gate
-**bool = True**
+`bool default = True`
 
 if False process is skipped
 
+---
 ## comment
-**str = ""**
+`str default = ""`
 used for logging
 
+---
 ## config_inputs
-**List[I] = []**
+`List[I] default = []`
+Dot notation config inputs
 
+---
 ## parameters_inputs
-**List[I] = []**
+`List[I] default = []`
 
+---
 ## external_state_inputs
-**List[I] = []**
+`List[I] default = []`
 
+---
 ## additional_inputs
-**List[tuple] = []**
+`List[tuple] default = []`
 
+---
 ## state_inputs
-**List[I] = []**
+`List[I] default = []`
 
+---
 ## state_outputs
-**List[I] = []**
+`List[I] default = []`
 
+---
 ## args
-**List[any] = []**
+`List[any] default = []`
 
+---
 additional args
 
 
