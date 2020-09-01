@@ -88,7 +88,7 @@ def test_process_runner_time():
     run_processes = process_runner.initialize_processes(processes)
 
     time = min(repeat(lambda: run_processes(initial_state=state), number=2000, repeat=5))
-    assert 0.239 < time < 0.248
+    assert 0.220 < time < 0.248
 
 
 def test_get_process_inputs_time():
@@ -113,7 +113,7 @@ def test_get_process_inputs_time():
                                     )
     time = min(repeat(get_process_inputs_fn, number=20000, repeat=25))
     print(1 - (time / 0.15))
-    assert 0.120 < time < 0.135
+    assert 0.110 < time < 0.135
 
 
 def test_get_key_values_time():
@@ -136,4 +136,4 @@ def test_get_key_values_time():
                                     )
     time = min(repeat(get_process_inputs_fn, number=80000, repeat=5))
     print(1 - (time / 0.210))
-    assert 0.212 < time < 0.220
+    assert 0.200 < time < 0.220
