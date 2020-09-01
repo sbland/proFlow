@@ -95,8 +95,25 @@ def get_result(result, k):
     raise ValueError(f'Could not determine type of {result}')
 
 
+def validate_input(DEBUG: bool = False) -> Callable[[any, bool, str], any]:
+    def validate_input_(
+        input: I,
+        value: any,
+    ) -> any:
+        if not DEBUG:
+            return value
+        if input.required and value is None:
+            raise ValueError(f'Input is required: {input.from_}')
+        return value
+    return validate_input_
+
+
 def get_key_values(
-        f: Callable, data: any, input_keys: List[I]) -> List[tuple]:  # noqa: E741
+        f: Callable,
+        data: any,
+        input_keys: List[I],
+        DEBUG: bool = False,
+) -> List[tuple]:  # noqa: E741
     """gets the key value pairs from named tuples using the input keys from and keys as
 
     Inputs
@@ -136,11 +153,19 @@ def get_key_values(
     # -- 7.211 %
     as_keys = [f(key.as_) if key.as_ else None for key in input_keys]
     # -- 64.6 %
+    # get the values from the data matching the from_keys
     input_values = [get_nested_val(data, key) for key in from_keys]
-    # -- 6.79 %
-    key_values_pairs = [(k, v) for k, v in zip(as_keys, input_values) if k is not None]
+    validated_input_values = [
+        validate_input(DEBUG)(kd, v) for kd, v in zip(input_keys, input_values)] \
+        if DEBUG else input_values
 
-    args = [v for k, v in zip(as_keys, input_values) if k is None]
+    # if DEBUG:
+    #     if not all([validate_input(DEBUG)(kd, v) for kd, v in zip(input_keys, input_values)]):
+    #         raise ValueError('Invalid Input')
+    # -- 6.79 %
+    key_values_pairs = [(k, v) for k, v in zip(as_keys, validated_input_values) if k is not None]
+
+    args = [v for k, v in zip(as_keys, validated_input_values) if k is None]
     return key_values_pairs, args
 
 
@@ -161,7 +186,7 @@ def get_process_inputs(
     additional_inputs = process.additional_inputs
 
     # convert additional inputs to key value tuples
-    additional_inputs_tuples = [astuple(a) for a in additional_inputs]
+    additional_inputs_tuples = [astuple(a)[0:2] for a in additional_inputs]
 
     # -- 17.3%
     # create function that formats the key.as_ and key.from_
