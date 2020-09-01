@@ -9,15 +9,20 @@ class I:  # noqa: E742
     """interface Named Tuple"""
     from_: str
     as_: str = None
+
     def __repr__(self) -> str:
         return f'I(from_="{self.from_}" as_="{self.as_}")'
 
-@dataclass(frozen=True)
+
+# @dataclass(frozen=True)
+@dataclass
 class Process:
     """Process object that stores the function and input and output targets."""
-    func: Callable[[Model_State_Shape], Model_State_Shape] = lambda: NotImplementedError()  # The function to call
+    func: Callable[[Model_State_Shape],
+                   Model_State_Shape] = lambda: NotImplementedError()  # The function to call
     gate: bool = True  # if False process is skipped
     comment: str = ""  # used for logging
+    group: str = ""  # group tag
     # Inputs to function
     config_inputs: List[I] = field(default_factory=list)
     parameters_inputs: List[I] = field(default_factory=list)
