@@ -12,10 +12,12 @@ class ProcessRunner():
     def __init__(self,
                  config_in: Config_Shape = Config_Shape(),
                  external_state_in: External_State_Shape = External_State_Shape(),
-                 parameters_in: Parameters_Shape = Parameters_Shape()):
+                 parameters_in: Parameters_Shape = Parameters_Shape(),
+                 DEBUG_MODE: bool = False):
         self.config = config_in
         self.parameters = parameters_in
         self.external_state = external_state_in
+        self.DEBUG_MODE = DEBUG_MODE
 
     # Define the process runner
     def run_processes(
@@ -32,7 +34,8 @@ class ProcessRunner():
         """
         run_process_loaded = partial(run_process, config=self.config,
                                      parameters=self.parameters,
-                                     external_state=self.external_state)
+                                     external_state=self.external_state,
+                                     DEBUG_MODE=self.DEBUG_MODE)
         new_state = reduce(run_process_loaded, processes, initial_state)
         return new_state
 

@@ -176,6 +176,7 @@ def get_process_inputs(
     config: Config_Shape,
     parameters: Parameters_Shape,
     external_state: External_State_Shape,
+    DEBUG_MODE: bool = False,
 ) -> dict:
     """Get inputs from sources based on process input lists"""
     # get inputs from process
@@ -195,10 +196,14 @@ def get_process_inputs(
 
     # -- 85.57 %
     # get key value inputs to pass to function
-    key_values_config, args_config = get_key_values(f, config, config_inputs)
-    key_values_parameters, args_parameters = get_key_values(f, parameters, parameters_inputs)
-    key_values_state, args_state = get_key_values(f, prev_state, state_inputs)
-    key_values_e_state, args_e_state = get_key_values(f, external_state, e_state_inputs)
+    key_values_config, args_config \
+        = get_key_values(f, config, config_inputs, DEBUG=DEBUG_MODE)
+    key_values_parameters, args_parameters \
+        = get_key_values(f, parameters, parameters_inputs, DEBUG=DEBUG_MODE)
+    key_values_state, args_state \
+        = get_key_values(f, prev_state, state_inputs, DEBUG=DEBUG_MODE)
+    key_values_e_state, args_e_state \
+        = get_key_values(f, external_state, e_state_inputs, DEBUG=DEBUG_MODE)
 
     # -- 2.81 %
     # Merge inputs into a single dictionary that represents the kwargs of the process func
@@ -219,7 +224,8 @@ def run_process(
         process: Process,
         config: Config_Shape,
         parameters: Parameters_Shape,
-        external_state: External_State_Shape) -> NamedTuple:
+        external_state: External_State_Shape,
+        DEBUG_MODE: bool = False) -> NamedTuple:
     """ Run a single process and output the updated state.
         The process object contains the function along with all the input
         and output targets.
@@ -236,6 +242,7 @@ def run_process(
             config,
             parameters,
             external_state,
+            DEBUG_MODE=DEBUG_MODE
         )
 
         # RUN PROCESS

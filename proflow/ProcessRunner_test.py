@@ -1,10 +1,10 @@
+import pytest
 import numpy as np
 
 from proflow.tests.mocks import Mock_Config_Shape, Mock_External_State_Shape, \
     Mock_Model_State_Shape, Mock_Nested_State, Mock_Parameters_Shape
 from proflow.ProcessRunnerCls import ProcessRunner
 from unittest.mock import MagicMock, patch
-import pytest
 from vendor.helpers.list_helpers import flatten_list, filter_none
 
 from .ProcessRunner import Process, I
