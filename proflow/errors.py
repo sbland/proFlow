@@ -11,6 +11,8 @@ class Run_Process_Error(Exception):
         return f"""
         !! {self.message} !! \n
         !! {str(self.error)}
-         state:
-         \n{state_print}
+
         """
+        # TODO: Find better way of showing state in error
+        #  state:
+        #  \n{state_print}
