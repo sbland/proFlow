@@ -8,9 +8,9 @@ class Run_Process_Error(Exception):
         state_str = str(self.state)
         state_print = state_str[0:100] + '...' + \
             state_str[:-100] if len(state_str) > 200 else state_str
-        return f"""
-        !! {self.message} !! \n
-        !! {str(self.error)}
+        return f"""{self.message}
+        !!--------------!!
+        {str(self.error)}
 
         """
         # TODO: Find better way of showing state in error
