@@ -1,6 +1,7 @@
 import pytest
 import numpy as np
 
+from proflow.helpers import rgetattr
 from proflow.tests.mocks import Mock_Config_Shape, Mock_External_State_Shape, \
     Mock_Model_State_Shape, Mock_Nested_State, Mock_Parameters_Shape
 from proflow.ProcessRunnerCls import ProcessRunner
@@ -41,19 +42,20 @@ def ____():
 
 @pytest.fixture(scope="module", autouse=True)
 def ______():
-    with patch('proflow.ProcessRunner.External_State_Shape', return_value=Mock_External_State_Shape) \
+    with patch('proflow.ProcessRunner.External_State_Shape',
+               return_value=Mock_External_State_Shape) \
             as _fixture:
         yield _fixture
 
 
-def test_procces_runner():
+def test_procces_runner_simple():
     state = Mock_Model_State_Shape(a=2.1, b=4.1)
     processes = flatten_list([
         Process(
             func=process_add,
-            config_inputs=[
-                I('foo', as_='x'),
-                I('bar', as_='y'),
+            config_inputs=lambda config: [
+                I(config.foo, as_='x'),
+                I(config.bar, as_='y'),
             ],
             state_outputs=[
                 I('result', as_='c'),
@@ -61,11 +63,11 @@ def test_procces_runner():
         ),
         Process(
             func=process_add,
-            config_inputs=[
-                I('foo', as_='x'),
+            config_inputs=lambda config: [
+                I(config.foo, as_='x'),
             ],
-            state_inputs=[
-                I('a', as_='y'),
+            state_inputs=lambda state: [
+                I(state.a, as_='y'),
             ],
             state_outputs=[
                 I('result', as_='d'),
@@ -84,11 +86,11 @@ def test_procces_runner_nested_args():
     processes = flatten_list([
         Process(
             func=process_add,
-            config_inputs=[
-                I('roo.abc', as_='x'),
+            config_inputs=lambda config: [
+                I(config.roo['abc'], as_='x'),
             ],
-            state_inputs=[
-                I('a', as_='y'),
+            state_inputs=lambda state: [
+                I(state.a, as_='y'),
             ],
             state_outputs=[
                 I('result', as_='a'),
@@ -106,11 +108,11 @@ def test_procces_runner_nested_args_out():
     processes = flatten_list([
         Process(
             func=process_add,
-            config_inputs=[
-                I('roo.abc', as_='x'),
+            config_inputs=lambda config: [
+                I(config.roo['abc'], as_='x'),
             ],
-            state_inputs=[
-                I('a', as_='y'),
+            state_inputs=lambda state: [
+                I(state.a, as_='y'),
             ],
             state_outputs=[
                 I('result', as_='nested.na'),
@@ -127,11 +129,11 @@ def test_procces_runner_nested_args_list():
     processes = flatten_list([
         Process(
             func=process_add,
-            config_inputs=[
-                I('roo.abc', as_='x'),
+            config_inputs=lambda config: [
+                I(config.roo['abc'], as_='x'),
             ],
-            state_inputs=[
-                I('a', as_='y'),
+            state_inputs=lambda state: [
+                I(state.a, as_='y'),
             ],
             state_outputs=[
                 I('result', as_='a'),
@@ -148,11 +150,11 @@ def test_procces_runner_nested_args_list_out():
     processes = flatten_list([
         Process(
             func=lambda i, j: [i, j],
-            config_inputs=[
-                I('foo', as_='i'),
+            config_inputs=lambda config: [
+                I(config.foo, as_='i'),
             ],
-            state_inputs=[
-                I('a', as_='j'),
+            state_inputs=lambda state: [
+                I(state.a, as_='j'),
             ],
             state_outputs=[
                 I('0', as_='lst.0'),
@@ -171,12 +173,12 @@ def test_procces_runner_nested_args_matrix_out():
     processes = flatten_list([
         Process(
             func=lambda i, j, k: [[i, j], [k, k]],
-            config_inputs=[
-                I('foo', as_='i'),
+            config_inputs=lambda config: [
+                I(config.foo, as_='i'),
             ],
-            state_inputs=[
-                I('a', as_='j'),
-                I('b', as_='k'),
+            state_inputs=lambda state: [
+                I(state.a, as_='j'),
+                I(state.b, as_='k'),
             ],
             state_outputs=[
                 I('0.1', as_='lst.0'),
@@ -190,17 +192,18 @@ def test_procces_runner_nested_args_matrix_out():
     assert state_2.lst[1] == state.b
 
 
-def test_procces_runner_nested():
+def test_procces_runner_nested_simple():
     state = Mock_Model_State_Shape(a=2.1, b=4.1)
 
     processes = flatten_list([
         [Process(
             func=process_add,
-            config_inputs=[
-                I('bar', as_='y'),
+            comment="tag me",
+            config_inputs=lambda config: [
+                I(config.bar, as_='y'),
             ],
-            additional_inputs=[
-                I('x', i),
+            additional_inputs=lambda: [
+                I(i, as_='x'),
             ],
             state_outputs=[
                 I('result', as_='c'),
@@ -208,11 +211,11 @@ def test_procces_runner_nested():
         ) for i in range(10)],
         Process(
             func=process_add,
-            config_inputs=[
-                I('foo', as_='x'),
+            config_inputs=lambda config: [
+                I(config.foo, as_='x'),
             ],
-            state_inputs=[
-                I('a', as_='y'),
+            state_inputs=lambda state: [
+                I(state.a, as_='y'),
             ],
             state_outputs=[
                 I('result', as_='d'),
@@ -234,11 +237,11 @@ def test_procces_b_optional():
     processes = filter_none(flatten_list([
         Process(
             func=process_add,
-            additional_inputs=[
-                I('x', 10),
+            additional_inputs=lambda: [
+                I(10, as_='x'),
             ],
-            state_inputs=[
-                I('a', as_='y'),
+            state_inputs=lambda state: [
+                I(state.a, as_='y'),
             ],
             state_outputs=[
                 I('result', as_='c'),
@@ -246,11 +249,11 @@ def test_procces_b_optional():
         ) if config_do_this else None,
         Process(
             func=process_add,
-            additional_inputs=[
-                I('x', 100),
+            additional_inputs=lambda: [
+                I(100, as_='x'),
             ],
-            state_inputs=[
-                I('a', as_='y'),
+            state_inputs=lambda state: [
+                I(state.a, as_='y'),
             ],
             state_outputs=[
                 I('result', as_='d'),
@@ -265,16 +268,17 @@ def test_procces_b_optional():
 
 def test_procces_b_complex():
     state = Mock_Model_State_Shape(a=2.1, b=4.1)
-
     processes = filter_none(flatten_list([
         [
             Process(
                 func=process_add,
-                additional_inputs=[
-                    I('x', i),
+                # Note: i=i ensures that we pass i into lambda scope
+                # Otherwise i would = i at the end of the scope
+                additional_inputs=lambda i=i: [
+                    I(i, as_='x'),
                 ],
-                state_inputs=[
-                    I('a', as_='y'),
+                state_inputs=lambda state: [
+                    I(state.a, as_='y'),
                 ],
                 state_outputs=[
                     I('result', as_='a'),
@@ -282,11 +286,11 @@ def test_procces_b_complex():
             ) if i < 4 else
             Process(
                 func=process_add,
-                additional_inputs=[
-                    I('x', 100),
+                additional_inputs=lambda: [
+                    I(100, as_='x'),
                 ],
-                state_inputs=[
-                    I('a', as_='y'),
+                state_inputs=lambda state: [
+                    I(state.a, as_='y'),
                 ],
                 state_outputs=[
                     I('result', as_='a'),
@@ -296,8 +300,8 @@ def test_procces_b_complex():
         ],
         Process(
             func=lambda x: {'out': x},
-            state_inputs=[
-                I('a', as_='x'),
+            state_inputs=lambda state: [
+                I(state.a, as_='x'),
             ],
             state_outputs=[
                 I('out', as_='b'),
@@ -305,8 +309,8 @@ def test_procces_b_complex():
         ),
         Process(
             func=lambda x: {'out': x * 2},
-            state_inputs=[
-                I('b', as_='x'),
+            state_inputs=lambda state: [
+                I(state.b, as_='x'),
             ],
             state_outputs=[
                 I('out', as_='b'),
@@ -347,25 +351,25 @@ def test_procces_b_complex_02():
     gsto_processes = [
         Process(
             func=function_with_lots_of_args,
-            config_inputs=[
-                I('foo', as_='season_Astart'),
-                I('foo', as_='Tleaf_C'),
-                I('foo', as_='c_a'),
-                I('foo', as_='e_a'),
-                I('bar', as_='Q'),
-                I('bar', as_='g_bl'),
-                I('bar', as_='g_sto_0'),
-                I('bar', as_='m'),
+            config_inputs=lambda config: [
+                I(config.foo, as_='season_Astart'),
+                I(config.foo, as_='Tleaf_C'),
+                I(config.foo, as_='c_a'),
+                I(config.foo, as_='e_a'),
+                I(config.bar, as_='Q'),
+                I(config.bar, as_='g_bl'),
+                I(config.bar, as_='g_sto_0'),
+                I(config.bar, as_='m'),
             ],
-            state_inputs=[
-                I('a', as_='V_cmax_25'),
-                I('a', as_='J_max_25'),
-                I('a', as_='D_0'),
-                I('a', as_='O3'),
-                I('a', as_='O3up_acc'),
-                I('a', as_='td'),
-                I('a', as_='dd'),
-                I('a', as_='hr'),
+            state_inputs=lambda state: [
+                I(state.a, as_='V_cmax_25'),
+                I(state.a, as_='J_max_25'),
+                I(state.a, as_='D_0'),
+                I(state.a, as_='O3'),
+                I(state.a, as_='O3up_acc'),
+                I(state.a, as_='td'),
+                I(state.a, as_='dd'),
+                I(state.a, as_='hr'),
             ],
             state_outputs=[
                 I('gsto_final', as_='b'),
@@ -382,11 +386,11 @@ def test_procces_b_complex_02():
         ),
         Process(
             func=translate_unit,
-            state_inputs=[
-                I('b', as_='val'),
+            state_inputs=lambda state: [
+                I(state.b, as_='val'),
             ],
-            additional_inputs=[
-                I('rate', 0.1),
+            additional_inputs=lambda: [
+                I(0.1, as_='rate'),
             ],
             state_outputs=[
                 I('result', as_='b')
@@ -394,8 +398,8 @@ def test_procces_b_complex_02():
         ),
         Process(
             func=lambda x: {'result': x * 2},
-            state_inputs=[
-                I('c', as_='x'),
+            state_inputs=lambda state: [
+                I(state.c, as_='x'),
             ],
             state_outputs=[
                 I('result', as_='c')
@@ -405,8 +409,8 @@ def test_procces_b_complex_02():
 
     end_process = Process(
         func=lambda x: {'result': x * 2},
-        state_inputs=[
-            I('b', as_='x'),
+        state_inputs=lambda state: [
+            I(state.b, as_='x'),
         ],
         state_outputs=[
             I('result', as_='b')
@@ -428,11 +432,11 @@ def test_annual_cycle():
     hourly_processes = [
         Process(
             func=process_add,
-            state_inputs=[
-                I('a', as_='x'),
+            state_inputs=lambda state: [
+                I(state.a, as_='x'),
             ],
-            additional_inputs=[
-                I('y', 1),
+            additional_inputs=lambda: [
+                I(1, as_='y'),
             ],
             state_outputs=[
                 I('result', as_='a')
@@ -442,11 +446,11 @@ def test_annual_cycle():
     daily_start_processes = [
         Process(
             func=process_add,
-            state_inputs=[
-                I('b', as_='x'),
+            state_inputs=lambda state: [
+                I(state.b, as_='x'),
             ],
-            additional_inputs=[
-                I('y', 1),
+            additional_inputs=lambda: [
+                I(1, as_='y'),
             ],
             state_outputs=[
                 I('result', as_='b')
@@ -454,8 +458,8 @@ def test_annual_cycle():
         ),
         Process(
             func=lambda x: {'result': x},
-            state_inputs=[
-                I('a', as_='x'),
+            state_inputs=lambda state: [
+                I(state.a, as_='x'),
             ],
             state_outputs=[
                 I('result', as_='c')
@@ -465,8 +469,8 @@ def test_annual_cycle():
     daily_end_processes = [
         Process(
             func=lambda x: {'result': x},
-            state_inputs=[
-                I('a', as_='x'),
+            state_inputs=lambda state: [
+                I(state.a, as_='x'),
             ],
             state_outputs=[
                 I('result', as_='d')
@@ -507,10 +511,10 @@ def test_process_with_string_literals():
     processes = flatten_list([
         Process(
             func=process_add,
-            state_inputs=[
-                I('a', as_='x'),
+            state_inputs=lambda state: [
+                I(state.a, as_='x'),
                 # uses the target from additional inputs to define the nested prop to use
-                I('nested.{state.target}', as_='y'),
+                I(rgetattr(state, ['nested', state.target]), as_='y'),
             ],
             state_outputs=[
                 I('result', as_='c'),
@@ -519,8 +523,8 @@ def test_process_with_string_literals():
         Process(
             func=lambda x: {'out': x},
 
-            additional_inputs=[
-                I('x', 'nab'),
+            additional_inputs=lambda: [
+                I('nab', as_='x'),
             ],
             state_outputs=[
                 I('out', as_='target')
@@ -528,10 +532,10 @@ def test_process_with_string_literals():
         ),
         Process(
             func=process_add,
-            state_inputs=[
-                I('a', as_='x'),
+            state_inputs=lambda state: [
+                I(state.a, as_='x'),
                 # uses the target from additional inputs to define the nested prop to use
-                I('nested.{state.target}', as_='y'),
+                I(rgetattr(state, ['nested', state.target]), as_='y'),
             ],
             state_outputs=[
                 I('result', as_='d'),
@@ -567,11 +571,11 @@ def test_setup_parameters():
     processes = flatten_list([
         Process(
             func=process_add,
-            external_state_inputs=[
-                I('data_a', as_='x'),
+            external_state_inputs=lambda estate: [
+                I(estate.data_a, as_='x'),
             ],
-            additional_inputs=[
-                I('y', 10),
+            additional_inputs=lambda: [
+                I(10, as_='y'),
             ],
             state_outputs=[
                 I('result', as_='foo'),
@@ -608,9 +612,10 @@ def test_process_runner_using_wildcard_list_index():
     state = Mock_Model_State_Shape(a=2.1, b=4.1, matrix=[[1, 2, 3], [4, 5, 6]])
     processes = flatten_list([
         Process(
-            func=lambda values: values,
-            state_inputs=[
-                I('matrix._.1')
+            func=lambda input: input,
+            state_inputs=lambda state: [
+                # TODO: can we abstract this to make it readable?
+                I([state.matrix[i][1] for i in range(len(state.matrix))], as_='input')
             ],
             state_outputs=[
                 I('_result', as_='c'),
@@ -626,9 +631,10 @@ def test_process_runner_using_wildcard_list_obj():
     state = Mock_Model_State_Shape(a=2.1, b=4.1, matrix=[[1, 2, 3], [4, 5, 6]])
     processes = flatten_list([
         Process(
-            func=lambda out: out,
-            state_inputs=[
-                I('nested_lst_obj._.na'),
+            func=lambda input: input,
+            state_inputs=lambda state: [
+                I([state.nested_lst_obj[i].na for i in range(len(state.nested_lst_obj))],
+                  as_='input'),
             ],
             state_outputs=[
                 I('_result', as_='d')
@@ -644,9 +650,10 @@ def test_process_runner_using_wildcard_multiple():
     state = Mock_Model_State_Shape(a=2.1, b=4.1, matrix=[[1, 2, 3], [4, 5, 6]])
     processes = flatten_list([
         Process(
-            func=lambda values: values,
-            state_inputs=[
-                I('matrix._._')
+            func=lambda input: input,
+            state_inputs=lambda state: [
+                I([[state.matrix[i][j] for j in range(len(state.matrix[i]))]
+                   for i in range(len(state.matrix))], as_='input')
             ],
             state_outputs=[
                 I('_result', as_='c'),
@@ -662,9 +669,9 @@ def test_process_runner_using_wildcard_nparray():
     state = Mock_Model_State_Shape(a=2.1, b=4.1, matrix=np.array([[1, 2, 3], [4, 5, 6]]))
     processes = flatten_list([
         Process(
-            func=lambda values: values,
-            state_inputs=[
-                I('matrix._.1')
+            func=lambda input: input,
+            state_inputs=lambda state: [
+                I([state.matrix[i][1] for i in range(len(state.matrix))], as_='input'),
             ],
             state_outputs=[
                 I('_result', as_='c'),

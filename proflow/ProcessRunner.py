@@ -234,19 +234,34 @@ def run_process(
         note: args from process are not garuanteed to be in the correct order
     """
     if not process.gate:
+
         return prev_state
     try:
-        kwrds, args = get_process_inputs(
-            process,
-            prev_state,
-            config,
-            parameters,
-            external_state,
-            DEBUG_MODE=DEBUG_MODE
-        )
+        config_args = process.config_inputs(config)
+        # parameters_args = process.parameters_inputs(parameters)
+        external_state_args = process.external_state_inputs(external_state)
+        additional_args = process.additional_inputs()
+        state_args = process.state_inputs(prev_state)
+        # additional_inputs_tuples = [astuple(a)[0:2] for a in additional_inputs]
+        # kwargs = {**config_args, **state_args} # fastest method
+        kwargs = {i.as_: i.from_ for i in config_args +
+                  state_args + additional_args + external_state_args}
+        result = process.func(**kwargs)
+        # TODO: Implement new state out map
+        # state_out = process.map_outputs(result, prev_state)
+        # return state_out
 
-        # RUN PROCESS
-        result = process.func(*args, **kwrds)
+        # kwrds, args = get_process_inputs(
+        #     process,
+        #     prev_state,
+        #     config,
+        #     parameters,
+        #     external_state,
+        #     DEBUG_MODE=DEBUG_MODE
+        # )
+
+        # # RUN PROCESS
+        # result = process.func(*args, **kwrds)
 
         # CREATE NEW STATE
         output_map = process.state_outputs

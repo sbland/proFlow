@@ -25,12 +25,20 @@ class Process:
     comment: str = ""  # used for logging
     group: str = ""  # group tag
     # Inputs to function
-    config_inputs: List[I] = field(default_factory=list)
-    parameters_inputs: List[I] = field(default_factory=list)
-    external_state_inputs: List[I] = field(default_factory=list)
-    additional_inputs: List[tuple] = field(default_factory=list)
-    state_inputs: List[I] = field(default_factory=list)
-    state_outputs: List[I] = field(default_factory=list)
+    # TODO: The below objects could be set as the actual State Shape objects instead
+    state_inputs: Callable[[object], List[I]] = \
+        field(default_factory=lambda: lambda *args, **kwargs: [])
+    config_inputs: Callable[[object], List[I]] = \
+        field(default_factory=lambda: lambda *args, **kwargs:  [])
+    parameters_inputs: Callable[[object], List[I]] = \
+        field(default_factory=lambda: lambda *args, **kwargs:  [])
+    external_state_inputs: Callable[[object], List[I]] = \
+        field(default_factory=lambda: lambda *args, **kwargs:  [])
+    additional_inputs: List[tuple] = \
+        field(default_factory=lambda: lambda *args, **kwargs:  [])
+    # TODO: state_outputs is depreciated
+    state_outputs: Callable[[any, object], object] = field(default_factory=list)
+    map_outputs: Callable[[any, object], object] = field(default_factory=list)
     args: List[any] = field(default_factory=list)  # additional args
 
     def __repr__(self) -> str:

@@ -1,4 +1,6 @@
 from .Objects import Process
+from typing import Union, List
+from functools import reduce
 
 
 def check_types(self):
@@ -43,3 +45,17 @@ def print_process(**kwargs) -> Process:
         func=log_value,
         **kwargs
     )
+
+
+def rgetattr(obj: object, attr: Union[str, List[str]], *args):
+    """Get nested properties with dot notation or list of string path.
+
+    Properties
+    ----------
+    obj: object  [description]
+    attr: OneOf[str, List[str]]  Either a dot notation string or list of strings
+    """
+    def _getattr(obj, attr):
+        return getattr(obj, attr, *args)
+    attr_list = attr.split('.') if isinstance(attr, str) else attr
+    return reduce(_getattr, [obj] + attr_list)

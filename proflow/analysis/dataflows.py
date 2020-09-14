@@ -103,7 +103,8 @@ def link_processes_to_state(
     for i, p in enumerate(filtered_inputs):
         state_item_rect = state_item_rects[i]
         text = '\n'.join([t_wrap(t, p_width//HALF_FONT_SIZE) for t in p.split('.')])
-        [canvas.fill_text(t, state_item_rect.x + LP, (state_item_rect.y + TP + FONT_SIZE) + FONT_SIZE * i)
+        [canvas.fill_text(t, state_item_rect.x + LP, (state_item_rect.y + TP + FONT_SIZE) +
+                          FONT_SIZE * i)
          for i, t in enumerate(text.split('\n'))]
 
     for i, link in enumerate(links):
