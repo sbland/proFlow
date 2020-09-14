@@ -20,6 +20,7 @@ class Process:
     output: Callable[[dict], any] = lambda: NotImplementedError()
     gate: Callable[[dict], any] = None
     comment: str = ""  # used for logging
+    map_input: List[tuple] = []
     # group: str = ""  # group tag
     # # Inputs to function
     # config_inputs: List[I] = field(default_factory=list)
@@ -80,15 +81,21 @@ def process_wrapper(config, state):
         pass
 
 processes = get_processes()
-print(list(map(lambda p: p.comment, processes)))
+# print(list(map(lambda p: p.comment, processes)))
 
 # Can we print where in the variables came from
-print(list(map(lambda p: p.func.__name__, processes)))
+# print(list(map(lambda p: p.func.__name__, processes)))
 
 print(inspect.getsource(processes[0].func))
 
 
-
+Process(
+    func=add_me,
+    map_inputs = lambda c, s: [
+        ('x', s['foo']['bar']),
+        ('y', c['hello']['val']),
+    ]
+)
 
 # def process_runner():
 
