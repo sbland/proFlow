@@ -565,14 +565,33 @@ def test_procces_runner_list_result():
     assert state_2.lst == [1, 2, 3]
 
 
+def test_use_external_state():
+    state = Mock_Model_State_Shape(a=2.1, b=4.1)
+    process = Process(
+        func=process_add,
+        external_state_inputs=lambda e_state, row_index: [
+            I(e_state.data_a[row_index], as_='x'),
+        ],
+        additional_inputs=lambda: [
+            I(10, as_='y'),
+        ],
+        state_outputs=[
+            I('result', as_='a'),
+        ],
+    )
+    run_processes = process_runner.initialize_processes([process])
+    state_2 = run_processes(initial_state=state)
+    assert state_2.a == 11
+
+
 def test_setup_parameters():
     """Test that we can initialize the parameters"""
     parameters = Mock_Parameters_Shape()
     processes = flatten_list([
         Process(
             func=process_add,
-            external_state_inputs=lambda estate: [
-                I(estate.data_a, as_='x'),
+            external_state_inputs=lambda e_state, row_index: [
+                I(e_state.data_a[row_index], as_='x'),
             ],
             additional_inputs=lambda: [
                 I(10, as_='y'),

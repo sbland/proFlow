@@ -5,6 +5,7 @@ The process runner is then passed a list of processes that it runs in order
 updating the state at each step
 """
 from dataclasses import astuple, is_dataclass
+from proflow.helpers import rgetattr
 from typing import NamedTuple, List, Callable
 from functools import reduce
 
@@ -228,20 +229,46 @@ def run_process(
         parameters: Parameters_Shape,
         external_state: External_State_Shape,
         DEBUG_MODE: bool = False) -> NamedTuple:
-    """ Run a single process and output the updated state.
+    """Run a single process and output the updated state.
         The process object contains the function along with all the input
         and output targets.
 
 
         note: args from process are not garuanteed to be in the correct order
+
+    Parameters
+    ----------
+    prev_state : NamedTuple
+        Model state prior to this process being ran
+    config : Config_Shape
+        Model configuration
+    parameters : Parameters_Shape
+        Model derived parameters
+    external_state : External_State_Shape
+        External data
+    DEBUG_MODE : bool, optional
+        Debug processes when True, by default False
+
+    Returns
+    -------
+    Model State
+        Model State after process
+
+    Raises
+    ------
+    Run_Process_Error
+        Catches error that occur when running the process
     """
     if not process.gate:
-
         return prev_state
     try:
+        row_index = rgetattr(prev_state, 'temporal.row_index', 0)
         config_args = process.config_inputs(config)
         # parameters_args = process.parameters_inputs(parameters)
-        external_state_args = process.external_state_inputs(external_state)
+        # TODO: we need a better way of accessing current row index
+        external_state_args = process.external_state_inputs(
+            external_state, row_index,
+        )
         additional_args = process.additional_inputs()
         state_args = process.state_inputs(prev_state)
         # additional_inputs_tuples = [astuple(a)[0:2] for a in additional_inputs]
