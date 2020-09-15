@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="proflow",
-    version="0.1.0",
+    version="0.1.1b",
     author="Sam Bland",
     author_email="sbland.co.uk@gmail.com",
     description="Functional Process Runner",
@@ -14,7 +14,8 @@ setuptools.setup(
         'pytest-runner',
         'numpy',
         'scipy',
-        'ipycanvas'
+        'ipycanvas',
+        'snapshottest'
     ],
     tests_require=['pytest'],
     extras_require={'test': ['pytest']},

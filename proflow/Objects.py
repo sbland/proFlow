@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from proflow.process_inspector import parse_inputs
 from typing import Callable, List
 
 from .internal_state import Model_State_Shape
@@ -23,7 +24,7 @@ class Process:
                    Model_State_Shape] = lambda: NotImplementedError()  # The function to call
     gate: bool = True  # if False process is skipped
     comment: str = ""  # used for logging
-    group: str = ""  # group tag
+    group: str = None  # group tag
     # Inputs to function
     # TODO: The below objects could be set as the actual State Shape objects instead
     state_inputs: Callable[[object], List[I]] = \
@@ -46,11 +47,16 @@ class Process:
             f'func={self.func.__name__}',
             f'comment="{self.comment}"',
             f'gate={self.gate}',
-            f'config_inputs={self.config_inputs}',
-            f'parameters_inputs={self.parameters_inputs}',
-            f'external_state_inputs={self.external_state_inputs}',
-            f'additional_inputs={self.additional_inputs}',
-            f'state_inputs={self.state_inputs}',
+            f'group={self.group}',
+            # f'config_inputs={self.config_inputs()}',
+            # f'parameters_inputs={self.parameters_inputs}',
+            # f'external_state_inputs={self.external_state_inputs}',
+            # f'additional_inputs={self.additional_inputs}',
+            f'config_inputs={parse_inputs(self.config_inputs)}',
+            f'parameters_inputs={parse_inputs(self.parameters_inputs)}',
+            f'external_state_inputs={parse_inputs(self.external_state_inputs)}',
+            f'additional_inputs={parse_inputs(self.additional_inputs)}',
+            f'state_inputs={parse_inputs(self.state_inputs)}',
             f'state_outputs={self.state_outputs}',
             f'args={self.args}',
 
