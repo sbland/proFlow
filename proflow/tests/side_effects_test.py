@@ -1,10 +1,9 @@
 from proflow.ProcessRunnerCls import ProcessRunner
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 import pytest
-from dataclasses import dataclass, field
 from vendor.helpers.list_helpers import flatten_list
 from proflow.tests.mocks import Mock_Config_Shape, Mock_External_State_Shape, \
-    Mock_Model_State_Shape, Mock_Nested_State, Mock_Parameters_Shape
+    Mock_Model_State_Shape, Mock_Parameters_Shape
 from ..ProcessRunner import Process, I
 
 
@@ -39,7 +38,8 @@ def ____():
 
 @pytest.fixture(scope="module", autouse=True)
 def ______():
-    with patch('proflow.ProcessRunner.External_State_Shape', return_value=Mock_External_State_Shape) \
+    with patch('proflow.ProcessRunner.External_State_Shape',
+               return_value=Mock_External_State_Shape) \
             as _fixture:
         yield _fixture
 
@@ -67,13 +67,13 @@ def test_side_effect_state_arg():
         Process(
             func=fn,
             comment="fn",
-            state_inputs=[
-                I('a'),
+            state_inputs=lambda state: [
+                I(state.a, as_='input'),
             ],
         ),
     ])
     run_processes = process_runner.initialize_processes(processes)
     state_2 = run_processes(initial_state=state)
-    fn.assert_called_with(2.1)
+    fn.assert_called_with(input=2.1)
     assert state_2.a == 2.1
     assert state_2.b == 4.1

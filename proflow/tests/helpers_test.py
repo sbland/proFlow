@@ -1,5 +1,6 @@
 import pytest
 from ..ProcessRunner import get_key_values, I
+from ..helpers import rgetattr
 
 
 def test_get_key_values():
@@ -34,3 +35,12 @@ def test_get_key_values_assert_required():
                        [I('key_from_missing', as_='key_to', required=True)],
                        DEBUG=True)
     assert 'Input is required: key_from_missing' in str(exc)
+
+
+def test_rgetattr():
+    v = rgetattr([1, 2, 3], 0)
+    assert v == 1
+    v = rgetattr({'foo': {'bar': 3}}, 'foo.bar')
+    assert v == 3
+    v = rgetattr({'foo': {'bar': 3}}, ['foo', 'bar'])
+    assert v == 3

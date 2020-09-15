@@ -56,6 +56,8 @@ def rgetattr(obj: object, attr: Union[str, List[str]], *args):
     attr: OneOf[str, List[str]]  Either a dot notation string or list of strings
     """
     def _getattr(obj, attr):
-        return getattr(obj, attr, *args)
-    attr_list = attr.split('.') if isinstance(attr, str) else attr
+        return obj[attr] if (isinstance(obj, list) or isinstance(obj, dict)) \
+            else getattr(obj, attr, *args)
+    attr_list = attr if isinstance(attr, list) else attr.split(
+        '.') if isinstance(attr, str) else [attr]
     return reduce(_getattr, [obj] + attr_list)

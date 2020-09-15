@@ -114,6 +114,7 @@ def get_key_values(
         input_keys: List[I],
         DEBUG: bool = False,
 ) -> List[tuple]:  # noqa: E741
+    raise DeprecationWarning('Depreciated')
     """gets the key value pairs from named tuples using the input keys from and keys as
 
     Inputs
@@ -179,6 +180,7 @@ def get_process_inputs(
     DEBUG_MODE: bool = False,
 ) -> dict:
     """Get inputs from sources based on process input lists"""
+    raise DeprecationWarning('Depreciated')
     # get inputs from process
     config_inputs: List[I] = process.config_inputs
     parameters_inputs: List[I] = process.parameters_inputs
@@ -243,10 +245,13 @@ def run_process(
         additional_args = process.additional_inputs()
         state_args = process.state_inputs(prev_state)
         # additional_inputs_tuples = [astuple(a)[0:2] for a in additional_inputs]
+        args = process.args
         # kwargs = {**config_args, **state_args} # fastest method
         kwargs = {i.as_: i.from_ for i in config_args +
-                  state_args + additional_args + external_state_args}
-        result = process.func(**kwargs)
+                  state_args + additional_args + external_state_args if i.as_ is not None}
+        args = process.args + [i.from_ for i in config_args +
+                               state_args + additional_args + external_state_args if i.as_ is None]
+        result = process.func(*args, **kwargs)
         # TODO: Implement new state out map
         # state_out = process.map_outputs(result, prev_state)
         # return state_out

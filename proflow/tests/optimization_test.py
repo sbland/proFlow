@@ -2,13 +2,15 @@ from functools import partial
 import pytest
 from timeit import repeat
 
+from proflow.helpers import rgetattr
+
 from proflow.tests.mocks import Mock_Config_Shape, Mock_External_State_Shape, \
     Mock_Model_State_Shape, Mock_Parameters_Shape
 from proflow.ProcessRunnerCls import ProcessRunner
 from unittest.mock import patch
 from vendor.helpers.list_helpers import flatten_list
 
-from ..ProcessRunner import Process, I, get_key_values, get_process_inputs
+from ..ProcessRunner import Process, I, get_key_values
 
 
 def process_add(x, y):
@@ -42,7 +44,8 @@ def ____():
 
 @pytest.fixture(scope="module", autouse=True)
 def ______():
-    with patch('proflow.ProcessRunner.External_State_Shape', return_value=Mock_External_State_Shape) \
+    with patch('proflow.ProcessRunner.External_State_Shape',
+               return_value=Mock_External_State_Shape) \
             as _fixture:
         yield _fixture
 
@@ -52,9 +55,9 @@ def test_process_runner_time():
     processes = flatten_list([
         Process(
             func=lambda x, y: x + y,
-            config_inputs=[
-                I('foo', as_='x'),
-                I('bar', as_='y'),
+            config_inputs=lambda config: [
+                I(config.foo, as_='x'),
+                I(config.bar, as_='y'),
             ],
             state_outputs=[
                 I('result', as_='c'),
@@ -62,11 +65,11 @@ def test_process_runner_time():
         ),
         Process(
             func=lambda x, y: x + y,
-            config_inputs=[
-                I('foo', as_='x'),
+            config_inputs=lambda config: [
+                I(config.foo, as_='x'),
             ],
-            state_inputs=[
-                I('matrix.0.{state.ind}', as_='y'),
+            state_inputs=lambda state: [
+                I(rgetattr(state.matrix[0], state.ind), as_='y'),
             ],
             state_outputs=[
                 I('result', as_='c'),
@@ -74,11 +77,11 @@ def test_process_runner_time():
         ),
         [Process(
             func=lambda x, y: x + y,
-            config_inputs=[
-                I('foo', as_='x'),
+            config_inputs=lambda config: [
+                I(config.foo, as_='x'),
             ],
-            additional_inputs=[
-                I('y', i),
+            additional_inputs=lambda i=i: [
+                I(i, as_='y'),
             ],
             state_outputs=[
                 I('result', as_='d'),
@@ -88,32 +91,33 @@ def test_process_runner_time():
     run_processes = process_runner.initialize_processes(processes)
 
     time = min(repeat(lambda: run_processes(initial_state=state), number=2000, repeat=5))
-    assert 0.220 < time < 0.26
+    # assert 0.220 < time < 0.26 # Times with old method
+    assert 0.1 < time < 0.125
 
-
-def test_get_process_inputs_time():
-    state = Mock_Model_State_Shape(a=2.1, b=4.1)
-    process = Process(
-        func=lambda x, y: x + y,
-        config_inputs=[
-            I('foo', as_='x'),
-            I('bar', as_='y'),
-        ],
-        state_outputs=[
-            I('result', as_='c'),
-        ],
-    )
-    config = Mock_Config_Shape()
-    get_process_inputs_fn = partial(get_process_inputs,
-                                    process=process,
-                                    prev_state=state,
-                                    config=config,
-                                    parameters=Mock_Parameters_Shape(),
-                                    external_state=Mock_External_State_Shape(),
-                                    )
-    time = min(repeat(get_process_inputs_fn, number=20000, repeat=25))
-    print(1 - (time / 0.15))
-    assert 0.110 < time < 0.135
+# TODO: Below is depreciated
+# def test_get_process_inputs_time():
+#     state = Mock_Model_State_Shape(a=2.1, b=4.1)
+#     process = Process(
+#         func=lambda x, y: x + y,
+#         config_inputs=lambda config: [
+#             I(config.foo, as_='x'),
+#             I(config.bar, as_='y'),
+#         ],
+#         state_outputs=[
+#             I('result', as_='c'),
+#         ],
+#     )
+#     config = Mock_Config_Shape()
+#     get_process_inputs_fn = partial(get_process_inputs,
+#                                     process=process,
+#                                     prev_state=state,
+#                                     config=config,
+#                                     parameters=Mock_Parameters_Shape(),
+#                                     external_state=Mock_External_State_Shape(),
+#                                     )
+#     time = min(repeat(get_process_inputs_fn, number=20000, repeat=25))
+#     print(1 - (time / 0.15))
+#     assert 0.110 < time < 0.135
 
 
 def test_get_key_values_time():
