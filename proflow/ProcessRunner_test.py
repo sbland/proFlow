@@ -58,7 +58,7 @@ def test_procces_runner_simple():
                 I(config.bar, as_='y'),
             ],
             state_outputs=[
-                I('result', as_='c'),
+                I('_result', as_='c'),
             ],
         ),
         Process(
@@ -70,7 +70,7 @@ def test_procces_runner_simple():
                 I(state.a, as_='y'),
             ],
             state_outputs=[
-                I('result', as_='d'),
+                I('_result', as_='d'),
             ],
         ),
     ])
@@ -93,7 +93,7 @@ def test_procces_runner_nested_args():
                 I(state.a, as_='y'),
             ],
             state_outputs=[
-                I('result', as_='a'),
+                I('_result', as_='a'),
             ],
         ),
     ])
@@ -115,7 +115,7 @@ def test_procces_runner_nested_args_out():
                 I(state.a, as_='y'),
             ],
             state_outputs=[
-                I('result', as_='nested.na'),
+                I('_result', as_='nested.na'),
             ],
         ),
     ])
@@ -136,7 +136,7 @@ def test_procces_runner_nested_args_list():
                 I(state.a, as_='y'),
             ],
             state_outputs=[
-                I('result', as_='a'),
+                I('_result', as_='a'),
             ],
         ),
     ])
@@ -206,7 +206,7 @@ def test_procces_runner_nested_simple():
                 I(i, as_='x'),
             ],
             state_outputs=[
-                I('result', as_='c'),
+                I('_result', as_='c'),
             ],
         ) for i in range(10)],
         Process(
@@ -218,7 +218,7 @@ def test_procces_runner_nested_simple():
                 I(state.a, as_='y'),
             ],
             state_outputs=[
-                I('result', as_='d'),
+                I('_result', as_='d'),
             ],
         ),
     ])
@@ -244,7 +244,7 @@ def test_procces_b_optional():
                 I(state.a, as_='y'),
             ],
             state_outputs=[
-                I('result', as_='c'),
+                I('_result', as_='c'),
             ],
         ) if config_do_this else None,
         Process(
@@ -256,7 +256,7 @@ def test_procces_b_optional():
                 I(state.a, as_='y'),
             ],
             state_outputs=[
-                I('result', as_='d'),
+                I('_result', as_='d'),
             ],
         )if config_dont_do_this else None,
     ]))
@@ -281,7 +281,7 @@ def test_procces_b_complex():
                     I(state.a, as_='y'),
                 ],
                 state_outputs=[
-                    I('result', as_='a'),
+                    I('_result', as_='a'),
                 ],
             ) if i < 4 else
             Process(
@@ -293,7 +293,7 @@ def test_procces_b_complex():
                     I(state.a, as_='y'),
                 ],
                 state_outputs=[
-                    I('result', as_='a'),
+                    I('_result', as_='a'),
                 ],
             ) if i < 8 else None
             for i in range(10)
@@ -345,7 +345,7 @@ def test_procces_b_complex_02():
 
     def translate_unit(val, rate):
         return {
-            'result': val * rate,
+            'out': val * rate,
         }
 
     gsto_processes = [
@@ -393,27 +393,27 @@ def test_procces_b_complex_02():
                 I(0.1, as_='rate'),
             ],
             state_outputs=[
-                I('result', as_='b')
+                I('out', as_='b')
             ]
         ),
         Process(
-            func=lambda x: {'result': x * 2},
+            func=lambda x: {'out': x * 2},
             state_inputs=lambda state: [
                 I(state.c, as_='x'),
             ],
             state_outputs=[
-                I('result', as_='c')
+                I('out', as_='c')
             ],
         ),
     ]
 
     end_process = Process(
-        func=lambda x: {'result': x * 2},
+        func=lambda x: {'out': x * 2},
         state_inputs=lambda state: [
             I(state.b, as_='x'),
         ],
         state_outputs=[
-            I('result', as_='b')
+            I('out', as_='b')
         ]
     )
 
@@ -439,7 +439,7 @@ def test_annual_cycle():
                 I(1, as_='y'),
             ],
             state_outputs=[
-                I('result', as_='a')
+                I('_result', as_='a')
             ]
         ),
     ]
@@ -453,27 +453,27 @@ def test_annual_cycle():
                 I(1, as_='y'),
             ],
             state_outputs=[
-                I('result', as_='b')
+                I('_result', as_='b')
             ]
         ),
         Process(
-            func=lambda x: {'result': x},
+            func=lambda x: {'out': x},
             state_inputs=lambda state: [
                 I(state.a, as_='x'),
             ],
             state_outputs=[
-                I('result', as_='c')
+                I('out', as_='c')
             ]
         ),
     ]
     daily_end_processes = [
         Process(
-            func=lambda x: {'result': x},
+            func=lambda x: {'out': x},
             state_inputs=lambda state: [
                 I(state.a, as_='x'),
             ],
             state_outputs=[
-                I('result', as_='d')
+                I('out', as_='d')
             ]
         ),
     ]
@@ -489,6 +489,7 @@ def test_annual_cycle():
     state = Mock_Model_State_Shape(a=0, b=0)
 
     run_processes = process_runner.initialize_processes(daily_processes)
+    state_2 = run_processes(initial_state=state)
     state_2 = run_processes(initial_state=state)
     assert state_2.a == 24  # hours ran
     assert state_2.b == 1  # days ran
@@ -517,7 +518,7 @@ def test_process_with_string_literals():
                 I(rgetattr(state, ['nested', state.target]), as_='y'),
             ],
             state_outputs=[
-                I('result', as_='c'),
+                I('_result', as_='c'),
             ],
         ),
         Process(
@@ -538,7 +539,7 @@ def test_process_with_string_literals():
                 I(rgetattr(state, ['nested', state.target]), as_='y'),
             ],
             state_outputs=[
-                I('result', as_='d'),
+                I('_result', as_='d'),
             ],
         ),
     ])
@@ -556,7 +557,7 @@ def test_procces_runner_list_result():
             func=lambda: [1, 2, 3],
             comment="initialize with lists",
             state_outputs=[
-                I('_list', as_='lst')
+                I('_result', as_='lst')
             ]
         )
     ])
@@ -576,7 +577,7 @@ def test_use_external_state():
             I(10, as_='y'),
         ],
         state_outputs=[
-            I('result', as_='a'),
+            I('_result', as_='a'),
         ],
     )
     run_processes = process_runner.initialize_processes([process])
@@ -597,7 +598,7 @@ def test_setup_parameters():
                 I(10, as_='y'),
             ],
             state_outputs=[
-                I('result', as_='foo'),
+                I('_result', as_='foo'),
             ],
         ),
     ])
@@ -610,6 +611,7 @@ def test_process_using_gate():
     state = Mock_Model_State_Shape(a=2.1, b=4.1)
     fn_1 = MagicMock()
     fn_2 = MagicMock()
+
     processes = flatten_list([
         Process(
             func=fn_1,
