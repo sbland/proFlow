@@ -92,7 +92,7 @@ def test_process_runner_time():
 
     time = min(repeat(lambda: run_processes(initial_state=state), number=2000, repeat=5))
     # assert 0.220 < time < 0.26 # Times with old method
-    assert 0.1 < time < 0.128
+    assert 0.1 < time < 0.13
 
 # TODO: Below is depreciated
 # def test_get_process_inputs_time():

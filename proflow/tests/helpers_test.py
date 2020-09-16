@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
+import numpy as np
 from timeit import repeat
-import pytest
-from ..ProcessRunner import get_key_values, I
 from ..helpers import rgetattr, rsetattr
 
 
@@ -48,6 +47,11 @@ def test_rgetattr():
     assert v == 3
 
 
+def test_rgetattr_numpy():
+    v = rgetattr(np.arange(5), 3)
+    assert v == 3
+
+
 def test_rgetattr_convert_str_index():
     v = rgetattr([[1, 2, 3], [4, 5, 6]], '1.2')
     assert v == 6
@@ -81,7 +85,7 @@ def test_rsetattr_with_dataclass():
 def test_rsetattr_time():
     obj = {'foo': {'bar': 3}}
     t1 = min(repeat(lambda: rsetattr(obj, 'foo', 'zzz')))
-    assert t1 < 0.29
+    assert t1 < 0.3
 
 # TODO: Can we implement a version that does not mutate
 # def test_rsetattr_mutation():

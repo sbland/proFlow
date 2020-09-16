@@ -59,6 +59,7 @@ def rgetattr(obj: object, attr: Union[str, List[str]], *args):
     """
     def _getattr(obj, attr):
         return obj[int(attr)] if isinstance(obj, list) \
+            else obj[int(attr)] if type(obj).__module__ == 'numpy' \
             else obj[attr] if isinstance(obj, dict) \
             else getattr(obj, attr, *args)
     attr_list = attr if isinstance(attr, list) else attr.split(

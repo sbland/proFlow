@@ -64,7 +64,7 @@ def get_inputs_from_process(
 def get_new_val(attr, acc):
     if is_dataclass(attr):
         return replace(attr, **acc)
-    if isinstance(attr, list):
+    if isinstance(attr, list) or type(attr).__module__ == 'numpy':
         list_copy = deepcopy(attr)
         for k, v in acc.items():
             list_copy[int(k)] = v
@@ -74,16 +74,40 @@ def get_new_val(attr, acc):
         for k, v in acc.items():
             dict_copy[k] = v
         return dict_copy
+
     # TODO: Handle named tuple
     # TODO: Handle numpy
     raise Exception(f'Invalid type: {type(attr)}')
 
 
-def build_up_args(acc, tar, target_split, initial_state):
+def build_up_args(
+    acc: dict,
+    i: int,
+    target_split: List[str],
+    initial_state: object,
+) -> dict:
+    """Part of iterator to replace part of object starting at bottom.
+
+    Parameters
+    ----------
+    acc : dict
+        Previous result from iterator
+    i : int
+        current iterator index (In reverse order)
+    target_split : List[str]
+        Dotstring split into list
+    initial_state : object
+        Object to update
+
+    Returns
+    -------
+    dict
+        [description]
+    """
+
     # TODO: Test me
-    [i, t] = tar
+    t = target_split[i]
     t_2_h = '.'.join(target_split[0:i+1])
-    new_args = {t: f'replace(foo.{t_2_h}, {acc})'}
     attr = rgetattr(initial_state, t_2_h)
     new_val = get_new_val(attr, acc)
     new_args = {t: new_val}
@@ -92,7 +116,7 @@ def build_up_args(acc, tar, target_split, initial_state):
 
 def replace_state_val(initial_state, target, val):
     target_split = target.split('.')
-    target_indexed = reversed(list(enumerate(target_split[0:-1])))
+    target_indexes = reversed(list(range(len(target_split[0:-1]))))
 
     build_up_args_part = partial(
         build_up_args,
@@ -100,8 +124,8 @@ def replace_state_val(initial_state, target, val):
         initial_state=initial_state,
     )
 
-    out = reduce(build_up_args_part, target_indexed, {target_split[-1]: val})
-    final_state = replace(initial_state, **out)
+    out = reduce(build_up_args_part, target_indexes, {target_split[-1]: val})
+    final_state = get_new_val(initial_state, out)
     return final_state
 
 
