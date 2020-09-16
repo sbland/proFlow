@@ -25,7 +25,7 @@ def test_process_error():
                 I('y', as_=4),
             ],
             state_outputs=[
-                I('result', as_='c'),
+                I('_result', as_='c'),
             ],
         ),
     ])
@@ -47,7 +47,7 @@ def test_process_error_with_comment():
                 I('y', as_=4),
             ],
             state_outputs=[
-                I('result', as_='c'),
+                I('_result', as_='c'),
             ],
         ),
     ])
