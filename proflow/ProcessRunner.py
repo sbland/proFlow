@@ -38,6 +38,7 @@ def format_with_variables(
     f = partial(format_with_variables, config, state, {'name': 'john' })
     e.g. f('hello {name}') == 'hello john'
     """
+    raise DeprecationWarning()
     format_data = {
         # Note additional inputs are expanded to allow easy access
         **additional_inputs,
@@ -58,6 +59,7 @@ def format_with_variables(
 
 def get_result_from_list(lst: list, k: List[int]) -> any:
     """Recursively gets the value from the input list using the ints in k"""
+    raise DeprecationWarning()
     result = lst
     for i in k:
         if k == '_list':
@@ -72,6 +74,7 @@ def get_result(result, k):
 
     if k == '_list' then we return the full list
     """
+    raise DeprecationWarning()
     # TODO: Make clearer that we are getting the actual result value if result is a str, int or
     # float
     # TODO: Better error reporting when key not valid etc
@@ -259,6 +262,7 @@ def run_process(
     Run_Process_Error
         Catches error that occur when running the process
     """
+    raise DeprecationWarning('Depreciated')
     if not process.gate:
         return prev_state
     try:
