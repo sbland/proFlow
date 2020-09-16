@@ -2,7 +2,8 @@ from timeit import repeat
 import numpy as np
 
 from ..helpers import rsetattr
-from ..process_ins_and_outs import build_up_args, get_inputs_from_process, get_new_val, map_result_to_state, replace_state_val
+from ..process_ins_and_outs import build_up_args, get_inputs_from_process, \
+    get_new_val, map_result_to_state, replace_state_val
 from ..Objects import I, Process
 from .mocks import Mock_Config_Shape, Mock_External_State_Shape, \
     Mock_Model_State_Shape, Mock_Parameters_Shape
@@ -53,6 +54,15 @@ def test_get_new_val_numpy():
     new_obj = get_new_val(attr, acc)
     assert new_obj[3] == new_val
     assert attr[3] != new_val
+
+
+def test_get_new_val_list_append():
+    attr = [1, 2, 3, 4]
+    new_val = 99
+    acc = {'+': new_val}
+    new_obj = get_new_val(attr, acc)
+    assert new_obj[4] == new_val
+    assert len(attr) < len(new_obj)
 
 
 def test_build_up_args():

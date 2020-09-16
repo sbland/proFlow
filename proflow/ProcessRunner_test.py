@@ -507,7 +507,11 @@ def test_annual_cycle():
 
 
 def test_process_with_string_literals():
-    """We can use string literals to insert variables into our target"""
+    """Use rgetattr to use state as target.
+
+    We can use string literals to insert variables into our target
+
+    """
     state = Mock_Model_State_Shape(a=1, b=2, nested=Mock_Nested_State(3, 1003), target="na")
     processes = flatten_list([
         Process(
@@ -515,7 +519,7 @@ def test_process_with_string_literals():
             state_inputs=lambda state: [
                 I(state.a, as_='x'),
                 # uses the target from additional inputs to define the nested prop to use
-                I(rgetattr(state, ['nested', state.target]), as_='y'),
+                I(rgetattr(state, f'nested.{state.target}'), as_='y'),
             ],
             state_outputs=[
                 I('_result', as_='c'),
@@ -536,7 +540,7 @@ def test_process_with_string_literals():
             state_inputs=lambda state: [
                 I(state.a, as_='x'),
                 # uses the target from additional inputs to define the nested prop to use
-                I(rgetattr(state, ['nested', state.target]), as_='y'),
+                I(rgetattr(state, f'nested.{state.target}'), as_='y'),
             ],
             state_outputs=[
                 I('_result', as_='d'),
@@ -547,6 +551,34 @@ def test_process_with_string_literals():
     state_2 = run_processes(initial_state=state)
     assert state_2.c == 4
     assert state_2.d == 1004
+
+
+def test_process_with_string_literal_output():
+    """We can use string literals to target output state base on input state variable."""
+    state = Mock_Model_State_Shape(a=1, b=2, nested=Mock_Nested_State(3, 1003), target="na")
+    processes = flatten_list([
+        Process(
+            func=lambda x: {'out': x},
+            additional_inputs=lambda: [
+                I('nab', as_='x'),
+            ],
+            state_outputs=[
+                I('out', as_='target')
+            ]
+        ),
+        Process(
+            func=lambda x: x,
+            state_inputs=lambda state: [
+                I(state.a, as_='x'),
+            ],
+            state_outputs=[
+                I('_result', as_='nested.{state.target}'),
+            ],
+        ),
+    ])
+    run_processes = process_runner.initialize_processes(processes)
+    state_2 = run_processes(initial_state=state)
+    assert state_2.nested.nab == 1
 
 
 def test_procces_runner_list_result():

@@ -125,4 +125,4 @@ def test_get_nested_val_time():
 
     time = min(repeat(test_all, number=15000, repeat=5))
     print(1 - (time / 0.158))
-    assert 0.158 < time < 0.170
+    assert 0.158 < time < 0.174

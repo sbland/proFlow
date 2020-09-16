@@ -67,7 +67,10 @@ def get_new_val(attr, acc):
     if isinstance(attr, list) or type(attr).__module__ == 'numpy':
         list_copy = deepcopy(attr)
         for k, v in acc.items():
-            list_copy[int(k)] = v
+            if k == '+':
+                list_copy.append(v)
+            else:
+                list_copy[int(k)] = v
         return list_copy
     if isinstance(attr, dict):
         dict_copy = deepcopy(attr)

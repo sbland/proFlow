@@ -30,6 +30,8 @@ class Mock_Model_State_Shape:
     nested_lst_obj: List[Mock_Nested_State] = field(
         default_factory=lambda: [Mock_Nested_State(1, 2), Mock_Nested_State(3, 4)])
 
+    logs: List[dict] = field(default_factory=lambda: [])
+
 
 @dataclass
 class Mock_Config_Shape:

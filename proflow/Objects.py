@@ -1,10 +1,10 @@
 from dataclasses import dataclass, field
-from proflow.external_state import External_State_Shape
-from proflow.parameters import Parameters_Shape
-from proflow.config import Config_Shape
-from proflow.process_inspector import parse_inputs
 from typing import Callable, List
 
+from .external_state import External_State_Shape
+from .parameters import Parameters_Shape
+from .config import Config_Shape
+from .process_inspector import parse_inputs
 from .internal_state import Model_State_Shape
 
 

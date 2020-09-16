@@ -1,4 +1,3 @@
-from functools import partial
 import pytest
 from timeit import repeat
 
@@ -10,7 +9,7 @@ from proflow.ProcessRunnerCls import ProcessRunner
 from unittest.mock import patch
 from vendor.helpers.list_helpers import flatten_list
 
-from ..ProcessRunner import Process, I, get_key_values
+from ..ProcessRunner import Process, I
 
 
 def process_add(x, y):

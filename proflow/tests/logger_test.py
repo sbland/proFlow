@@ -1,0 +1,26 @@
+from proflow.Objects import Process, I
+from proflow.logger import log_values
+from proflow.tests.mocks import Mock_Model_State_Shape
+from proflow.ProcessRunnerCls import ProcessRunner
+
+
+def test_log_values():
+    existing_logs = [
+        {'a': 1, 'foo': 'bar'},
+        {'a': 2, 'foo': 'barh'},
+        {'a': 3, 'foo': 'barhum'},
+        {'a': 4, 'foo': 'barhumb'},
+    ]
+    row_index = len(existing_logs)
+    state = Mock_Model_State_Shape(1.1, 2.2, target='humbug', logs=existing_logs)
+    log_process = log_values(
+        row_index,
+        state_inputs=lambda state: [
+            I(state.a, as_='a'),
+            I(state.target, as_='foo'),
+        ],
+    )
+    assert type(log_process) == Process
+    prunner = ProcessRunner()
+    state_out = prunner.run_processes([log_process], state)
+    assert state_out.logs == {}
