@@ -1,6 +1,6 @@
 from proflow.Objects import Process, I
 from proflow.logger import log_values
-from proflow.tests.mocks import Mock_Model_State_Shape
+from proflow.tests.mocks import Mock_Model_State_Shape, Mock_Temporal_State
 from proflow.ProcessRunnerCls import ProcessRunner
 
 
@@ -11,7 +11,13 @@ def test_log_values():
         {'a': 3, 'foo': 'barhum'},
         {'a': 4, 'foo': 'barhumb'},
     ]
-    state = Mock_Model_State_Shape(1.1, 2.2, target='humbug', logs=existing_logs)
+    state = Mock_Model_State_Shape(
+        1.1,
+        2.2,
+        target='humbug',
+        logs=existing_logs,
+        temporal=Mock_Temporal_State(4, 0, 4)
+    )
     log_process = log_values(
         state_inputs=lambda state: [
             I(state.a, as_='a'),
