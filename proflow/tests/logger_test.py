@@ -11,10 +11,8 @@ def test_log_values():
         {'a': 3, 'foo': 'barhum'},
         {'a': 4, 'foo': 'barhumb'},
     ]
-    row_index = len(existing_logs)
     state = Mock_Model_State_Shape(1.1, 2.2, target='humbug', logs=existing_logs)
     log_process = log_values(
-        row_index,
         state_inputs=lambda state: [
             I(state.a, as_='a'),
             I(state.target, as_='foo'),
@@ -23,4 +21,4 @@ def test_log_values():
     assert type(log_process) == Process
     prunner = ProcessRunner()
     state_out = prunner.run_processes([log_process], state)
-    assert state_out.logs == {}
+    assert state_out.logs[4] == {'a': 1.1, 'foo': 'humbug'}
