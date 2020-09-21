@@ -1,0 +1,101 @@
+{
+    "directed": true,
+    "multigraph": true,
+    "graph": {},
+    "nodes": [
+        {
+            "index": 0,
+            "x": 0,
+            "y": 0,
+            "name": "<lambda>",
+            "text": "Demo process a",
+            "id": 0
+        },
+        {
+            "index": 1,
+            "x": 1,
+            "y": 0,
+            "name": "<lambda>",
+            "text": "Demo process b",
+            "id": 1
+        },
+        {
+            "index": 2,
+            "x": 2,
+            "y": 0,
+            "name": "<lambda>",
+            "text": "Demo process c",
+            "id": 2
+        },
+        {
+            "index": 3,
+            "x": 3,
+            "y": 0,
+            "name": "<lambda>",
+            "text": "Demo process d",
+            "id": 3
+        },
+        {
+            "index": 4,
+            "x": 3,
+            "y": 0,
+            "name": "<lambda>",
+            "text": "Demo process e",
+            "id": 4
+        },
+        {
+            "index": 5,
+            "x": 3,
+            "y": 0,
+            "name": "<lambda>",
+            "text": "Demo process f",
+            "id": 5
+        }
+    ],
+    "links": [
+        {
+            "source": 0,
+            "target": 1,
+            "name": "info.tomorrow",
+            "key": 0
+        },
+        {
+            "source": 0,
+            "target": 2,
+            "name": "info.tomorrow",
+            "key": 0
+        },
+        {
+            "source": 1,
+            "target": 4,
+            "name": "info.other",
+            "key": 0
+        },
+        {
+            "source": 2,
+            "target": 3,
+            "name": "info.today",
+            "key": 0
+        },
+        {
+            "source": 2,
+            "target": 4,
+            "name": "info.other",
+            "key": 0,
+            "multiid": 0
+        },
+        {
+            "source": 2,
+            "target": 4,
+            "name": "info.other.extra",
+            "key": 0,
+            "multiid": 1
+        },
+        {
+            "source": 4,
+            "target": 5,
+            "name": "info.other",
+            "key": 0
+        }
+    ]
+}
