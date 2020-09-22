@@ -142,10 +142,15 @@ def parse_key(k: str) -> str:
     return out
 
 
-def parse_inputs(map_inputs_fn: Callable[[any], List[I]]) -> dict:
-    input_lines_row = extract_inputs_lines(map_inputs_fn)
+def parse_inputs_to_interface(process_inputs: Callable[[any], List[I]]) -> List[I]:
+    input_lines_row = extract_inputs_lines(process_inputs)
     args_and_kwargs = (split_from_and_as(line) for line in input_lines_row)
     input_objects = (I(*out.args, **out.kwargs) for out in args_and_kwargs)
+    return input_objects
+
+
+def parse_inputs(map_inputs_fn: Callable[[any], List[I]]) -> dict:
+    input_objects = parse_inputs_to_interface(map_inputs_fn)
     inputs_map = {parse_key(i.from_): i.as_ for i in input_objects}
     return inputs_map
 
@@ -156,12 +161,24 @@ def parse_outputs(output_objects: List[I]) -> dict:
 
 
 def inspect_process(process: 'Process'):
-    args_parsed = {
-        "config_inputs": parse_inputs(process.config_inputs),
-        "state_inputs": parse_inputs(process.state_inputs),
-        "parameter_inputs": parse_inputs(process.state_inputs),
-        "additional_inputs": parse_inputs(process.additional_inputs),
-        "state_outputs": parse_outputs(process.state_outputs),
-    }
+    Parsed = namedtuple(
+        'Parsed', 'config_inputs state_inputs parameter_inputs additional_inputs state_outputs')
+    return Parsed(
+        config_inputs=parse_inputs(process.config_inputs),
+        state_inputs=parse_inputs(process.state_inputs),
+        parameter_inputs=parse_inputs(process.state_inputs),
+        additional_inputs=parse_inputs(process.additional_inputs),
+        state_outputs=parse_outputs(process.state_outputs),
+    )
 
-    return args_parsed
+
+def inspect_process_to_interfaces(process: 'Process'):
+    Parsed = namedtuple(
+        'Parsed', 'config_inputs state_inputs parameter_inputs additional_inputs state_outputs')
+    return Parsed(
+        config_inputs=parse_inputs_to_interface(process.config_inputs),
+        state_inputs=parse_inputs_to_interface(process.state_inputs),
+        parameter_inputs=parse_inputs_to_interface(process.state_inputs),
+        additional_inputs=parse_inputs_to_interface(process.additional_inputs),
+        state_outputs=process.state_outputs,
+    )

@@ -1,7 +1,7 @@
 """Tests for the process inspector."""
 
 from proflow.process_inspector import inspect_process, split_trailing_and_part, \
-    parse_inputs, extract_inputs_lines, split_from_and_as, parse_key
+    parse_inputs, extract_inputs_lines, split_from_and_as, parse_key, inspect_process_to_interfaces
 
 from proflow.Objects.Interface import I
 from proflow.Objects.Process import Process
@@ -32,23 +32,39 @@ DEMO_PROCESS = Process(
 
 def test_inspect_process(snapshot):
     process_inputs = inspect_process(DEMO_PROCESS)
-    assert process_inputs == {
-        'additional_inputs': {
-            '10': 'z'
-        },
-        'config_inputs': {
-            'config.a': 'x'
-        },
-        'parameter_inputs': {
-            'state.a': 'y'
-        },
-        'state_inputs': {
-            'state.a': 'y'
-        },
-        'state_outputs': {
-            '_result': 'state.x'
-        }
-    }
+    assert process_inputs.additional_inputs == {'10': 'z'}
+    assert process_inputs.config_inputs == {'config.a': 'x'}
+    assert process_inputs.parameter_inputs == {'state.a': 'y'}
+    assert process_inputs.state_inputs == {'state.a': 'y'}
+    assert process_inputs.state_outputs == {'_result': 'state.x'}
+    # assert process_inputs
+    # assert process_inputs == {
+    #     'additional_inputs': {
+    #         '10': 'z'
+    #     },
+    #     'config_inputs': {
+    #         'config.a': 'x'
+    #     },
+    #     'parameter_inputs': {
+    #         'state.a': 'y'
+    #     },
+    #     'state_inputs': {
+    #         'state.a': 'y'
+    #     },
+    #     'state_outputs': {
+    #         '_result': 'state.x'
+    #     }
+    # }
+    snapshot.assert_match(process_inputs, 'process_inputs')
+
+
+def test_inspect_process_to_interfaces(snapshot):
+    process_inputs = inspect_process_to_interfaces(DEMO_PROCESS)
+    assert list(process_inputs.additional_inputs) == [I('10', as_='z')]
+    assert list(process_inputs.config_inputs) == [I('config.a', as_='x')]
+    assert list(process_inputs.parameter_inputs) == [I('state.a', as_='y')]
+    assert list(process_inputs.state_inputs) == [I('state.a', as_='y')]
+    assert list(process_inputs.state_outputs) == [I('_result', as_='x')]
     snapshot.assert_match(process_inputs, 'process_inputs')
 
 
