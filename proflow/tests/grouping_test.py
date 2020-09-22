@@ -1,5 +1,6 @@
 from proflow.grouping import group
-from proflow.Objects import I, Process
+from proflow.Objects.Interface import I
+from proflow.Objects.Process import Process
 
 
 def test_can_group_processes():
@@ -7,8 +8,8 @@ def test_can_group_processes():
         Process(
             func=lambda x: x + 1,
             comment="A demo process A",
-            config_inputs=[
-                I('a', as_='x'),
+            config_inputs=lambda config: [
+                I(config.a, as_='x'),
             ],
             state_outputs=[
                 I('_result', as_='y'),
@@ -17,8 +18,8 @@ def test_can_group_processes():
         Process(
             func=lambda x: x + 1,
             comment="A demo process B",
-            config_inputs=[
-                I('y', as_='x'),
+            config_inputs=lambda config: [
+                I(config.y, as_='x'),
             ],
             state_outputs=[
                 I('_result', as_='b'),

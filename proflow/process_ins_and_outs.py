@@ -4,7 +4,8 @@ from typing import Any, List
 from copy import deepcopy
 
 from .helpers import rgetattr
-from .Objects import Process, I
+from .Objects.Process import Process
+from .Objects.Interface import I
 from .internal_state import Model_State_Shape
 from .config import Config_Shape
 from .external_state import External_State_Shape

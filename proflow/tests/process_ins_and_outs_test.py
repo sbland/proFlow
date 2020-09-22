@@ -4,7 +4,8 @@ import numpy as np
 from ..helpers import rsetattr
 from ..process_ins_and_outs import build_up_args, get_inputs_from_process, \
     get_new_val, map_result_to_state, replace_state_val
-from ..Objects import I, Process
+from ..Objects.Interface import I
+from ..Objects.Process import Process
 from .mocks import Mock_Config_Shape, Mock_External_State_Shape, \
     Mock_Model_State_Shape, Mock_Parameters_Shape
 

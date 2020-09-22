@@ -2,7 +2,8 @@
 from typing import Callable, List
 
 from .internal_state import Model_State_Shape
-from .Objects import I, Process
+from .Objects.Process import Process
+from .Objects.Interface import I
 
 
 def merge_logs(logs, index, **kwargs):

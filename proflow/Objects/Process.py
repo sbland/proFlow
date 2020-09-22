@@ -1,25 +1,14 @@
 from dataclasses import dataclass, field
 from typing import Callable, List
 
-from .external_state import External_State_Shape
-from .parameters import Parameters_Shape
-from .config import Config_Shape
-from .process_inspector import parse_inputs
-from .internal_state import Model_State_Shape
+from proflow.external_state import External_State_Shape
+from proflow.parameters import Parameters_Shape
+from proflow.config import Config_Shape
+from proflow.process_inspector import parse_inputs
+from proflow.internal_state import Model_State_Shape
+from .Interface import I
 
 
-@dataclass(frozen=True)
-class I:  # noqa: E742
-    """interface Named Tuple"""
-    from_: str
-    as_: str = None
-    required: bool = False  # If true then is asserted != null on debug mode
-
-    def __repr__(self) -> str:
-        return f'I(from_="{self.from_}" as_="{self.as_}")'
-
-
-# @dataclass(frozen=True)
 @dataclass
 class Process:
     """Process object that stores the function and input and output targets."""

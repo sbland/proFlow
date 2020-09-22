@@ -6,7 +6,8 @@ from proflow.ProcessRunnerCls import ProcessRunner
 from unittest.mock import patch
 from vendor.helpers.list_helpers import flatten_list
 
-from ..ProcessRunner import Process, I
+from ..Objects.Process import Process
+from ..Objects.Interface import I
 
 
 def process_add(x, y):

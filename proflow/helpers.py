@@ -1,4 +1,4 @@
-from .Objects import Process
+from .Objects.Process import Process
 from typing import Any, Union, List
 from functools import reduce
 

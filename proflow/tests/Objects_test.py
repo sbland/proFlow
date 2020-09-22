@@ -1,6 +1,7 @@
 """Tests associated with the Objects.py file."""
 
-from proflow.Objects import I, Process
+from proflow.Objects.Interface import I
+from proflow.Objects.Process import Process
 
 
 def test_Process_object(snapshot):

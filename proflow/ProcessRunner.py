@@ -16,7 +16,8 @@ import numpy as np
 from vendor.helpers.comparisons import isNamedTuple
 from vendor.helpers.named_tuple_helpers import _replace_recursive
 
-from .Objects import Process, I
+from .Objects.Process import Process
+from .Objects.Interface import I
 from .config import Config_Shape
 from .parameters import Parameters_Shape
 from .external_state import External_State_Shape

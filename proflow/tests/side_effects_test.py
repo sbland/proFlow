@@ -4,7 +4,8 @@ import pytest
 from vendor.helpers.list_helpers import flatten_list
 from proflow.tests.mocks import Mock_Config_Shape, Mock_External_State_Shape, \
     Mock_Model_State_Shape, Mock_Parameters_Shape
-from ..ProcessRunner import Process, I
+from ..Objects.Process import Process
+from ..Objects.Interface import I
 
 
 def process_add(x, y):

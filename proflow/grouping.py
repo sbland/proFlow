@@ -1,5 +1,5 @@
 from typing import List, Callable
-from .Objects import Process
+from .Objects.Process import Process
 
 
 def group(name: str) -> Callable[[List[Process]], List[Process]]:

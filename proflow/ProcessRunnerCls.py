@@ -6,7 +6,7 @@ from typing import Callable, List, NamedTuple
 from .parameters import Parameters_Shape
 from .external_state import External_State_Shape
 from .config import Config_Shape
-from .ProcessRunner import Process
+from .Objects.Process import Process
 from .errors import Run_Process_Error
 
 
