@@ -122,7 +122,8 @@ var simulation = d3.forceSimulation()
     .force("center", d3.forceCenter(width / 2, height / 2));
 
 
-d3.json("force/force.json", function (error, graph) {
+d3.json("/data/force.json", function (error, graph) {
+    // d3.json("force/force.json", function (error, graph) {
     if (error) throw error;
     var linksData = graph.links
     sortLinks(linksData)
