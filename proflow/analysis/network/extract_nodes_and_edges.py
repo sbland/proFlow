@@ -20,6 +20,7 @@ class Node:
     name: str
     text: str
 
+
 @dataclass
 class Node_Link_Data:
     node_index: int
@@ -74,3 +75,9 @@ def process_to_node(p: Process, i: int) -> Node:
 def processes_to_nodes(processes: List[Process]) -> List[Node]:
     nodes = [process_to_node(p, i) for i, p in enumerate(processes)]
     return nodes
+
+
+def processes_to_nodes_and_edges(processes: List[Process]) -> Tuple[List[Node], List[Edge]]:
+    nodes = processes_to_nodes(processes)
+    edges = get_successive_edges(*get_process_link_data(processes))
+    return nodes, edges

@@ -1,7 +1,7 @@
 from proflow.Objects import Process, I
 
 from .extract_nodes_and_edges import get_process_link_data, get_successive_edges, \
-    process_to_node, processes_to_nodes, Node_Link_Data, Edge, Node
+    process_to_node, processes_to_nodes, Node_Link_Data, Edge, Node, processes_to_nodes_and_edges
 
 
 DEMO_PROCESSES = [
@@ -117,3 +117,9 @@ def test_processes_to_nodes():
     """Test processes_to_nodes returns correct data."""
     out = processes_to_nodes(DEMO_PROCESSES)
     assert out == DEMO_NODES
+
+
+def test_processes_to_nodes_and_edges():
+    """Test processes_to_nodes_and_edges returns correct data."""
+    out = processes_to_nodes_and_edges(DEMO_PROCESSES)
+    assert out == (DEMO_NODES, DEMO_EDGES)
