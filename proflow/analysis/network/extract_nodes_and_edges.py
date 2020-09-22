@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from collections import namedtuple
 from typing import List, Tuple
 
-from proflow.Objects import Process
+from proflow.Objects.Process import Process
+from proflow.process_inspector import inspect_process_to_interfaces
 
 
 @dataclass
@@ -30,11 +30,14 @@ class Node_Link_Data:
 def get_process_link_data(
     processes: List[Process],
 ) -> Tuple[List[Node_Link_Data]]:
+    process_links = [inspect_process_to_interfaces(process) for process in processes]
+    # TODO: Handle config and other inputs here
     state_inputs_link_data = [
-        Node_Link_Data(i, inp.from_) for i, p in enumerate(processes) for inp in p.state_inputs
+        Node_Link_Data(i, inp.from_) for i, p in enumerate(process_links) for inp in p.state_inputs
     ]
     state_outputs_link_data = [
-        Node_Link_Data(i, outp.as_) for i, p in enumerate(processes) for outp in p.state_outputs
+        # TODO: Can we avoid adding state. here?
+        Node_Link_Data(i, f'state.{outp.as_}') for i, p in enumerate(process_links) for outp in p.state_outputs
     ]
     return state_inputs_link_data, state_outputs_link_data
 
