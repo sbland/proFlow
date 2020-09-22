@@ -2,7 +2,7 @@ import json
 from dataclasses import asdict
 from typing import List
 import networkx as nx
-from proflow.analysis.horizontal_flow_analysis.extract_nodes_and_edges import Edge, Node
+from proflow.analysis.network.extract_nodes_and_edges import Edge, Node
 
 
 def asjson(nodes: List[Node], edges: List[Edge], output_file: str):
@@ -21,3 +21,4 @@ def asjson(nodes: List[Node], edges: List[Edge], output_file: str):
     )
 
     json.dump(json_graph_data, open(output_file, "w"))
+    return json_graph_data
