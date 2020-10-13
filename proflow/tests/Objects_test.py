@@ -21,8 +21,8 @@ def test_Process_object(snapshot):
         additional_inputs=lambda: [
             I(10, as_='z'),
         ],
-        state_outputs=[
-            I('_result', as_='x'),
+        state_outputs=lambda result: [
+            (result, 'x'),
         ]
     )
     snapshot.assert_match(demo_process, 'demo_process')

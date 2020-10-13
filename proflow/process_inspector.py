@@ -101,10 +101,11 @@ def extract_inputs_lines(map_inputs_fn: Callable[[object], List[str]]):
     lines = (g for match in matches if match is not None for g in match.groups())
     return lines
 
+
 def extract_output_lines(map_inputs_fn: Callable[[object], List[str]]):
     inputs_source = inspect.getsource(map_inputs_fn)
     # r = re.compile(r'.(?<=\[).*\]', re.DOTALL | re.MULTILINE) # Include brackets
-    r = re.compile(r'\((.*?)\)(?:,|$)', re.DOTALL | re.MULTILINE)  # inside of I object
+    r = re.compile(r'(?: |\[)\((.*?)\)(?:,|$)', re.DOTALL | re.MULTILINE)  # inside of I object
     matches = r.finditer(inputs_source)
     lines = (g for match in matches if match is not None for g in match.groups())
     return lines
@@ -179,6 +180,7 @@ def parse_key(k: str) -> str:
 def rm_inv_comma(string: str):
     return re.sub('^\'|\'$', '', string)
 
+
 def parse_inputs_to_interface(process_inputs: Callable[[any], List[I]]) -> List[I]:
     input_lines_row = extract_inputs_lines(process_inputs)
     args_and_kwargs = (split_from_and_as(line) for line in input_lines_row)
@@ -189,7 +191,8 @@ def parse_inputs_to_interface(process_inputs: Callable[[any], List[I]]) -> List[
 def parse_outputs_to_interface(process_outputs: Callable[[any], List[I]]) -> List[I]:
     output_lines_row = extract_output_lines(process_outputs)
     args_and_kwargs = (line.split(',') for line in output_lines_row)
-    output_objects = (I(from_=from_, as_=f'state.{rm_inv_comma(as_.strip())}') for from_, as_ in args_and_kwargs)
+    output_objects = (
+        I(from_=from_, as_=f'state.{rm_inv_comma(as_.strip())}') for from_, as_ in args_and_kwargs)
     return output_objects
 
 
