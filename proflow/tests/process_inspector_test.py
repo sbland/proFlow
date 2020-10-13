@@ -127,7 +127,7 @@ def test_extract_output_lines_complex_01():
 
 def test_extract_output_lines_complex_02():
     """Test parse_inputs returns correct value."""
-    DEMO_OUTPUTS = lambda result: [(result['hr'], 'temporal.hr')]
+    DEMO_OUTPUTS = lambda result:[(result['hr'], 'temporal.hr')]
     out = list(extract_output_lines(DEMO_OUTPUTS))
     # TODO: We are stripping out the for loop here. Can we include it
     assert out == ["result['hr'], 'temporal.hr'"]
