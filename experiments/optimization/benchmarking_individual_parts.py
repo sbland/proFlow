@@ -10,25 +10,43 @@ import cProfile
 from vendor.helpers.list_helpers import flatten_list
 from proflow.ProcessRunnerCls import ProcessRunner
 from proflow.tests.mocks import Mock_Model_State_Shape, Mock_Config_Shape, Mock_External_State_Shape, Mock_Nested_State
-from proflow.process_ins_and_outs import map_result_to_state
+# from proflow.process_ins_and_outs import map_result_to_state
 from proflow.process_state_modifiers import map_result_to_state_fn
 
 # %%
+def map_result_to_state(
+    prev_state,
+    output_map,
+    result,
+):
+    # output_map(prev_state, result)
+    # for o in output_map(result):
+    #     rsetattr(prev_state, o.as_, o.from_)
+    for from_, as_ in output_map(result):
+        rsetattr(prev_state, as_, from_)
+    return prev_state
 
 prev_state = Mock_Model_State_Shape(a=2.1, b=4.1)
+
+
 def run_model_mutative():
     for i in range(100000):
-        new_val = i
-        new_state = map_result_to_state(prev_state, lambda prev_state, result: (
-            rsetattr(prev_state, 'nested.na', result)
-        ), new_val)
+        new_val = {'out': i}
+        # new_state = map_result_to_state(prev_state, lambda prev_state, result: (
+        #     rsetattr(prev_state, 'nested.na', result['out']),
+        # ), new_val)
+        new_state = map_result_to_state(prev_state, lambda result: [
+            (result['out'], 'nested.na')
+            # I(result['out'], as_='nested.na'),
+        ], new_val)
+
 
 run_model_mutative()
 
 # %%
 timetorun = min(repeat(lambda: run_model_mutative(), number=10, repeat=3))
 timetorun
-# 3.22
+# 1.94 or 1.28
 
 
 # %%
