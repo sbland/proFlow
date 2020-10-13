@@ -1,6 +1,7 @@
 
 # Build Steps
-1. `python setup.py sdist bdist_wheel`
+1. `bumpversion <major|minor|patch>`
+2. `python setup.py sdist bdist_wheel`
 
 ## Process Runners to update state
 Pure functions should not modify the state. Instead they should return a copy of the state.
