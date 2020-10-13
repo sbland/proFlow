@@ -2,7 +2,7 @@
 
 from proflow.process_inspector import inspect_process, parse_outputs, split_trailing_and_part, \
     parse_inputs, extract_inputs_lines, split_from_and_as, parse_key, inspect_process_to_interfaces, \
-    extract_output_lines
+    extract_output_lines, strip_out_comments
 
 from proflow.Objects.Interface import I
 from proflow.Objects.Process import Process
@@ -86,7 +86,7 @@ def test_split_trailing_and_part():
 
 def test_extract_input_lines():
     """Test parse_inputs returns correct value =."""
-    DEMO_INPUTS = lambda config: [ # noqa E731
+    def DEMO_INPUTS(config): return [  # noqa E731
         I(config.a.foo.bar, as_='x'),
         I(config.a.foo[0], as_='y'),
     ]
@@ -96,7 +96,7 @@ def test_extract_input_lines():
 
 def test_extract_output_lines():
     """Test parse_inputs returns correct value."""
-    DEMO_OUTPUTS = lambda result: [ # noqa E731
+    DEMO_OUTPUTS = lambda result: [  # noqa E731
         (result.a.foo.bar, 'x'),
         (result.a.foo[0], 'y'),
     ]
@@ -104,9 +104,18 @@ def test_extract_output_lines():
     assert out == ["result.a.foo.bar, 'x'", "result.a.foo[0], 'y'"]
 
 
+def test_strip_out_comments():
+    out = strip_out_comments("""
+# noqa E731
+# other comment
+usefulinfo
+    """)
+    assert out == "\n\n\nusefulinfo\n    "
+
+
 def test_extract_output_lines_complex_01():
     """Test parse_inputs returns correct value."""
-    DEMO_OUTPUTS = lambda result: [ # noqa E731
+    DEMO_OUTPUTS = lambda result: [  # noqa E731
             [(result[iL][iLC], f'foo.{iL}.{iLC}.bar')
                 for iL in range(3) for iLC in range(3)],
             (result.a.foo.bar, 'x'),
@@ -114,7 +123,6 @@ def test_extract_output_lines_complex_01():
     out = list(extract_output_lines(DEMO_OUTPUTS))
     # TODO: We are stripping out the for loop here. Can we include it
     assert out == ["result[iL][iLC], f'foo.{iL}.{iLC}.bar'", "result.a.foo.bar, 'x'"]
-
 
 
 def test_extract_output_lines_complex_02():
@@ -140,7 +148,7 @@ def test_parse_key():
 
 def test_parse_inputs():
     """Test parse_inputs returns correct value."""
-    DEMO_INPUTS = lambda config: [
+    def DEMO_INPUTS(config): return [
         I(config.a.foo.bar, as_='x'),
         I(config.a.foo[0], as_='y'),
     ]

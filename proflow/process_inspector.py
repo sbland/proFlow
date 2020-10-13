@@ -102,8 +102,13 @@ def extract_inputs_lines(map_inputs_fn: Callable[[object], List[str]]):
     return lines
 
 
+def strip_out_comments(string: str) -> str:
+    r = re.compile(r'#.*?$', re.MULTILINE)
+    return r.sub('', string)
+
 def extract_output_lines(map_inputs_fn: Callable[[object], List[str]]):
-    inputs_source = inspect.getsource(map_inputs_fn)
+    inputs_source = strip_out_comments(inspect.getsource(map_inputs_fn))
+
     r_list = re.compile(r'lambda result: .*?\[(?P<con>.*)\]', re.DOTALL | re.MULTILINE)
     between_sqbrackets = r_list.search(inputs_source).groups()[0]
     r = re.compile(r'(?: |\[|^)\((.*?)\)(?:,|$)', re.DOTALL | re.MULTILINE)  #
