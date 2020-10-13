@@ -37,7 +37,7 @@ def get_process_link_data(
     ]
     state_outputs_link_data = [
         # TODO: Can we avoid adding state. here?
-        Node_Link_Data(i, f'state.{outp.as_}') for i, p in enumerate(process_links) for outp in p.state_outputs
+        Node_Link_Data(i, outp.as_) for i, p in enumerate(process_links) for outp in p.state_outputs
     ]
     return state_inputs_link_data, state_outputs_link_data
 

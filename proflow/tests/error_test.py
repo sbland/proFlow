@@ -20,15 +20,16 @@ def test_process_error():
     processes = flatten_list([
         Process(
             func=process_add,
-            additional_inputs=[
-                I('x', as_=None),
-                I('y', as_=4),
+            additional_inputs=lambda: [
+                I(None, as_='x'),
+                I(4, as_='y'),
             ],
-            state_outputs=[
-                I('_result', as_='c'),
+            state_outputs=lambda result: [
+                (result, 'c'),
             ],
         ),
     ])
+    process_runner.DEBUG_MODE = True
     run_processes = process_runner.initialize_processes(processes)
     with pytest.raises(Run_Process_Error) as exc:
         run_processes(initial_state=state)
@@ -42,15 +43,16 @@ def test_process_error_with_comment():
         Process(
             func=process_add,
             comment="Demo Process",
-            additional_inputs=[
-                I('x', as_=None),
-                I('y', as_=4),
+            additional_inputs=lambda: [
+                I(None, as_='x'),
+                I(4, as_='y'),
             ],
-            state_outputs=[
-                I('_result', as_='c'),
+            state_outputs=lambda result: [
+                (result, 'c'),
             ],
         ),
     ])
+    process_runner.DEBUG_MODE = True
     run_processes = process_runner.initialize_processes(processes)
     with pytest.raises(Run_Process_Error) as exc:
         run_processes(initial_state=state)

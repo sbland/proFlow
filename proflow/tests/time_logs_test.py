@@ -68,8 +68,8 @@ def test_that_processRunnerCls_logs_time_for_each_process():
                 I(config.foo, as_='x'),
                 I(config.bar, as_='y'),
             ],
-            state_outputs=[
-                I('_result', as_='c'),
+            state_outputs=lambda result: [
+                (result, 'c'),
             ],
         ),
         Process(
@@ -80,8 +80,8 @@ def test_that_processRunnerCls_logs_time_for_each_process():
             state_inputs=lambda state: [
                 I(state.a, as_='y'),
             ],
-            state_outputs=[
-                I('_result', as_='d'),
+            state_outputs=lambda result: [
+                (result, 'd'),
             ],
         ),
     ])
@@ -103,8 +103,8 @@ def test_that_processRunnerCls_debug_logs_time_for_each_process():
                 I(config.foo, as_='x'),
                 I(config.bar, as_='y'),
             ],
-            state_outputs=[
-                I('_result', as_='c'),
+            state_outputs=lambda result: [
+                (result, 'c'),
             ],
         ),
         Process(
@@ -147,25 +147,25 @@ def test_that_processRunnerCls_debug_logs_time_for_each_process():
                 I(state.nested.na, as_='y120'),
                 I(state.nested.na, as_='y121'),
             ],
-            state_outputs=[
-                I('_result', as_='nested.na'),
-                I('_result', as_='nested.na'),
-                I('_result', as_='nested.na'),
-                I('_result', as_='nested.na'),
-                I('_result', as_='nested.na'),
-                I('_result', as_='nested.na'),
-                I('_result', as_='nested.na'),
-                I('_result', as_='nested.na'),
-                I('_result', as_='nested.na'),
-                I('_result', as_='nested.na'),
-                I('_result', as_='nested.na'),
-                I('_result', as_='nested.na'),
-                I('_result', as_='nested.na'),
-                I('_result', as_='nested.na'),
-                I('_result', as_='nested.na'),
-                I('_result', as_='nested.na'),
-                I('_result', as_='nested.na'),
-                I('_result', as_='nested.na'),
+            state_outputs=lambda result: [
+                (result, 'nested.na'),
+                (result, 'nested.na'),
+                (result, 'nested.na'),
+                (result, 'nested.na'),
+                (result, 'nested.na'),
+                (result, 'nested.na'),
+                (result, 'nested.na'),
+                (result, 'nested.na'),
+                (result, 'nested.na'),
+                (result, 'nested.na'),
+                (result, 'nested.na'),
+                (result, 'nested.na'),
+                (result, 'nested.na'),
+                (result, 'nested.na'),
+                (result, 'nested.na'),
+                (result, 'nested.na'),
+                (result, 'nested.na'),
+                (result, 'nested.na'),
             ],
         ),
     ])

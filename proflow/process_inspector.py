@@ -66,10 +66,45 @@ def split_trailing_and_part(v: str):
 # ==========================
 
 
-def extract_inputs_lines(map_inputs_fn):
+def extract_inputs_lines(map_inputs_fn: Callable[[object], List[str]]):
+    """Extracts each line form the list of inputs.
+
+    For example
+    ```
+    lambda config: [
+        I(config.a.foo.bar, as_='x'),
+        I(config.a.foo[0], as_='x'),
+    ]
+    ```
+    Becomes:
+    ```
+    [
+        "config.a.foo.bar, as_='x'",
+        "config.a.foo[0], as_='x'",
+    ]
+    ```
+
+    Parameters
+    ----------
+    map_inputs_fn : Callable
+        the process input function
+
+    Returns
+    -------
+    List[str]
+        [description]
+    """
     inputs_source = inspect.getsource(map_inputs_fn)
     # r = re.compile(r'.(?<=\[).*\]', re.DOTALL | re.MULTILINE) # Include brackets
     r = re.compile(r'I\((.*?)\)(?:,|$)', re.DOTALL | re.MULTILINE)  # inside of I object
+    matches = r.finditer(inputs_source)
+    lines = (g for match in matches if match is not None for g in match.groups())
+    return lines
+
+def extract_output_lines(map_inputs_fn: Callable[[object], List[str]]):
+    inputs_source = inspect.getsource(map_inputs_fn)
+    # r = re.compile(r'.(?<=\[).*\]', re.DOTALL | re.MULTILINE) # Include brackets
+    r = re.compile(r'\((.*?)\)(?:,|$)', re.DOTALL | re.MULTILINE)  # inside of I object
     matches = r.finditer(inputs_source)
     lines = (g for match in matches if match is not None for g in match.groups())
     return lines
@@ -123,7 +158,6 @@ def parse_key(k: str) -> str:
     """
 
     def replace_var_fn(x):
-        print(x.groups())
         if x.groups()[0] is not None:
             return f'.{x.groups()[0]}.'
         elif x.groups()[1] is not None:
@@ -142,11 +176,21 @@ def parse_key(k: str) -> str:
     return out
 
 
+def rm_inv_comma(string: str):
+    return re.sub('^\'|\'$', '', string)
+
 def parse_inputs_to_interface(process_inputs: Callable[[any], List[I]]) -> List[I]:
     input_lines_row = extract_inputs_lines(process_inputs)
     args_and_kwargs = (split_from_and_as(line) for line in input_lines_row)
     input_objects = (I(*out.args, **out.kwargs) for out in args_and_kwargs)
     return input_objects
+
+
+def parse_outputs_to_interface(process_outputs: Callable[[any], List[I]]) -> List[I]:
+    output_lines_row = extract_output_lines(process_outputs)
+    args_and_kwargs = (line.split(',') for line in output_lines_row)
+    output_objects = (I(from_=from_, as_=f'state.{rm_inv_comma(as_.strip())}') for from_, as_ in args_and_kwargs)
+    return output_objects
 
 
 def parse_inputs(map_inputs_fn: Callable[[any], List[I]]) -> dict:
@@ -155,8 +199,11 @@ def parse_inputs(map_inputs_fn: Callable[[any], List[I]]) -> dict:
     return inputs_map
 
 
-def parse_outputs(output_objects: List[I]) -> dict:
-    outputs_map = {parse_key(i.from_): f'state.{i.as_}' for i in output_objects}
+def parse_outputs(map_outputs_fn: Callable[[any], List[I]]) -> dict:
+    output_lines = parse_outputs_to_interface(map_outputs_fn)
+    outputs_map = {
+        parse_key(i.from_): f'{rm_inv_comma(i.as_.strip())}'
+        for i in output_lines}
     return outputs_map
 
 
@@ -180,5 +227,5 @@ def inspect_process_to_interfaces(process: 'Process'):
         state_inputs=parse_inputs_to_interface(process.state_inputs),
         parameter_inputs=parse_inputs_to_interface(process.state_inputs),
         additional_inputs=parse_inputs_to_interface(process.additional_inputs),
-        state_outputs=process.state_outputs,
+        state_outputs=parse_outputs_to_interface(process.state_outputs),
     )

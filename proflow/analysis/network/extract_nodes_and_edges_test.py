@@ -64,7 +64,6 @@ def test_processes_to_nodes():
 def test_processes_to_nodes_and_edges():
     """Test processes_to_nodes_and_edges returns correct data."""
     out = processes_to_nodes_and_edges(DEMO_PROCESSES)
-    print(out)
     (
         [
             Node(index=0, x=0, y=0, name='<lambda>', text='Demo process a'),
@@ -73,11 +72,11 @@ def test_processes_to_nodes_and_edges():
             Node(index=3, x=3, y=0, name='<lambda>', text='Demo process d')
         ],
         [
-            Edge(source=0, target=-1, name='state.info.today'),
-            Edge(source=0, target=-1, name='state.info.hour'),
-            Edge(source=1, target=-1, name='state.info.tomorrow'),
-            Edge(source=2, target=-1, name='state.info.tomorrow'),
-            Edge(source=3, target=-1, name='state.info.today')
+            Edge(source=0, target=-1, name='info.today'),
+            Edge(source=0, target=-1, name='info.hour'),
+            Edge(source=1, target=-1, name='info.tomorrow'),
+            Edge(source=2, target=-1, name='info.tomorrow'),
+            Edge(source=3, target=-1, name='info.today')
         ]
     )
     assert out == (DEMO_NODES, DEMO_EDGES)

@@ -1,11 +1,8 @@
-from dataclasses import is_dataclass, replace
-from functools import partial, reduce
-from typing import Any, List
-from copy import deepcopy
+"""Functions that get input args from the process and modify state from outputs in process."""
+from typing import Any, Callable, List
 
-from .helpers import rgetattr
+from .helpers import rgetattr, rsetattr
 from .Objects.Process import Process
-from .Objects.Interface import I
 from .internal_state import Model_State_Shape
 from .config import Config_Shape
 from .external_state import External_State_Shape
@@ -62,90 +59,20 @@ def get_inputs_from_process(
     return args, kwargs
 
 
-def get_new_val(attr, acc):
-    if is_dataclass(attr):
-        return replace(attr, **acc)
-    if isinstance(attr, list) or type(attr).__module__ == 'numpy':
-        list_copy = deepcopy(attr)
-        for k, v in acc.items():
-            if k == '+':
-                list_copy.append(v)
-            else:
-                list_copy[int(k)] = v
-        return list_copy
-    if isinstance(attr, dict):
-        dict_copy = deepcopy(attr)
-        for k, v in acc.items():
-            dict_copy[k] = v
-        return dict_copy
-
-    # TODO: Handle named tuple
-    # TODO: Handle numpy
-    raise Exception(f'Invalid type: {type(attr)}')
-
-
-def build_up_args(
-    acc: dict,
-    i: int,
-    target_split: List[str],
-    initial_state: object,
-) -> dict:
-    """Part of iterator to replace part of object starting at bottom.
-
-    Parameters
-    ----------
-    acc : dict
-        Previous result from iterator
-    i : int
-        current iterator index (In reverse order)
-    target_split : List[str]
-        Dotstring split into list
-    initial_state : object
-        Object to update
-
-    Returns
-    -------
-    dict
-        [description]
-    """
-
-    # TODO: Test me
-    t = target_split[i]
-    t_2_h = '.'.join(target_split[0:i+1])
-    attr = rgetattr(initial_state, t_2_h)
-    new_val = get_new_val(attr, acc)
-    new_args = {t: new_val}
-    return new_args
-
-
-def replace_state_val(initial_state, target, val):
-    target_split = target.split('.')
-    target_indexes = reversed(list(range(len(target_split[0:-1]))))
-
-    build_up_args_part = partial(
-        build_up_args,
-        target_split=target_split,
-        initial_state=initial_state,
-    )
-
-    out = reduce(build_up_args_part, target_indexes, {target_split[-1]: val})
-    final_state = get_new_val(initial_state, out)
-    return final_state
-
-
 def map_result_to_state(
     prev_state: Model_State_Shape,
-    output_map: List[I],
-    result,
+    output_map: Callable[[Model_State_Shape, Any], Model_State_Shape],
+    result: Any,
 ) -> Model_State_Shape:
     """Update the state based on an output mapping.
+    WARNING: MUTATES STATE
 
     using `_result` as an output key will map the entire result to the state target
 
     Parameters
     ----------
-    output_map : List[I]
-        List of output mappings
+    output_map : Callable
+        Lambda expression that assigns the result to the state
     prev_state : Model_State_Shape
         Previous Model State
     result : [type]
@@ -156,8 +83,7 @@ def map_result_to_state(
     Model_State_Shape
         [description]
     """
-    active_state = prev_state
-    for o in output_map:
-        result_item = rgetattr(result, o.from_) if o.from_ != '_result' else result
-        active_state = replace_state_val(active_state, o.as_, result_item)
-    return active_state
+    # output_map(prev_state, result)
+    for from_, as_ in output_map(result):
+        rsetattr(prev_state, as_, from_)
+    return prev_state

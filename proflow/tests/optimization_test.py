@@ -59,8 +59,8 @@ def test_process_runner_time():
                 I(config.foo, as_='x'),
                 I(config.bar, as_='y'),
             ],
-            state_outputs=[
-                I('_result', as_='c'),
+            state_outputs=lambda result: [
+                (result, 'c'),
             ],
         ),
         Process(
@@ -71,8 +71,8 @@ def test_process_runner_time():
             state_inputs=lambda state: [
                 I(rgetattr(state.matrix[0], state.ind), as_='y'),
             ],
-            state_outputs=[
-                I('_result', as_='c'),
+            state_outputs=lambda result: [
+                (result, 'c'),
             ],
         ),
         [Process(
@@ -83,8 +83,8 @@ def test_process_runner_time():
             additional_inputs=lambda i=i: [
                 I(i, as_='y'),
             ],
-            state_outputs=[
-                I('_result', as_='d'),
+            state_outputs=lambda result: [
+                (result, 'd'),
             ],
         ) for i in range(5)],
     ])
@@ -92,7 +92,7 @@ def test_process_runner_time():
 
     time = min(repeat(lambda: run_processes(initial_state=state), number=2000, repeat=5))
     # assert 0.220 < time < 0.26 # Times with old method
-    assert 0.1 < time < 0.13
+    assert 0.05 < time < 0.08
 
 # TODO: Below is depreciated
 # def test_get_process_inputs_time():
@@ -103,8 +103,8 @@ def test_process_runner_time():
 #             I(config.foo, as_='x'),
 #             I(config.bar, as_='y'),
 #         ],
-#         state_outputs=[
-#             I('_result', as_='c'),
+#         state_outputs=lambda result: [
+#             (result, 'c'),
 #         ],
 #     )
 #     config = Mock_Config_Shape()

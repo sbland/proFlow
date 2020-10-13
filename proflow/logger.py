@@ -24,8 +24,9 @@ def log_values(
             I(state.temporal.row_index, 'index'),
             I(state.logs, as_='logs'),
         ] + state_inputs(state),
-        additional_inputs=lambda: additional_inputs(),
-        state_outputs=[I('_result', as_='logs.+')]
+        additional_inputs=additional_inputs,
+        format_output=True,
+        state_outputs=lambda result: [(result, 'logs.+')]
     )
 
 

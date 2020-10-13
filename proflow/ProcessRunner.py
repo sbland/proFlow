@@ -101,6 +101,7 @@ def get_result(result, k):
 
 
 def validate_input(DEBUG: bool = False) -> Callable[[any, bool, str], any]:
+    raise DeprecationWarning('Depreciated')
     def validate_input_(
         input: I,
         value: any,

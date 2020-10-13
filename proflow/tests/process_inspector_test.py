@@ -1,7 +1,8 @@
 """Tests for the process inspector."""
 
-from proflow.process_inspector import inspect_process, split_trailing_and_part, \
-    parse_inputs, extract_inputs_lines, split_from_and_as, parse_key, inspect_process_to_interfaces
+from proflow.process_inspector import inspect_process, parse_outputs, split_trailing_and_part, \
+    parse_inputs, extract_inputs_lines, split_from_and_as, parse_key, inspect_process_to_interfaces, \
+    extract_output_lines
 
 from proflow.Objects.Interface import I
 from proflow.Objects.Process import Process
@@ -24,8 +25,8 @@ DEMO_PROCESS = Process(
     additional_inputs=lambda: [
         I(10, as_='z'),
     ],
-    state_outputs=[
-        I('_result', as_='x'),
+    state_outputs=lambda result: [
+        (result, 'x'),
     ]
 )
 
@@ -36,27 +37,7 @@ def test_inspect_process(snapshot):
     assert process_inputs.config_inputs == {'config.a': 'x'}
     assert process_inputs.parameter_inputs == {'state.a': 'y'}
     assert process_inputs.state_inputs == {'state.a': 'y'}
-    assert process_inputs.state_outputs == {'_result': 'state.x'}
-    # assert process_inputs
-    # assert process_inputs == {
-    #     'additional_inputs': {
-    #         '10': 'z'
-    #     },
-    #     'config_inputs': {
-    #         'config.a': 'x'
-    #     },
-    #     'parameter_inputs': {
-    #         'state.a': 'y'
-    #     },
-    #     'state_inputs': {
-    #         'state.a': 'y'
-    #     },
-    #     'state_outputs': {
-    #         '_result': 'state.x'
-    #     }
-    # }
-    snapshot.assert_match(process_inputs, 'process_inputs')
-
+    assert process_inputs.state_outputs == {'result': 'state.x'}
 
 def test_inspect_process_to_interfaces(snapshot):
     process_inputs = inspect_process_to_interfaces(DEMO_PROCESS)
@@ -64,8 +45,7 @@ def test_inspect_process_to_interfaces(snapshot):
     assert list(process_inputs.config_inputs) == [I('config.a', as_='x')]
     assert list(process_inputs.parameter_inputs) == [I('state.a', as_='y')]
     assert list(process_inputs.state_inputs) == [I('state.a', as_='y')]
-    assert list(process_inputs.state_outputs) == [I('_result', as_='x')]
-    snapshot.assert_match(process_inputs, 'process_inputs')
+    assert list(process_inputs.state_outputs) == [I('result', as_='state.x')]
 
 
 def test_inspect_process_empty(snapshot):
@@ -82,12 +62,17 @@ def test_inspect_process_empty(snapshot):
         ],
         additional_inputs=lambda: [
         ],
-        state_outputs=[
-            I('_result', as_='x'),
+        state_outputs=lambda result: [
+            (result, 'x'),
         ]
     )
+
     process_inputs = inspect_process(demo_process)
-    snapshot.assert_match(process_inputs, 'process_inputs')
+    assert list(process_inputs.additional_inputs) == []
+    assert list(process_inputs.config_inputs) == []
+    assert list(process_inputs.parameter_inputs) == []
+    assert list(process_inputs.state_inputs) == []
+    assert list(process_inputs.state_outputs) == ['result']
 
 
 def test_split_trailing_and_part():
@@ -102,10 +87,20 @@ def test_extract_input_lines():
     """Test parse_inputs returns correct value."""
     def DEMO_INPUTS(config): return [
         I(config.a.foo.bar, as_='x'),
-        I(config.a.foo[0], as_='x'),
+        I(config.a.foo[0], as_='y'),
     ]
     out = list(extract_inputs_lines(DEMO_INPUTS))
-    assert out == ["config.a.foo.bar, as_='x'", "config.a.foo[0], as_='x'"]
+    assert out == ["config.a.foo.bar, as_='x'", "config.a.foo[0], as_='y'"]
+
+
+def test_extract_output_lines():
+    """Test parse_inputs returns correct value."""
+    DEMO_OUTPUTS = lambda result: [  # noqa: E731
+        (result.a.foo.bar, 'x'),
+        (result.a.foo[0], 'y'),
+    ]
+    out = list(extract_output_lines(DEMO_OUTPUTS))
+    assert out == ["result.a.foo.bar, 'x'", "result.a.foo[0], 'y'"]
 
 
 def test_split_from_and_as():
@@ -130,3 +125,13 @@ def test_parse_inputs():
     out = parse_inputs(DEMO_INPUTS)
     # assert out == ["config.a.foo.bar, as_='x'", "config.a.foo[0], as_='x'"]
     assert out == {"config.a.foo.bar": "x", "config.a.foo.0": "y"}
+
+
+def test_parse_outputs():
+    """Test parse_outputs returns correct value."""
+    DEMO_OUTPUTS = lambda result: [  # noqa: E731
+        (result.a.foo.bar, 'x'),
+        (result.a.foo[0], 'y'),
+    ]
+    out = parse_outputs(DEMO_OUTPUTS)
+    assert out == {"result.a.foo.bar": "state.x", "result.a.foo.0": "state.y"}

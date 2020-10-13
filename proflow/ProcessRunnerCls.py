@@ -1,5 +1,7 @@
+from copy import deepcopy
 from datetime import datetime
 from functools import partial, reduce
+from proflow.process_state_modifiers import map_result_to_state_fn
 from proflow.process_ins_and_outs import get_inputs_from_process, map_result_to_state
 from typing import Callable, List, NamedTuple
 
@@ -17,11 +19,14 @@ class ProcessRunner():
                  config_in: Config_Shape = Config_Shape(),
                  external_state_in: External_State_Shape = External_State_Shape(),
                  parameters_in: Parameters_Shape = Parameters_Shape(),
-                 DEBUG_MODE: bool = False):
+                 DEBUG_MODE: bool = False,
+                 IMMUTABLE_MODE: bool = False,
+                 ):
         self.config = config_in
         self.parameters = parameters_in
         self.external_state = external_state_in
         self.DEBUG_MODE = DEBUG_MODE
+        self.IMMUTABLE_MODE = IMMUTABLE_MODE
         self.time_logs = []
         self.debug_time_logs = []
 
@@ -38,10 +43,20 @@ class ProcessRunner():
         the reduce function allows us to iterate through each function
         passing the state to the next
         """
-        run_process_loaded = partial(self.run_process, config=self.config,
-                                     parameters=self.parameters,
-                                     external_state=self.external_state,
-                                     DEBUG_MODE=self.DEBUG_MODE)
+        run_process_loaded = \
+            partial(self.run_process, config=self.config,
+                    parameters=self.parameters,
+                    external_state=self.external_state,
+                    IMMUTABLE_MODE=self.IMMUTABLE_MODE
+                    ) \
+            if not self.DEBUG_MODE else \
+            partial(self.run_process_debug, config=self.config,
+                    parameters=self.parameters,
+                    external_state=self.external_state,
+                    DEBUG_MODE=self.DEBUG_MODE,
+                    IMMUTABLE_MODE=self.IMMUTABLE_MODE
+                    )
+
         new_state = reduce(run_process_loaded, processes, initial_state)
         return new_state
 
@@ -60,7 +75,38 @@ class ProcessRunner():
         config: Config_Shape,
         parameters: Parameters_Shape,
         external_state: External_State_Shape,
-        DEBUG_MODE: bool = False,
+        IMMUTABLE_MODE: bool = False,
+    ):
+        modified_state = deepcopy(prev_state) if self.IMMUTABLE_MODE else prev_state
+
+        if not process.gate:
+            return modified_state
+        args, kwargs = get_inputs_from_process(
+            process,
+            modified_state,
+            config,
+            parameters,
+            external_state,
+        )
+
+        # RUN PROCESS FUNC
+        result = process.func(*args, **kwargs)
+
+        output_state = map_result_to_state(modified_state, process.state_outputs, result) \
+            if not process.format_output else \
+            map_result_to_state_fn(modified_state, process.state_outputs, result)
+
+        return output_state
+
+    def run_process_debug(
+        self,
+        prev_state: NamedTuple,  # Can be state or parameter
+        process: Process,
+        config: Config_Shape,
+        parameters: Parameters_Shape,
+        external_state: External_State_Shape,
+        DEBUG_MODE: bool = True,
+        IMMUTABLE_MODE: bool = False,
     ) -> NamedTuple:
         """Run a single process and output the updated state.
             The process object contains the function along with all the input
@@ -95,13 +141,14 @@ class ProcessRunner():
         if not process.gate:
             return prev_state
         try:
+            modified_state = deepcopy(prev_state) if self.IMMUTABLE_MODE else prev_state
             process_id = process.comment or getattr(process.func, '__name__', 'Unknown')
             if DEBUG_MODE:
                 start_time_input_setup = datetime.now()
 
             args, kwargs = get_inputs_from_process(
                 process,
-                prev_state,
+                modified_state,
                 config,
                 parameters,
                 external_state,
@@ -129,7 +176,8 @@ class ProcessRunner():
             if DEBUG_MODE:
                 start_time_output_setup = datetime.now()
 
-            output_state = map_result_to_state(prev_state, process.state_outputs, result)
+            # TODO: This is expensive!
+            output_state = map_result_to_state(modified_state, process.state_outputs, result)
 
             if DEBUG_MODE:
                 end_time_output_setup = datetime.now()
@@ -146,7 +194,7 @@ class ProcessRunner():
             return output_state
 
         except Exception as e:
-            raise Run_Process_Error(process, e, prev_state) from e
+            raise Run_Process_Error(process, e, modified_state) from e
 
     def reset_logs(self):
         self.time_logs = []

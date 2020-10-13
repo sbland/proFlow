@@ -13,8 +13,8 @@ DEMO_PROCESSES = [
             I(state.info.today, as_='y'),
             I(state.info.hour, as_='z')
         ],
-        state_outputs=[
-            I('_result', as_='info.tomorrow'),
+        state_outputs=lambda result: lambda result: [
+            (result, 'info.tomorrow'),
         ]
     ),
     Process(
@@ -26,8 +26,8 @@ DEMO_PROCESSES = [
         state_inputs=lambda state: [
             I(state.info.tomorrow, as_='y'),
         ],
-        state_outputs=[
-            I('_result', as_='info.today'),
+        state_outputs=lambda result: [
+            (result, 'info.today'),
         ]
     ),
     Process(
@@ -39,8 +39,8 @@ DEMO_PROCESSES = [
         state_inputs=lambda state: [
             I(state.info.tomorrow, as_='y'),
         ],
-        state_outputs=[
-            I('_result', as_='info.today'),
+        state_outputs=lambda result: [
+            (result, 'info.today'),
         ]
     ),
     Process(
@@ -52,8 +52,8 @@ DEMO_PROCESSES = [
         state_inputs=lambda state: [
             I(state.info.today, as_='y'),
         ],
-        state_outputs=[
-            I('_result', as_='info.tomorrow'),
+        state_outputs=lambda result: [
+            (result, 'info.tomorrow'),
         ]
     ),
 ]
