@@ -177,7 +177,9 @@ class ProcessRunner():
                 start_time_output_setup = datetime.now()
 
             # TODO: This is expensive!
-            output_state = map_result_to_state(modified_state, process.state_outputs, result)
+            output_state = map_result_to_state(modified_state, process.state_outputs, result) \
+                if not process.format_output else \
+                map_result_to_state_fn(modified_state, process.state_outputs, result)
 
             if DEBUG_MODE:
                 end_time_output_setup = datetime.now()
