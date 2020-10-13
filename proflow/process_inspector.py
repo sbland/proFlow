@@ -104,9 +104,10 @@ def extract_inputs_lines(map_inputs_fn: Callable[[object], List[str]]):
 
 def extract_output_lines(map_inputs_fn: Callable[[object], List[str]]):
     inputs_source = inspect.getsource(map_inputs_fn)
-    # r = re.compile(r'.(?<=\[).*\]', re.DOTALL | re.MULTILINE) # Include brackets
-    r = re.compile(r'(?: |\[)\((.*?)\)(?:,|$)', re.DOTALL | re.MULTILINE)  # inside of I object
-    matches = r.finditer(inputs_source)
+    r_list = re.compile(r'lambda result: .*?\[(?P<con>.*)\]', re.DOTALL | re.MULTILINE)
+    between_sqbrackets = r_list.search(inputs_source).groups()[0]
+    r = re.compile(r'(?: |\[|^)\((.*?)\)(?:,|$)', re.DOTALL | re.MULTILINE)  #
+    matches = r.finditer(between_sqbrackets)
     lines = (g for match in matches if match is not None for g in match.groups())
     return lines
 

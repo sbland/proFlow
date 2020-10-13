@@ -85,8 +85,8 @@ def test_split_trailing_and_part():
 
 
 def test_extract_input_lines():
-    """Test parse_inputs returns correct value."""
-    def DEMO_INPUTS(config): return [
+    """Test parse_inputs returns correct value =."""
+    DEMO_INPUTS = lambda config: [ # noqa E731
         I(config.a.foo.bar, as_='x'),
         I(config.a.foo[0], as_='y'),
     ]
@@ -96,7 +96,7 @@ def test_extract_input_lines():
 
 def test_extract_output_lines():
     """Test parse_inputs returns correct value."""
-    def DEMO_OUTPUTS(result): return [
+    DEMO_OUTPUTS = lambda result: [ # noqa E731
         (result.a.foo.bar, 'x'),
         (result.a.foo[0], 'y'),
     ]
@@ -106,7 +106,7 @@ def test_extract_output_lines():
 
 def test_extract_output_lines_complex_01():
     """Test parse_inputs returns correct value."""
-    def DEMO_OUTPUTS(result): return [  # noqa E731
+    DEMO_OUTPUTS = lambda result: [ # noqa E731
             [(result[iL][iLC], f'foo.{iL}.{iLC}.bar')
                 for iL in range(3) for iLC in range(3)],
             (result.a.foo.bar, 'x'),
@@ -114,6 +114,15 @@ def test_extract_output_lines_complex_01():
     out = list(extract_output_lines(DEMO_OUTPUTS))
     # TODO: We are stripping out the for loop here. Can we include it
     assert out == ["result[iL][iLC], f'foo.{iL}.{iLC}.bar'", "result.a.foo.bar, 'x'"]
+
+
+
+def test_extract_output_lines_complex_02():
+    """Test parse_inputs returns correct value."""
+    DEMO_OUTPUTS = lambda result: [(result['hr'], 'temporal.hr')]
+    out = list(extract_output_lines(DEMO_OUTPUTS))
+    # TODO: We are stripping out the for loop here. Can we include it
+    assert out == ["result['hr'], 'temporal.hr'"]
 
 
 def test_split_from_and_as():
@@ -131,7 +140,7 @@ def test_parse_key():
 
 def test_parse_inputs():
     """Test parse_inputs returns correct value."""
-    def DEMO_INPUTS(config): return [
+    DEMO_INPUTS = lambda config: [
         I(config.a.foo.bar, as_='x'),
         I(config.a.foo[0], as_='y'),
     ]
@@ -142,7 +151,7 @@ def test_parse_inputs():
 
 def test_parse_outputs():
     """Test parse_outputs returns correct value."""
-    def DEMO_OUTPUTS(result): return [  # noqa: E731
+    DEMO_OUTPUTS = lambda result: [  # noqa: E731
         (result.a.foo.bar, 'x'),
         (result.a.foo[0], 'y'),
     ]
@@ -152,7 +161,7 @@ def test_parse_outputs():
 
 def test_parse_outputs_complex_01():
     """Test parse_outputs returns correct value."""
-    def DEMO_OUTPUTS(result): return [  # noqa: E731
+    DEMO_OUTPUTS = lambda result: [  # noqa: E731
             (result[iL][iLC], f'foo.{iL}.{iLC}.bar')
             for iL in range(3) for iLC in range(3)
         ]
