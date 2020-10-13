@@ -4,7 +4,7 @@ from typing import Callable, List, Tuple
 from proflow.external_state import External_State_Shape
 from proflow.parameters import Parameters_Shape
 from proflow.config import Config_Shape
-from proflow.process_inspector import parse_inputs
+from proflow.process_inspector import parse_inputs, parse_outputs
 from proflow.internal_state import Model_State_Shape
 from .Interface import I
 
@@ -73,6 +73,6 @@ class Process:
             f'external_state_inputs={parse_inputs(self.external_state_inputs)}',
             f'additional_inputs={parse_inputs(self.additional_inputs)}',
             f'state_inputs={parse_inputs(self.state_inputs)}',
-            f'state_outputs={self.state_outputs}',
+            f'state_outputs={parse_outputs(self.state_outputs)}',
             f'args={self.args}',
         ]) + ')'
