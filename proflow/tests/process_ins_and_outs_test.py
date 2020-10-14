@@ -20,6 +20,9 @@ def test_get_inputs_from_process():
             I(state.b),
             I(state.a, as_='y'),
         ],
+        external_state_inputs=lambda e_state, row_index: [
+            I(e_state.data_a[row_index], as_='z'),
+        ],
         state_outputs=lambda prev_state, result: [
             rsetattr(prev_state, 'nested.na', result[0]),
         ],
@@ -32,10 +35,11 @@ def test_get_inputs_from_process():
         Mock_Config_Shape(),
         Mock_Parameters_Shape(),
         Mock_External_State_Shape(),
+        0,
     )
 
     assert args == [1, 2, 3, 4.1]
-    assert kwargs == {'x': 1, 'y': 2.1}
+    assert kwargs == {'x': 1, 'y': 2.1, 'z': 1}
 
 
 def test_map_result_to_state():

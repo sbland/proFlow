@@ -1,7 +1,7 @@
 from proflow.Objects.Interface import I
 from proflow.Objects.Process import Process
 from proflow.logger import log_values
-from proflow.tests.mocks import Mock_Model_State_Shape, Mock_Temporal_State
+from proflow.tests.mocks import Mock_Model_State_Shape
 from proflow.ProcessRunnerCls import ProcessRunner
 
 
@@ -10,7 +10,6 @@ def test_log_values():
         a=1.1,
         b=2.2,
         target='humbug',
-        temporal=Mock_Temporal_State(4, 0, 4)
     )
     log_process = log_values(
         state_inputs=lambda state: [
@@ -31,7 +30,6 @@ def test_log_multiple_values():
         a=1.1,
         b=2.2,
         target='humbug',
-        temporal=Mock_Temporal_State(4, 0, 4)
     )
     log_process = log_values(
         state_inputs=lambda state: [
@@ -61,7 +59,6 @@ def test_log_next_row():
         a=1.1,
         b=2.2,
         target='humbug',
-        temporal=Mock_Temporal_State(4, 0, 4)
     )
     log_process = log_values(
         state_inputs=lambda state: [
@@ -92,7 +89,6 @@ def test_log_skip_row():
         a=1.1,
         b=2.2,
         target='humbug',
-        temporal=Mock_Temporal_State(4, 0, 4)
     )
     log_process = log_values(
         state_inputs=lambda state: [

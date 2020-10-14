@@ -8,18 +8,18 @@ class Mock_Nested_State:
     nab: int = 7
 
 
-@dataclass
-class Mock_Temporal_State:
-    hr: int = 0
-    dd: int = 0
-    row_index: int = 0
+# @dataclass
+# class Mock_Temporal_State:
+#     hr: int = 0
+#     dd: int = 0
+#     row_index: int = 0
 
 
 @dataclass
 class Mock_Model_State_Shape:
     a: float
     b: float
-    temporal: Mock_Temporal_State = field(default_factory=lambda: Mock_Temporal_State())
+    # temporal: Mock_Temporal_State = field(default_factory=lambda: Mock_Temporal_State())
     c: float = 0
     d: float = 0
     ind: int = 0

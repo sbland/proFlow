@@ -15,6 +15,7 @@ def get_inputs_from_process(
     config: Config_Shape,
     parameters: Parameters_Shape,
     external_state: External_State_Shape,
+    row_index: int,
 ) -> List[Any]:
     """Get the args and kwargs from the Process.
 
@@ -30,16 +31,16 @@ def get_inputs_from_process(
         Model Parameters
     external_state : External_State_Shape
         External data
+    row_index: int
+        The current process runner row index for external state access
 
     Returns
     -------
     Tuple[List, dict]
         Input args and kwargs
     """
-    row_index = rgetattr(prev_state, 'temporal.row_index', 0)
     config_args = process.config_inputs(config)
     parameters_args = process.parameters_inputs(parameters)
-    # TODO: we need a better way of accessing current row index
     external_state_args = process.external_state_inputs(
         external_state, row_index,
     )
@@ -83,7 +84,6 @@ def map_result_to_state(
     Model_State_Shape
         [description]
     """
-    # output_map(prev_state, result)
     for from_, as_ in output_map(result):
         rsetattr(prev_state, as_, from_)
     return prev_state

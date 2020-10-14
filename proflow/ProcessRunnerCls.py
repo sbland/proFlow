@@ -91,6 +91,7 @@ class ProcessRunner():
             self.config,
             self.parameters,
             self.external_state,
+            row_index,
         )
 
         self.state_logs[row_index] = {**self.state_logs[row_index], **kwargs}
@@ -140,6 +141,7 @@ class ProcessRunner():
         parameters: Parameters_Shape = self.parameters
         external_state: External_State_Shape = self.external_state
         IMMUTABLE_MODE: bool = self.IMMUTABLE_MODE
+        row_index: int = self.tm.row_index
 
         modified_state = deepcopy(prev_state) if IMMUTABLE_MODE else prev_state
 
@@ -151,6 +153,7 @@ class ProcessRunner():
             config,
             parameters,
             external_state,
+            row_index,
         )
 
         # RUN PROCESS FUNC
@@ -206,6 +209,7 @@ class ProcessRunner():
         parameters: Parameters_Shape = self.parameters
         external_state: External_State_Shape = self.external_state
         IMMUTABLE_MODE: bool = self.IMMUTABLE_MODE
+        row_index: int = self.tm.row_index
 
         if not process.gate:
             return prev_state
@@ -220,6 +224,7 @@ class ProcessRunner():
                 config,
                 parameters,
                 external_state,
+                row_index,
             )
 
             end_time_input_setup = datetime.now()
