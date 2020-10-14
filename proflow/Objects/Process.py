@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Callable, List, Tuple
+from enum import Enum
 
 from proflow.external_state import External_State_Shape
 from proflow.parameters import Parameters_Shape
@@ -9,6 +10,12 @@ from proflow.internal_state import Model_State_Shape
 from .Interface import I
 
 
+class ProcessType(Enum):
+    STANDARD = 0
+    TIME = 1
+    LOG = 2
+    # TODO: Add NONMUTABLE type
+
 @dataclass
 class Process:
     """Process object that stores the function and input and output targets.
@@ -16,6 +23,8 @@ class Process:
     Parameters:
         func: Callable
             The function to call with the process
+        ptype: ProcessType
+            The type of process. Acts as a switch to decide how we run it
         gate: bool
             if false we skip the process
         comment: string
@@ -41,6 +50,7 @@ class Process:
     """
     func: Callable[[Model_State_Shape],
                    Model_State_Shape] = lambda: NotImplementedError()  # The function to call
+    ptype: ProcessType = field(default_factory=lambda: ProcessType.STANDARD)
     gate: bool = True  # if False process is skipped
     comment: str = ""  # used for logging
     group: str = None  # group tag
@@ -56,15 +66,14 @@ class Process:
         field(default_factory=lambda: lambda e_state, row_index: [])
     additional_inputs: Callable[[], List[I]] = \
         field(default_factory=lambda: lambda: [])
-    # TODO: state_outputs is depreciated
     state_outputs: Callable[[any], List[Tuple]] = field(default_factory=lambda: lambda result: [])
-    # map_outputs: Callable[[any, object], object] = field(default_factory=list) # Depreciated
     args: List[any] = field(default_factory=list)  # additional args
     format_output: bool = False  # If true we process the target output string
 
     def __repr__(self) -> str:
         return 'Process(' + '; '.join([
             f'func={self.func.__name__}',
+            f'ptype={self.ptype}',
             f'comment="{self.comment}"',
             f'gate={self.gate}',
             f'group={self.group}',
