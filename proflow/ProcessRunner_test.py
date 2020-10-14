@@ -835,3 +835,40 @@ def test_advance_time_step():
     assert state_2.c == 4
     assert state_2.d == 3.1
     assert process_runner.tm.row_index == 1
+
+def test_reset_process_runner():
+    process_runner.reset()
+    state = Mock_Model_State_Shape(a=2.1, b=4.1)
+    processes = flatten_list([
+        Process(
+            func=process_add,
+            config_inputs=lambda config: [
+                I(config.foo, as_='x'),
+                I(config.bar, as_='y'),
+            ],
+            state_outputs=lambda result: [
+                (result, 'c'),
+            ],
+        ),
+        advance_time_step_process(),
+        Process(
+            func=process_add,
+            config_inputs=lambda config: [
+                I(config.foo, as_='x'),
+            ],
+            state_inputs=lambda state: [
+                I(state.a, as_='y'),
+            ],
+            state_outputs=lambda result: [
+                (result, 'd'),
+            ],
+        ),
+    ])
+    assert process_runner.tm.row_index == 0
+    run_processes = process_runner.initialize_processes(processes)
+    state_2 = run_processes(initial_state=state)
+    assert state_2.c == 4
+    assert state_2.d == 3.1
+    assert process_runner.tm.row_index == 1
+    process_runner.reset()
+    assert process_runner.tm.row_index == 0
