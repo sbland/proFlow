@@ -35,6 +35,12 @@ class ProcessRunner():
         self.debug_time_logs = []
         self.tm = TimeManager(row_per=row_per)
 
+    def reset(self):
+        self.state_logs = [{}]
+        self.time_logs = []
+        self.debug_time_logs = []
+        self.tm = TimeManager(row_per=self.tm.per_row)
+
     # Define the process runner
     def run_processes(
             self,
