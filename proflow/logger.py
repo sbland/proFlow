@@ -2,7 +2,7 @@
 from typing import Callable, List
 
 from .internal_state import Model_State_Shape
-from .Objects.Process import Process
+from .Objects.Process import Process, ProcessType
 from .Objects.Interface import I
 
 
@@ -19,14 +19,11 @@ def log_values(
 ):
     return Process(
         func=merge_logs,
+        ptype=ProcessType.LOG,
         comment="Logging Values",
-        state_inputs=lambda state: [
-            I(state.temporal.row_index, 'index'),
-            I(state.logs, as_='logs'),
-        ] + state_inputs(state),
+        state_inputs=state_inputs,
         additional_inputs=additional_inputs,
         format_output=True,
-        state_outputs=lambda result: [(result, 'logs.+')]
     )
 
 

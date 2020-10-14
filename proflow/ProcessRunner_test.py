@@ -4,7 +4,7 @@ import numpy as np
 from proflow.helpers import rgetattr
 from proflow.tests.mocks import Mock_Config_Shape, Mock_External_State_Shape, \
     Mock_Model_State_Shape, Mock_Nested_State, Mock_Parameters_Shape
-from proflow.ProcessRunnerCls import ProcessRunner
+from proflow.ProcessRunnerCls import ProcessRunner, advance_time_step_process
 from unittest.mock import MagicMock, patch
 from vendor.helpers.list_helpers import flatten_list, filter_none
 
@@ -20,30 +20,30 @@ process_runner = ProcessRunner(
     Mock_Config_Shape(), Mock_External_State_Shape(), Mock_Parameters_Shape())
 
 
-@pytest.fixture(scope="module", autouse=True)
-def _():
-    with patch('proflow.ProcessRunner.Model_State_Shape', side_effect=Mock_Model_State_Shape) \
-            as Mocked_State_Shape:
-        Mocked_State_Shape.__annotations__ = Mock_Model_State_Shape.__annotations__
-        yield Mocked_State_Shape
+# @pytest.fixture(scope="module", autouse=True)
+# def _():
+#     with patch('proflow.ProcessRunner.Model_State_Shape', side_effect=Mock_Model_State_Shape) \
+#             as Mocked_State_Shape:
+#         Mocked_State_Shape.__annotations__ = Mock_Model_State_Shape.__annotations__
+#         yield Mocked_State_Shape
 
 
 @pytest.fixture(scope="module", autouse=True)
 def __():
-    with patch('proflow.ProcessRunner.Config_Shape', return_value=Mock_Config_Shape) as _fixture:
+    with patch('proflow.ProcessRunnerCls.Config_Shape', return_value=Mock_Config_Shape) as _fixture:
         yield _fixture
 
 
 @pytest.fixture(scope="module", autouse=True)
 def ____():
-    with patch('proflow.ProcessRunner.Parameters_Shape', return_value=Mock_Parameters_Shape) \
+    with patch('proflow.ProcessRunnerCls.Parameters_Shape', return_value=Mock_Parameters_Shape) \
             as _fixture:
         yield _fixture
 
 
 @pytest.fixture(scope="module", autouse=True)
 def ______():
-    with patch('proflow.ProcessRunner.External_State_Shape',
+    with patch('proflow.ProcessRunnerCls.External_State_Shape',
                return_value=Mock_External_State_Shape) \
             as _fixture:
         yield _fixture
@@ -792,10 +792,48 @@ def test_appending_to_state_list():
     )
     new_log = {'a': 5, 'foo': 'barhumbug'},
     processes = [Process(
-        func=lambda : new_log,
+        func=lambda: new_log,
+        # We have to use format output flag to enable this
         format_output=True,
         state_outputs=lambda result: [(result, 'logs.+')]
     )]
     process_runner = ProcessRunner()
     state_out = process_runner.run_processes(processes, state)
     assert state_out.logs[4] == new_log
+
+def test_advance_time_step():
+    state = Mock_Model_State_Shape(a=2.1, b=4.1)
+    processes = flatten_list([
+        Process(
+            func=process_add,
+            config_inputs=lambda config: [
+                I(config.foo, as_='x'),
+                I(config.bar, as_='y'),
+            ],
+            state_outputs=lambda result: [
+                (result, 'c'),
+            ],
+        ),
+        advance_time_step_process(),
+        Process(
+            func=process_add,
+            config_inputs=lambda config: [
+                I(config.foo, as_='x'),
+            ],
+            state_inputs=lambda state: [
+                I(state.a, as_='y'),
+            ],
+            state_outputs=lambda result: [
+                (result, 'd'),
+            ],
+        ),
+    ])
+    process_runner.DEBUG_MODE = True
+    assert process_runner.tm.row_index == 0
+    assert len(process_runner.state_logs) == 1
+    run_processes = process_runner.initialize_processes(processes)
+    state_2 = run_processes(initial_state=state)
+    assert state_2.c == 4
+    assert state_2.d == 3.1
+    assert process_runner.tm.row_index == 1
+    assert len(process_runner.state_logs) == 2

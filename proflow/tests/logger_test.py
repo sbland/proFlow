@@ -6,17 +6,10 @@ from proflow.ProcessRunnerCls import ProcessRunner
 
 
 def test_log_values():
-    existing_logs = [
-        {'a': 1, 'foo': 'bar'},
-        {'a': 2, 'foo': 'barh'},
-        {'a': 3, 'foo': 'barhum'},
-        {'a': 4, 'foo': 'barhumb'},
-    ]
     state = Mock_Model_State_Shape(
-        1.1,
-        2.2,
+        a=1.1,
+        b=2.2,
         target='humbug',
-        logs=existing_logs,
         temporal=Mock_Temporal_State(4, 0, 4)
     )
     log_process = log_values(
@@ -25,7 +18,104 @@ def test_log_values():
             I(state.target, as_='foo'),
         ],
     )
+    processes = [log_process]
     assert type(log_process) == Process
-    prunner = ProcessRunner()
-    state_out = prunner.run_processes([log_process], state)
-    assert state_out.logs[4] == {'a': 1.1, 'foo': 'humbug'}
+    process_runner = ProcessRunner()
+    assert len(process_runner.state_logs) == 1
+    process_runner.run_processes(processes, state)
+    assert len(process_runner.state_logs) == 1
+    assert process_runner.state_logs[0] == {'a': 1.1, 'foo': 'humbug'}
+
+def test_log_multiple_values():
+    state = Mock_Model_State_Shape(
+        a=1.1,
+        b=2.2,
+        target='humbug',
+        temporal=Mock_Temporal_State(4, 0, 4)
+    )
+    log_process = log_values(
+        state_inputs=lambda state: [
+            I(state.a, as_='a'),
+            I(state.target, as_='foo'),
+        ],
+    )
+    processes = [log_process]
+    process_runner = ProcessRunner()
+    process_runner.run_processes(processes, state)
+
+    # run 2
+    log_process = log_values(
+        state_inputs=lambda state: [
+            I(state.a, as_='bar'),
+            I(state.target, as_='zed'),
+        ],
+    )
+    processes = [log_process]
+
+    process_runner.run_processes(processes, state)
+    assert len(process_runner.state_logs) == 1
+    assert process_runner.state_logs[0] == {'a': 1.1, 'foo': 'humbug', 'bar': 1.1, 'zed': 'humbug'}
+
+def test_log_next_row():
+    state = Mock_Model_State_Shape(
+        a=1.1,
+        b=2.2,
+        target='humbug',
+        temporal=Mock_Temporal_State(4, 0, 4)
+    )
+    log_process = log_values(
+        state_inputs=lambda state: [
+            I(state.a, as_='a'),
+            I(state.target, as_='foo'),
+        ],
+    )
+    processes = [log_process]
+    process_runner = ProcessRunner()
+    process_runner.run_processes(processes, state)
+
+    # Add next row
+    process_runner.tm.advance_row()
+    log_process = log_values(
+        state_inputs=lambda state: [
+            I(state.a, as_='a'),
+            I(state.target, as_='foo'),
+        ],
+    )
+    processes = [log_process]
+    process_runner.run_processes(processes, state)
+    assert len(process_runner.state_logs) == 2
+    assert process_runner.state_logs[0] == {'a': 1.1, 'foo': 'humbug'}
+    assert process_runner.state_logs[1] == {'a': 1.1, 'foo': 'humbug'}
+
+def test_log_skip_row():
+    state = Mock_Model_State_Shape(
+        a=1.1,
+        b=2.2,
+        target='humbug',
+        temporal=Mock_Temporal_State(4, 0, 4)
+    )
+    log_process = log_values(
+        state_inputs=lambda state: [
+            I(state.a, as_='a'),
+            I(state.target, as_='foo'),
+        ],
+    )
+    processes = [log_process]
+    process_runner = ProcessRunner()
+    process_runner.run_processes(processes, state)
+
+    # Progress 2 time steps without logging
+    process_runner.tm.advance_row()
+    process_runner.tm.advance_row()
+    log_process = log_values(
+        state_inputs=lambda state: [
+            I(state.a, as_='a'),
+            I(state.target, as_='foo'),
+        ],
+    )
+    processes = [log_process]
+    process_runner.run_processes(processes, state)
+    assert len(process_runner.state_logs) == 3
+    assert process_runner.state_logs[0] == {'a': 1.1, 'foo': 'humbug'}
+    assert process_runner.state_logs[1] == {}
+    assert process_runner.state_logs[2] == {'a': 1.1, 'foo': 'humbug'}
