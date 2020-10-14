@@ -830,10 +830,8 @@ def test_advance_time_step():
     ])
     process_runner.DEBUG_MODE = True
     assert process_runner.tm.row_index == 0
-    assert len(process_runner.state_logs) == 1
     run_processes = process_runner.initialize_processes(processes)
     state_2 = run_processes(initial_state=state)
     assert state_2.c == 4
     assert state_2.d == 3.1
     assert process_runner.tm.row_index == 1
-    assert len(process_runner.state_logs) == 2
