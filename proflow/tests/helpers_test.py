@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from vendor.test_helpers import use_benchmark_time
 import numpy as np
 from timeit import repeat
 from ..helpers import rgetattr, rsetattr
@@ -82,10 +83,10 @@ def test_rsetattr_with_dataclass():
     assert v.nest.roo == 4
 
 
-def test_rsetattr_time():
+def test_rsetattr_time(benchmark_fixture):
     obj = {'foo': {'bar': 3}}
     t1 = min(repeat(lambda: rsetattr(obj, 'foo', 'zzz')))
-    assert t1 < 0.3
+    assert t1 < 0.3/benchmark_fixture
 
 # TODO: Can we implement a version that does not mutate
 # def test_rsetattr_mutation():

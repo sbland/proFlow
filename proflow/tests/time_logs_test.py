@@ -25,7 +25,7 @@ process_runner = ProcessRunner(
     Mock_Config_Shape(),
     Mock_External_State_Shape(),
     Mock_Parameters_Shape(),
-    True,
+    DEBUG_MODE=True,
 )
 
 
@@ -90,10 +90,11 @@ def test_that_processRunnerCls_logs_time_for_each_process():
     assert state_2.c == 4
     assert state_2.d == 50026000.00000531
     time_logs = dict(process_runner.time_logs)
+    print(time_logs)
     assert time_logs['process_add'] < time_logs['process_add_complex']
 
 
-def test_that_processRunnerCls_debug_logs_time_for_each_process():
+def test_that_processRunnerCls_debug_logs_time_for_each_process(benchmark_fixture):
     process_runner.reset_logs()
     state = Mock_Model_State_Shape(a=2.1, b=4.1)
     processes = flatten_list([
@@ -173,5 +174,5 @@ def test_that_processRunnerCls_debug_logs_time_for_each_process():
     state_2 = run_processes(initial_state=state)
     assert state_2.c == 4
     debug_time_logs = process_runner.debug_time_logs
-    assert debug_time_logs[1]['input_time'] < 0.083
-    assert debug_time_logs[1]['output_time'] < 0.21
+    assert debug_time_logs[1]['input_time'] < 0.083/benchmark_fixture
+    assert debug_time_logs[1]['output_time'] < 0.21/benchmark_fixture

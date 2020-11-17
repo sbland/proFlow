@@ -1,8 +1,7 @@
-
+import pytest
 from dataclasses import dataclass
 from timeit import repeat
 from typing import NamedTuple
-
 from .fill_np_array import fill_np_array_with_cls
 from .dictionary_helpers import get_nested_val
 
@@ -82,7 +81,7 @@ def test_get_nested_arg_from_list_with_wildcard():
     result = get_nested_val(data, 'dictlist._.foo')
 
 
-def test_get_nested_val_time():
+def test_get_nested_val_time(benchmark_fixture):
 
     @dataclass
     class Dclass:
@@ -125,4 +124,4 @@ def test_get_nested_val_time():
 
     time = min(repeat(test_all, number=15000, repeat=5))
     print(1 - (time / 0.158))
-    assert 0.154 < time < 0.174
+    assert 0.154/benchmark_fixture < time < 0.174/benchmark_fixture
