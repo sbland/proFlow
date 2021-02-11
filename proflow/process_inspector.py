@@ -109,18 +109,18 @@ def strip_out_comments(string: str) -> str:
 
 
 def extract_output_lines(map_inputs_fn: Callable[[object], List[str]]) -> List[str]:
+    inputs_source = None
     try:
         inputs_source = strip_out_comments(inspect.getsource(map_inputs_fn))
-        r_list = re.compile(r'lambda result:.*?\[(?P<con>.*)\]', re.DOTALL | re.MULTILINE)
-        print(r_list.search(inputs_source))
+        r_list = re.compile(r'lambda result.*?:.*?\[(?P<con>.*)\]', re.DOTALL | re.MULTILINE)
         between_sqbrackets = r_list.search(inputs_source).groups()[0]
-        print(between_sqbrackets)
-        r = re.compile(r'(?: |\[|^)\((.*?)\)(?:,|$)', re.DOTALL | re.MULTILINE)  #
+        r = re.compile(r'(?: |\[|^)\((.*?)\)(?:,|$)$', re.DOTALL | re.MULTILINE)
         matches = r.finditer(between_sqbrackets)
         lines = (g for match in matches if match is not None for g in match.groups())
         return lines
     except AttributeError as identifier:
         warnings.warn(Warning('Failed to parse output lines'))
+        warnings.warn(Warning(inputs_source))
         warnings.warn(Warning(identifier))
         return []
 
@@ -203,11 +203,18 @@ def parse_inputs_to_interface(process_inputs: Callable[[any], List[I]]) -> List[
 
 
 def parse_outputs_to_interface(process_outputs: Callable[[any], List[I]]) -> List[I]:
-    output_lines_row = extract_output_lines(process_outputs)
-    args_and_kwargs = (line.split(',') for line in output_lines_row)
-    output_objects = (
-        I(from_=from_, as_=f'state.{rm_inv_comma(as_.strip())}') for from_, as_ in args_and_kwargs)
-    return output_objects
+    output_lines_row = None
+    try:
+        output_lines_row = extract_output_lines(process_outputs)
+        args_and_kwargs = (line.split(',') for line in output_lines_row)
+        output_objects = (
+            I(from_=from_, as_=f'state.{rm_inv_comma(as_.strip())}') for from_, as_ in args_and_kwargs)
+        return output_objects
+    except Exception as e:
+        warnings.warn(Warning('Failed to parse outputs to interface'))
+        warnings.warn(Warning(output_lines_row))
+        warnings.warn(Warning(e))
+        return []
 
 
 def parse_inputs(map_inputs_fn: Callable[[any], List[I]]) -> dict:

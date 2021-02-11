@@ -117,6 +117,18 @@ def test_extract_output_lines_dict_result():
     assert out == ["result['a'], 'a'", "result['b'], 'b'"]
 
 
+def test_extract_output_lines_with_copy():
+    """Test parse_inputs returns correct value."""
+    deepcopy = lambda: None
+    DEMO_OUTPUTS = lambda result: [
+        (deepcopy(result['a']), 'a'),
+        (deepcopy(result['b']), 'b'),
+    ]
+    out = list(extract_output_lines(DEMO_OUTPUTS))
+    print(out)
+    assert out == ["deepcopy(result['a']), 'a'", "deepcopy(result['b']), 'b'"]
+
+
 def test_strip_out_comments():
     out = strip_out_comments("""
 # noqa E731
@@ -188,3 +200,25 @@ def test_parse_outputs_complex_01():
         ]
     out = parse_outputs(DEMO_OUTPUTS)
     assert out == {"result.[iL].[iLC]": "state.f'foo.{iL}.{iLC}.bar"}
+
+
+def test_parse_outputs_complex_02():
+    """Test parse_outputs returns correct value."""
+    iLC = 0
+    DEMO_OUTPUTS = lambda result, iLC=iLC: [  # noqa: E731
+            (result[iL][iLC], f'foo.{iL}.{iLC}.bar')
+            for iL in range(3)
+        ]
+    out = parse_outputs(DEMO_OUTPUTS)
+    assert out == {"result.[iL].[iLC]": "state.f'foo.{iL}.{iLC}.bar"}
+
+
+def test_parse_outputs_complex_03():
+    """Test parse_outputs returns correct output."""
+    deepcopy = lambda: None
+    DEMO_OUTPUTS = lambda result: [
+        (deepcopy(result['a']), 'a'),
+    ]
+    out = parse_outputs(DEMO_OUTPUTS)
+    print(out)
+    assert out == {'deepcopy(result.a.)': 'state.a'}
