@@ -96,12 +96,25 @@ def test_extract_input_lines():
 
 def test_extract_output_lines():
     """Test parse_inputs returns correct value."""
-    DEMO_OUTPUTS = lambda result: [  # noqa E731
+    DEMO_OUTPUTS = lambda result: [  # noqa: E731
         (result.a.foo.bar, 'x'),
         (result.a.foo[0], 'y'),
     ]
     out = list(extract_output_lines(DEMO_OUTPUTS))
     assert out == ["result.a.foo.bar, 'x'", "result.a.foo[0], 'y'"]
+
+
+def test_extract_output_lines_dict_result():
+    """Test parse_inputs returns correct value."""
+    iLC = 0
+
+    DEMO_OUTPUTS = lambda result: [  # noqa: E731
+        (result['a'], 'a'),
+        (result['b'], 'b'),
+    ]
+    out = list(extract_output_lines(DEMO_OUTPUTS))
+    print(out)
+    assert out == ["result['a'], 'a'", "result['b'], 'b'"]
 
 
 def test_strip_out_comments():
@@ -127,7 +140,7 @@ def test_extract_output_lines_complex_01():
 
 def test_extract_output_lines_complex_02():
     """Test parse_inputs returns correct value."""
-    DEMO_OUTPUTS = lambda result:[(result['hr'], 'temporal.hr')]
+    DEMO_OUTPUTS = lambda result: [(result['hr'], 'temporal.hr')]
     out = list(extract_output_lines(DEMO_OUTPUTS))
     # TODO: We are stripping out the for loop here. Can we include it
     assert out == ["result['hr'], 'temporal.hr'"]
@@ -148,7 +161,7 @@ def test_parse_key():
 
 def test_parse_inputs():
     """Test parse_inputs returns correct value."""
-    def DEMO_INPUTS(config): return [
+    DEMO_INPUTS = lambda config: [  # noqa: E731
         I(config.a.foo.bar, as_='x'),
         I(config.a.foo[0], as_='y'),
     ]
