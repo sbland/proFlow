@@ -2,6 +2,7 @@ from collections import namedtuple
 from typing import List, Tuple, TYPE_CHECKING, Callable
 import inspect
 import re
+import warnings
 
 from proflow.Objects.Interface import I
 
@@ -111,14 +112,16 @@ def extract_output_lines(map_inputs_fn: Callable[[object], List[str]]) -> List[s
     try:
         inputs_source = strip_out_comments(inspect.getsource(map_inputs_fn))
         r_list = re.compile(r'lambda result:.*?\[(?P<con>.*)\]', re.DOTALL | re.MULTILINE)
+        print(r_list.search(inputs_source))
         between_sqbrackets = r_list.search(inputs_source).groups()[0]
+        print(between_sqbrackets)
         r = re.compile(r'(?: |\[|^)\((.*?)\)(?:,|$)', re.DOTALL | re.MULTILINE)  #
         matches = r.finditer(between_sqbrackets)
         lines = (g for match in matches if match is not None for g in match.groups())
         return lines
-    except Exception as identifier:
-        Warning('Failed to parse output lines')
-        Warning(identifier)
+    except AttributeError as identifier:
+        warnings.warn(Warning('Failed to parse output lines'))
+        warnings.warn(Warning(identifier))
         return []
 
 
