@@ -1,3 +1,4 @@
+import pytest
 from .Switch import switch, __s__
 
 
@@ -10,6 +11,7 @@ def test_switch():
         not_this_one=process_b,
     )
     assert process_to_run == process_a
+
 
 def test_switch_short_name():
     process_a = "process_a"
@@ -34,3 +36,9 @@ def test_switch_with_defined_options():
 
     )
     assert process_to_run == process_a
+
+
+def test_switch_missing_option():
+    with pytest.raises(KeyError) as e:
+        switch(comment="missing gate", gate="other option", options={})
+    assert "\"other option\" is not an option in \"missing gate\" switch" in str(e)
