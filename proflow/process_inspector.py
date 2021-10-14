@@ -168,8 +168,6 @@ def split_from_and_as(raw_input_line: str) -> Tuple[List[str], dict]:
     """
     Output = namedtuple('Output', 'args kwargs')
     split_args = raw_input_line.split(',')
-    if len(split_args) != 2:
-        raise ProflowParsingLineError('Failed to parse input line', raw_input_line)
     split_sub_args = (s.strip().split('=') for s in split_args)
     args = (s[0] for s in split_sub_args if len(s) == 1)
     split_sub_args = (s.strip().split('=') for s in split_args)
@@ -226,7 +224,9 @@ def parse_inputs_to_interface(process_inputs: Callable[[any], List[I]], allow_er
         if not allow_errors:
             raise e
         return [I(from_='UNKNOWN', as_='UNKNOWN')]
-
+    except TypeError as e:
+        warnings.warn(Warning(e.message))
+        return [I(from_='ERROR', as_='ERROR')]
     return input_objects
 
 def parse_output_line(output_line: str) -> List[str]:
