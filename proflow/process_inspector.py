@@ -10,6 +10,23 @@ if TYPE_CHECKING:
     from proflow.Objects.Process import Process
 
 
+class ProflowParsingError(Exception):
+    def __init__(self, message, function):
+        self.message = message
+        self.source = inspect.getsource(function)
+        super().__init__(self.message)
+
+
+class ProflowParsingLineError(Exception):
+    def __init__(self, message, failed_line: str):
+        self.message = message
+        self.source = failed_line
+        super().__init__(self.message)
+
+    def __repr__(self):
+        return f'Proflow parsing line error: {self.message} \n {self.source}'
+
+
 # def clean_key(k: str):
 #     stripped = k.strip()[1:-1]
 #     return stripped
@@ -113,15 +130,16 @@ def extract_output_lines(map_inputs_fn: Callable[[object], List[str]]) -> List[s
     try:
         inputs_source = strip_out_comments(inspect.getsource(map_inputs_fn))
         r_list = re.compile(r'lambda result.*?:.*?\[(?P<con>.*)\]', re.DOTALL | re.MULTILINE)
-        between_sqbrackets = r_list.search(inputs_source).groups()[0]
+        output_map_raw = r_list.search(inputs_source).groups()[0]
+        # Get lines
         r = re.compile(r'(?: |\[|^)\((.*?)\)(?:,|$)$', re.DOTALL | re.MULTILINE)
-        matches = r.finditer(between_sqbrackets)
+        matches = r.finditer(output_map_raw)
         lines = (g for match in matches if match is not None for g in match.groups())
         return lines
-    except AttributeError as identifier:
+    except AttributeError as error:
         warnings.warn(Warning('Failed to parse output lines'))
         warnings.warn(Warning(inputs_source))
-        warnings.warn(Warning(identifier))
+        warnings.warn(Warning(error))
         return []
 
 
@@ -150,6 +168,8 @@ def split_from_and_as(raw_input_line: str) -> Tuple[List[str], dict]:
     """
     Output = namedtuple('Output', 'args kwargs')
     split_args = raw_input_line.split(',')
+    if len(split_args) != 2:
+        raise ProflowParsingLineError('Failed to parse input line', raw_input_line)
     split_sub_args = (s.strip().split('=') for s in split_args)
     args = (s[0] for s in split_sub_args if len(s) == 1)
     split_sub_args = (s.strip().split('=') for s in split_args)
@@ -195,27 +215,41 @@ def rm_inv_comma(string: str):
     return re.sub('^\'|\'$', '', string)
 
 
-def parse_inputs_to_interface(process_inputs: Callable[[any], List[I]]) -> List[I]:
-    input_lines_row = extract_inputs_lines(process_inputs)
-    args_and_kwargs = (split_from_and_as(line) for line in input_lines_row)
-    input_objects = (I(*out.args, **out.kwargs) for out in args_and_kwargs)
+def parse_inputs_to_interface(process_inputs: Callable[[any], List[I]], allow_errors=True) -> List[I]:
+    try:
+        input_lines_row = extract_inputs_lines(process_inputs)
+        args_and_kwargs = (split_from_and_as(line) for line in input_lines_row)
+        input_objects = (I(*out.args, **out.kwargs) for out in args_and_kwargs)
+    except ProflowParsingLineError as e:
+        warnings.warn(Warning(e.message))
+        warnings.warn(Warning(e.source))
+        if not allow_errors:
+            raise e
+        return [I(from_='UNKNOWN', as_='UNKNOWN')]
+
     return input_objects
 
+def parse_output_line(output_line: str) -> List[str]:
+    output_args = output_line.split(',')
+    if len(output_args) != 2:
+        raise ProflowParsingLineError('Failed to parse output line', output_line)
+    return output_args
 
-def parse_outputs_to_interface(process_outputs: Callable[[any], List[I]]) -> List[I]:
+def parse_outputs_to_interface(process_outputs: Callable[[any], List[I]], allow_errors=True) -> List[I]:
     output_lines_row = None
     try:
         output_lines_row = extract_output_lines(process_outputs)
-        args_and_kwargs = (line.split(',') for line in output_lines_row)
-        output_objects = (
-            I(from_=from_, as_=f'state.{rm_inv_comma(as_.strip())}') for from_, as_ in args_and_kwargs)
+        args_and_kwargs = [parse_output_line(line) for line in output_lines_row]
+        output_objects = [
+            I(from_=args[0], as_=f'state.{rm_inv_comma(args[1].strip())}')
+            for args in args_and_kwargs]
         return output_objects
-    except Exception as e:
-        warnings.warn(Warning('Failed to parse outputs to interface'))
-        warnings.warn(Warning(output_lines_row))
-        warnings.warn(Warning(e))
-        return []
-
+    except ProflowParsingLineError as e:
+        warnings.warn(Warning(e.message))
+        warnings.warn(Warning(e.source))
+        if not allow_errors:
+            raise e
+        return [I(from_='UNKNOWN', as_='UNKNOWN')]
 
 def parse_inputs(map_inputs_fn: Callable[[any], List[I]]) -> dict:
     input_objects = parse_inputs_to_interface(map_inputs_fn)

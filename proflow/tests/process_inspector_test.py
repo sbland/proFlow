@@ -1,8 +1,20 @@
 """Tests for the process inspector."""
 
-from proflow.process_inspector import inspect_process, parse_outputs, split_trailing_and_part, \
-    parse_inputs, extract_inputs_lines, split_from_and_as, parse_key, inspect_process_to_interfaces, \
-    extract_output_lines, strip_out_comments
+import pytest
+from proflow.process_inspector import(
+    ProflowParsingLineError,
+    inspect_process,
+    parse_outputs,
+    parse_outputs_to_interface,
+    split_trailing_and_part,
+    parse_inputs,
+    extract_inputs_lines,
+    split_from_and_as,
+    parse_key,
+    inspect_process_to_interfaces,
+    extract_output_lines,
+    strip_out_comments,
+)
 
 from proflow.Objects.Interface import I
 from proflow.Objects.Process import Process
@@ -94,39 +106,75 @@ def test_extract_input_lines():
     assert out == ["config.a.foo.bar, as_='x'", "config.a.foo[0], as_='y'"]
 
 
-def test_extract_output_lines():
-    """Test parse_inputs returns correct value."""
-    DEMO_OUTPUTS = lambda result: [  # noqa: E731
-        (result.a.foo.bar, 'x'),
-        (result.a.foo[0], 'y'),
-    ]
-    out = list(extract_output_lines(DEMO_OUTPUTS))
-    assert out == ["result.a.foo.bar, 'x'", "result.a.foo[0], 'y'"]
+class TestExtractOutputLines:
+
+    def test_extract_output_lines(self):
+        """Test parse_inputs returns correct value."""
+        DEMO_OUTPUTS = lambda result: [  # noqa: E731
+            (result.a.foo.bar, 'x'),
+            (result.a.foo[0], 'y'),
+        ]
+        out = list(extract_output_lines(DEMO_OUTPUTS))
+        assert out == ["result.a.foo.bar, 'x'", "result.a.foo[0], 'y'"]
 
 
-def test_extract_output_lines_dict_result():
-    """Test parse_inputs returns correct value."""
-    iLC = 0
 
-    DEMO_OUTPUTS = lambda result: [  # noqa: E731
-        (result['a'], 'a'),
-        (result['b'], 'b'),
-    ]
-    out = list(extract_output_lines(DEMO_OUTPUTS))
-    print(out)
-    assert out == ["result['a'], 'a'", "result['b'], 'b'"]
+    def test_extract_output_lines_dict_result(self):
+        """Test parse_inputs returns correct value."""
+        iLC = 0
+
+        DEMO_OUTPUTS = lambda result: [  # noqa: E731
+            (result['a'], 'a'),
+            (result['b'], 'b'),
+        ]
+        out = list(extract_output_lines(DEMO_OUTPUTS))
+        print(out)
+        assert out == ["result['a'], 'a'", "result['b'], 'b'"]
 
 
-def test_extract_output_lines_with_copy():
-    """Test parse_inputs returns correct value."""
-    deepcopy = lambda: None
-    DEMO_OUTPUTS = lambda result: [
-        (deepcopy(result['a']), 'a'),
-        (deepcopy(result['b']), 'b'),
-    ]
-    out = list(extract_output_lines(DEMO_OUTPUTS))
-    print(out)
-    assert out == ["deepcopy(result['a']), 'a'", "deepcopy(result['b']), 'b'"]
+
+    def test_extract_output_lines_with_copy(self):
+        """Test parse_inputs returns correct value."""
+        deepcopy = lambda: None
+        DEMO_OUTPUTS = lambda result: [
+            (deepcopy(result['a']), 'a'),
+            (deepcopy(result['b']), 'b'),
+        ]
+        out = list(extract_output_lines(DEMO_OUTPUTS))
+        print(out)
+        assert out == ["deepcopy(result['a']), 'a'", "deepcopy(result['b']), 'b'"]
+
+
+    def test_extract_output_lines_complex_01(self):
+        """Test parse_inputs returns correct value."""
+        DEMO_OUTPUTS = lambda result: [  # noqa E731
+                [(result[iL][iLC], f'foo.{iL}.{iLC}.bar')
+                    for iL in range(3) for iLC in range(3)],
+                (result.a.foo.bar, 'x'),
+            ]
+        out = list(extract_output_lines(DEMO_OUTPUTS))
+        # TODO: We are stripping out the for loop here. Can we include it
+        assert out == ["result[iL][iLC], f'foo.{iL}.{iLC}.bar'", "result.a.foo.bar, 'x'"]
+
+
+    def test_extract_output_lines_complex_02(self):
+        """Test parse_inputs returns correct value."""
+        DEMO_OUTPUTS = lambda result: [(result['hr'], 'temporal.hr')]
+        out = list(extract_output_lines(DEMO_OUTPUTS))
+        # TODO: We are stripping out the for loop here. Can we include it
+        assert out == ["result['hr'], 'temporal.hr'"]
+
+
+
+    def test_extract_output_lines_with_star(self):
+        """Test parse_inputs returns correct value."""
+        deepcopy = lambda: None
+        DEMO_OUTPUTS = lambda result: [
+            *[('a', 'b') for _ in range(3)],
+        ]
+        out = list(extract_output_lines(DEMO_OUTPUTS))
+        print(out)
+        assert out == ["a, b", "a, b", "a, b"]
 
 
 def test_strip_out_comments():
@@ -136,26 +184,6 @@ def test_strip_out_comments():
 usefulinfo
     """)
     assert out == "\n\n\nusefulinfo\n    "
-
-
-def test_extract_output_lines_complex_01():
-    """Test parse_inputs returns correct value."""
-    DEMO_OUTPUTS = lambda result: [  # noqa E731
-            [(result[iL][iLC], f'foo.{iL}.{iLC}.bar')
-                for iL in range(3) for iLC in range(3)],
-            (result.a.foo.bar, 'x'),
-        ]
-    out = list(extract_output_lines(DEMO_OUTPUTS))
-    # TODO: We are stripping out the for loop here. Can we include it
-    assert out == ["result[iL][iLC], f'foo.{iL}.{iLC}.bar'", "result.a.foo.bar, 'x'"]
-
-
-def test_extract_output_lines_complex_02():
-    """Test parse_inputs returns correct value."""
-    DEMO_OUTPUTS = lambda result: [(result['hr'], 'temporal.hr')]
-    out = list(extract_output_lines(DEMO_OUTPUTS))
-    # TODO: We are stripping out the for loop here. Can we include it
-    assert out == ["result['hr'], 'temporal.hr'"]
 
 
 def test_split_from_and_as():
@@ -222,3 +250,47 @@ def test_parse_outputs_complex_03():
     out = parse_outputs(DEMO_OUTPUTS)
     print(out)
     assert out == {'deepcopy(result.a.)': 'state.a'}
+
+
+class TestParseOutputs:
+    def test_parse_outputs_to_interface(self):
+        DEMO_OUTPUTS = lambda result: [
+            (result['a'], 'a'),
+        ]
+
+        output_interface = list(parse_outputs_to_interface(DEMO_OUTPUTS))
+        assert len(output_interface) == 1
+        assert output_interface[0].from_ == "result['a']"
+        assert output_interface[0].as_ == "state.a"
+
+    def test_parse_outputs_throws_error_for_unknown_input(self):
+        DEMO_OUTPUTS = lambda result: [
+            # Multiple commas currently causes an error
+            (['some info', ['other into']], 'a'),
+        ]
+        with pytest.raises(ProflowParsingLineError) as e:
+            output_interface = list(parse_outputs_to_interface(DEMO_OUTPUTS, allow_errors=False))
+
+        assert repr(e) == f"<ExceptionInfo Proflow parsing line error: Failed to parse output line \n ['some info', ['other into']], 'a' tblen=5>"
+
+    def test_parse_outputs_returns_invalid_for_unknown_input(self):
+        DEMO_OUTPUTS = lambda result: [
+            # Multiple commas currently causes an error
+            (['some info', ['other into']], 'a'),
+        ]
+
+        output_interface = list(parse_outputs_to_interface(DEMO_OUTPUTS))
+        assert len(output_interface) == 1
+        assert output_interface[0].from_ == "UNKNOWN"
+        assert output_interface[0].as_ == "UNKNOWN"
+
+    def test_parse_with_star_arg(self):
+        nP = 3
+        DEMO_OUTPUTS = lambda result: [
+            *[(result, iP) for iP in range(nP)],
+        ]
+
+        output_interface = list(parse_outputs_to_interface(DEMO_OUTPUTS))
+        assert len(output_interface) == nP
+        assert output_interface[0].from_ == "result['a']"
+        assert output_interface[0].as_ == "state.a"
