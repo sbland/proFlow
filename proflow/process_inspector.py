@@ -217,7 +217,7 @@ def parse_inputs_to_interface(process_inputs: Callable[[any], List[I]], allow_er
     try:
         input_lines_row = extract_inputs_lines(process_inputs)
         args_and_kwargs = (split_from_and_as(line) for line in input_lines_row)
-        input_objects = (I(*out.args, **out.kwargs) for out in args_and_kwargs)
+        input_objects = [I(*out.args, **out.kwargs) for out in args_and_kwargs]
     except ProflowParsingLineError as e:
         warnings.warn(Warning(e.message))
         warnings.warn(Warning(e.source))
@@ -225,7 +225,7 @@ def parse_inputs_to_interface(process_inputs: Callable[[any], List[I]], allow_er
             raise e
         return [I(from_='UNKNOWN', as_='UNKNOWN')]
     except TypeError as e:
-        warnings.warn(Warning(e.message))
+        warnings.warn(Warning(e))
         return [I(from_='ERROR', as_='ERROR')]
     return input_objects
 

@@ -251,7 +251,7 @@ def test_parse_outputs_complex_03():
     print(out)
     assert out == {'deepcopy(result.a.)': 'state.a'}
 
-
+# TODO: Test inputs with == : state.a.foo == 1, as_="is_bool"
 class TestParseOutputs:
     def test_parse_outputs_to_interface(self):
         DEMO_OUTPUTS = lambda result: [
