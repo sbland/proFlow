@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="proflow",
-    version="0.3.8",
+    version="0.3.9",
     author="Sam Bland",
     author_email="sbland.co.uk@gmail.com",
     description="Functional Process Runner",
