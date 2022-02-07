@@ -1,4 +1,5 @@
 
+# https://packaging.python.org/en/latest/tutorials/packaging-projects/
 [ -z "$1" ] && echo "make sure to input [patch|minor|major]" && exit 1;
 source venv/bin/activate
 if [ -z "$(git status --porcelain)" ]; then
