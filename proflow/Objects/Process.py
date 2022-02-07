@@ -85,3 +85,19 @@ class Process:
             f'state_outputs={parse_outputs(self.state_outputs)}',
             f'args={self.args}',
         ]) + ')'
+
+    def human(self) -> dict:
+        return {
+            'func': self.func.__name__,
+            'ptype': self.ptype,
+            'comment': self.comment,
+            'gate': self.gate,
+            'group': self.group,
+            'config_inputs': parse_inputs(self.config_inputs),
+            'parameters_inputs': parse_inputs(self.parameters_inputs),
+            'external_state_inputs': parse_inputs(self.external_state_inputs),
+            'additional_inputs': parse_inputs(self.additional_inputs),
+            'state_inputs': parse_inputs(self.state_inputs),
+            'state_outputs': parse_outputs(self.state_outputs),
+            'args': self.args,
+        }
