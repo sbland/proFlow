@@ -43,9 +43,9 @@ class ProcessRunner():
 
     # Define the process runner
     def run_processes(
-            self,
-            processes: List[Process] = None,
-            initial_state: NamedTuple = None,  # initial state or parameters
+        self,
+        processes: List[Process] = None,
+        initial_state: NamedTuple = None,  # initial state or parameters
     ) -> NamedTuple:
         """ Takes the initial state and a list of processes
         returns the new state as modified by the processes
@@ -54,8 +54,9 @@ class ProcessRunner():
         the reduce function allows us to iterate through each function
         passing the state to the next
         """
-        new_state = reduce(self.process_switcher, processes, initial_state)
-        return new_state
+        _initial_state = initial_state or self.current_state
+        self.current_state = reduce(self.process_switcher, processes, _initial_state)
+        return self.current_state
 
     def initialize_processes(
         self,
@@ -72,6 +73,7 @@ class ProcessRunner():
         *args,
         **kwargs,
     ):
+        """Ran for each process on state."""
         if process.ptype == ProcessType.STANDARD:
             if self.DEBUG_MODE:
                 return self.run_process_debug(prev_state, process, *args, **kwargs)
