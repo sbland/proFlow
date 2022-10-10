@@ -1,7 +1,7 @@
 class Run_Process_Error(Exception):
     def __init__(self, process: 'Process', error: Exception, state):
         process_id = process.comment or getattr(process.func, '__name__', 'Unknown')
-        self.message = f'Failed to run {process_id}'
+        self.message = f'Failed to run "{process_id}"'
         self.error = error
         self.state = state
 
