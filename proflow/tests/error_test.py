@@ -2,7 +2,7 @@
 import pytest
 from vendor.helpers.list_helpers import flatten_list
 from proflow.ProcessRunnerCls import ProcessRunner
-from proflow.ProcessRunner import I, Process, Run_Process_Error
+from proflow.ProcessRunner import I, Process, RunProcessError
 from proflow.tests.mocks import Mock_Config_Shape, Mock_External_State_Shape, \
     Mock_Model_State_Shape, Mock_Parameters_Shape
 
@@ -31,7 +31,7 @@ def test_process_error():
     ])
     process_runner.DEBUG_MODE = True
     run_processes = process_runner.initialize_processes(processes)
-    with pytest.raises(Run_Process_Error) as exc:
+    with pytest.raises(RunProcessError) as exc:
         run_processes(initial_state=state)
     assert exc.value.message == 'Failed to run process_add'
     assert exc.value.state == state
@@ -54,7 +54,7 @@ def test_process_error_with_comment():
     ])
     process_runner.DEBUG_MODE = True
     run_processes = process_runner.initialize_processes(processes)
-    with pytest.raises(Run_Process_Error) as exc:
+    with pytest.raises(RunProcessError) as exc:
         run_processes(initial_state=state)
     assert exc.value.message == 'Failed to run Demo Process'
 

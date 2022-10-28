@@ -132,8 +132,11 @@ def extract_output_lines(map_inputs_fn: Callable[[object], List[str]]) -> List[s
         r_list = re.compile(r'lambda result.*?:.*?\[(?P<con>.*)\]', re.DOTALL | re.MULTILINE)
         output_map_raw = r_list.search(inputs_source).groups()[0]
         # Get lines
+        print(f"\"{output_map_raw}\"")
         r = re.compile(r'(?: |\[|^)\((.*?)\)(?:,|$)$', re.DOTALL | re.MULTILINE)
-        matches = r.finditer(output_map_raw)
+        # r = re.compile(r'(?: |\[|^)\((.*?)\).*?(?:,|$)$', re.DOTALL | re.MULTILINE)
+
+        matches = list(r.finditer(output_map_raw))
         lines = (g for match in matches if match is not None for g in match.groups())
         return lines
     except AttributeError as error:

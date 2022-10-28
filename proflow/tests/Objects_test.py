@@ -25,4 +25,5 @@ def test_Process_object(snapshot):
             (result, 'x'),
         ]
     )
-    snapshot.assert_match(demo_process, 'demo_process')
+    print(str(demo_process))
+    snapshot.assert_match(str(demo_process), 'demo_process')

@@ -4,7 +4,7 @@ import re
 
 from vendor.polyviz.bezier import bezier_curve_4pt
 
-from proflow.Objects import Process
+from proflow.Objects.Process import Process
 
 
 def get_all_unique_inputs(processes):

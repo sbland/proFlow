@@ -83,6 +83,7 @@ def map_result_to_state(
     -------
     Model_State_Shape
         [description]
+
     """
     for from_, as_ in output_map(result):
         rsetattr(prev_state, as_, from_)

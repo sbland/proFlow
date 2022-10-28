@@ -1,9 +1,16 @@
-class Run_Process_Error(Exception):
+import warnings
+class RunProcessError(Exception):
     def __init__(self, process: 'Process', error: Exception, state):
         process_id = process.comment or getattr(process.func, '__name__', 'Unknown')
         self.message = f'Failed to run {process_id}'
         self.error = error
         self.state = state
+        try:
+            with open('out.state') as f:
+                f.write(str(state))
+        except:
+            print("Failed to save out state after error.")
+            pass
 
     def __str__(self):
         # state_str = str(self.state)
@@ -17,3 +24,8 @@ class Run_Process_Error(Exception):
         # TODO: Find better way of showing state in error
         #  state:
         #  \n{state_print}
+
+def processWarning(process, message):
+    process_id = process.comment or getattr(process.func, '__name__', 'Unknown')
+    message = f'Warning when running: "{process_id}" : n {message}'
+    warnings.warn(message)

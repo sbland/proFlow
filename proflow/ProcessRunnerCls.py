@@ -1,17 +1,19 @@
 from copy import deepcopy
 from datetime import datetime
 from functools import partial, reduce
+from typing import Callable, List, NamedTuple
+from math import isnan
+
 from proflow.internal_state import Model_State_Shape
 from proflow.TimeManager import TimeManager, TimeScale
 from proflow.process_state_modifiers import map_result_to_state_fn
 from proflow.process_ins_and_outs import get_inputs_from_process, map_result_to_state
-from typing import Callable, List, NamedTuple
 
 from .parameters import Parameters_Shape
 from .external_state import External_State_Shape
 from .config import Config_Shape
 from .Objects.Process import Process, ProcessType
-from .errors import Run_Process_Error
+from .errors import RunProcessError, processWarning
 
 
 class ProcessRunner():
@@ -210,7 +212,7 @@ class ProcessRunner():
 
         Raises
         ------
-        Run_Process_Error
+        RunProcessError
             Catches error that occur when running the process
         """
         config: Config_Shape = self.config
@@ -243,6 +245,8 @@ class ProcessRunner():
             # Log time taken for process
             start_time = datetime.now()
             result = process.func(*args, **kwargs)
+            if result is None or isnan(result):
+                processWarning(process, f"Result is {result}")
             end_time = datetime.now()
             time_diff = (end_time - start_time)
             execution_time = time_diff.total_seconds() * 1000
@@ -269,7 +273,7 @@ class ProcessRunner():
             return output_state
 
         except Exception as e:
-            raise Run_Process_Error(process, e, modified_state) from e
+            raise RunProcessError(process, e, modified_state) from e
 
     def reset_logs(self):
         self.time_logs = []

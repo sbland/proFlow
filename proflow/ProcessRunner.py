@@ -1,8 +1,8 @@
-"""This is a process runner that creates an interface process and runner function
-It allows connecting plugin functions to config, state and external data and
-converts them into a process
-The process runner is then passed a list of processes that it runs in order
-updating the state at each step
+""" This is a process runner that creates an interface process and runner function
+    It allows connecting plugin functions to config, state and external data and
+    converts them into a process
+    The process runner is then passed a list of processes that it runs in order
+    updating the state at each step
 """
 from dataclasses import astuple, is_dataclass
 from proflow.helpers import rgetattr
@@ -23,7 +23,7 @@ from .parameters import Parameters_Shape
 from .external_state import External_State_Shape
 from .internal_state import Model_State_Shape
 
-from .errors import Run_Process_Error
+from .errors import RunProcessError
 
 
 def format_with_variables(
@@ -261,7 +261,7 @@ def run_process(
 
     Raises
     ------
-    Run_Process_Error
+    RunProcessError
         Catches error that occur when running the process
     """
     raise DeprecationWarning('Depreciated')
@@ -316,4 +316,4 @@ def run_process(
         return new_state
 
     except Exception as e:
-        raise Run_Process_Error(process, e, prev_state) from e
+        raise RunProcessError(process, e, prev_state) from e
