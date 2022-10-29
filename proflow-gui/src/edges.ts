@@ -1,4 +1,4 @@
-import { TNodeId } from "./nodes";
+import { INode, TNodeId } from "./nodes";
 
 export type TEdgeId = number;
 
@@ -12,4 +12,10 @@ export interface IEdge extends IEdgeRaw {
   name: string;
   id: TEdgeId;
   key: number;
+}
+
+
+export interface IEdgeFull extends IEdgeRaw {
+  source: INode;
+  target: INode;
 }

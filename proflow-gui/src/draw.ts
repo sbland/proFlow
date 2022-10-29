@@ -1,15 +1,23 @@
-import { IEdge } from "./edges";
+import { IEdgeFull } from "./edges";
 import { INode, TNodeId } from "./nodes";
 
 export function arcPath(
   mLinkNum: { [k: string]: number },
   leftHand: boolean,
-  d: IEdge,
+  d: IEdgeFull,
   nodes: { [k: TNodeId]: INode }
 ) {
   // var isOddLink = d.linkindex % 2 === 0;.
-  const source = nodes[d.source];
-  const target = nodes[d.target];
+  // TODO: check why we already have node linked to edge data
+  // const source = nodes[d.source];
+  // const target = nodes[d.target];
+  const source = d.source;
+  const target = d.target;
+  if (!source || !target) {
+    console.info(nodes);
+    console.info(d);
+    throw Error("Node not found!");
+  }
   var x1 = leftHand ? source.x : target.x,
     y1 = leftHand ? source.y : target.y,
     x2 = leftHand ? target.x : source.x,

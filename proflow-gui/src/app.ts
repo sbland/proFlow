@@ -10,26 +10,18 @@ http://bl.ocks.org/fancellu/2c782394602a93921faff74e594d1bb1
 // const { sortLinks, setLinkIndexAndNum } = require("./utils");
 // const { arcPath } = require("./draw");
 
+import * as d3 from "d3";
 import { sortLinks, setLinkIndexAndNum } from "./utils";
 import { arcPath } from "./draw";
 
-// TODO: d3 is currently imported in the html
-var d3 = d3;
-
 /* Globals */
-var mLinkNum;
-var nodes; //TODO: Set nodes
 
 var colors = d3.scaleOrdinal(d3.schemeCategory10);
 
 var svg = d3.select("svg");
 var width = +svg.attr("width");
 var height = +svg.attr("height");
-var node;
-var link;
-var pathInvis;
 
-console.info("hello")
 /* Generate svg */
 svg
   .append("defs")
@@ -69,12 +61,15 @@ d3.json("/data/force.json", function (error, graph) {
   if (error) throw error;
   var linksData = graph.links;
   sortLinks(linksData);
-  mLinkNum = setLinkIndexAndNum(linksData);
-  update(linksData, graph.nodes);
+  var mLinkNum = setLinkIndexAndNum(linksData);
+  update(linksData, graph.nodes, mLinkNum);
 });
 
 /* Assign data to d3 svg */
-function update(links, nodes) {
+function update(links, nodes, mLinkNum: { [k: string]: number } = {}) {
+  var link;
+  var pathInvis;
+  var node;
   link = svg
     .selectAll(".link")
     .data(links)
@@ -113,7 +108,7 @@ function update(links, nodes) {
       return "#invis_" + d.source + "-" + d.linkindex + "-" + d.target;
     })
     .style("fill", "#cccccc")
-    .style("font-size", 10)
+    .style("font-size", 30)
     .text(function (d) {
       return d.name;
     });
@@ -143,27 +138,32 @@ function update(links, nodes) {
       return d.name + ":" + d.text;
     });
 
-  simulation.nodes(nodes).on("tick", ticked);
+  simulation
+    .nodes(nodes)
+    .on("tick", ticked(link, pathInvis, node, mLinkNum, nodes));
 
   simulation.force("link").links(links);
 }
 
-function ticked() {
-  link.attr("d", function (d) {
-    return arcPath(mLinkNum, true, d, nodes);
-  });
+const ticked = (link, pathInvis, node, mLinkNum, nodes) =>
+  function tickedInner() {
+    link.attr("d", function (d) {
+      return arcPath(mLinkNum, true, d, nodes);
+    });
 
-  pathInvis.attr("d", function (d) {
-    const source = nodes[d.source];
-    const target = nodes[d.target];
+    pathInvis.attr("d", function (d) {
+      // const source = nodes[d.source];
+      // const target = nodes[d.target];
 
-    return arcPath(mLinkNum, source.x < target.x, d, nodes);
-  });
+      const source = d.source;
+      const target = d.target;
+      return arcPath(mLinkNum, source.x < target.x, d, nodes);
+    });
 
-  node.attr("transform", function (d) {
-    return "translate(" + d.x + ", " + d.y + ")";
-  });
-}
+    node.attr("transform", function (d) {
+      return "translate(" + d.x + ", " + d.y + ")";
+    });
+  };
 
 function dragstarted(d) {
   if (!d3.event.active) simulation.alphaTarget(0.02).restart();
