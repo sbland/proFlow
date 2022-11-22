@@ -1,12 +1,10 @@
 from collections import namedtuple
-from typing import List, Tuple, TYPE_CHECKING, Callable
+from typing import List, Tuple, TYPE_CHECKING, Callable, Union
 import inspect
 import re
 import warnings
 import ast
 import textwrap
-
-from numpy import deprecate
 
 from proflow.Objects.Interface import I
 
@@ -15,10 +13,26 @@ if TYPE_CHECKING:
 
 
 class ProflowParsingError(Exception):
-    def __init__(self, message, function):
+    def __init__(self, message, process: "Process"):
         self.message = message
-        self.source = inspect.getsource(function)
-        super().__init__(self.message)
+        self.process = process
+        # self.source = inspect.getsource(process)
+        self.full_message = f"""Failed to parse the Proflow Process: \n
+Process name: {process.comment or process.func.__name__} \n
+Message: "{message}"
+        """
+        super().__init__(self.full_message)
+
+
+class ProflowParsingFunctionError(Exception):
+    def __init__(self, message, func):
+        self.message = message
+        self.source = inspect.getsource(func)
+        self.full_message = f'Proflow parsing function error: {self.message} \n {self.source}'
+        super().__init__(self.full_message)
+    def __repr__(self):
+        return f'Proflow parsing function error: {self.message} \n {self.source}'
+
 
 
 class ProflowParsingLineError(Exception):
@@ -33,105 +47,13 @@ class ProflowParsingLineError(Exception):
 
 class ProflowParsingAstError(Exception):
     def __init__(self, message, failed_ast):
+        message = f'{message} \n ======= ast.dump: \n {ast.dump(failed_ast)} \n ==='
         self.message = message
         self.ast = failed_ast
         super().__init__(self.message)
 
     def __repr__(self):
-        return f'Proflow parsing line error: {self.message} \n {self.ast}'
-
-
-# def clean_key(k: str):
-#     stripped = k.strip()[1:-1]
-#     return stripped
-
-
-# def clean_val(v: str):
-#     """Clean the value component.
-
-#     Captured in brackets
-#     "(state['foo']['bar'] + 1),"
-#     "(state['foo']['bar'] + 1)"
-
-#     Parameters
-#     ----------
-#     v : str
-#         [description]
-#     """
-#     # get text inside the double inverted commas and
-#     r = re.compile(r'(?:\"|^)(.*?)(?=(?:,|\"|$|\s*[,\"]|\s*$))(?:,|$|\"|\s)*')
-#     stripped = r.search(v).groups()[0].strip()
-#     return stripped
-
-
-# def extract_target_path_from_val(v: str):
-#     raise NotImplementedError()
-#     # print(v)
-
-
-# def split_trailing_and_part(v: str):
-#     """Convert val from new style to old style.
-
-#     Expected Input:
-#     state['foo']['bar'][0][i] + 1
-
-#     Expected output:
-#     state.foo.bar.0._i_
-
-#     """
-#     # step 1. Find state or config
-#     find_state_conf_parts = r'(?P<target>state|config)(?P<value>(?:\S*\[(.*?)\])\S*)'
-#     find_trailing_parts = \
-#         r'(?P<trailing>( (?![^\[]*?\])(.*?(?![^\[]*?\])) )(?![^\[]*?\]).*?)(\[|$|state|config)'
-#     r = re.compile(find_state_conf_parts + '|' + find_trailing_parts)
-#     matches = r.finditer(v)
-#     parts = [m.groupdict() for m in matches]
-
-#     def merge_parts_fn(p):
-#         p_mod = {'target': p['target'], 'value': p['value']} if p['target'] is not None \
-#             else {'target': 'trailing', 'value': p['trailing']}
-#         return p_mod
-#     merged_parts = list(map(merge_parts_fn, parts))
-#     return merged_parts
-
-
-# ==========================
-
-
-# def extract_inputs_lines(map_inputs_fn: Callable[[object], List[str]]):
-#     """Extracts each line form the list of inputs.
-
-#     For example
-#     ```
-#     lambda config: [
-#         I(config.a.foo.bar, as_='x'),
-#         I(config.a.foo[0], as_='x'),
-#     ]
-#     ```
-#     Becomes:
-#     ```
-#     [
-#         "config.a.foo.bar, as_='x'",
-#         "config.a.foo[0], as_='x'",
-#     ]
-#     ```
-
-#     Parameters
-#     ----------
-#     map_inputs_fn : Callable
-#         the process input function
-
-#     Returns
-#     -------
-#     List[str]
-#         [description]
-#     """
-#     inputs_source = inspect.getsource(map_inputs_fn)
-#     # r = re.compile(r'.(?<=\[).*\]', re.DOTALL | re.MULTILINE) # Include brackets
-#     r = re.compile(r'I\((.*?)\)(?:,|$)', re.DOTALL | re.MULTILINE)  # inside of I object
-#     matches = r.finditer(inputs_source)
-#     lines = (g for match in matches if match is not None for g in match.groups())
-#     return lines
+        return f'Proflow parsing line error: {self.message}'
 
 
 def strip_out_comments(string: str) -> str:
@@ -273,21 +195,35 @@ def get_lambda_func(input_tree: ast.Assign) -> ast.Lambda:
     elif isinstance(input_tree.value, ast.Lambda):
         return input_tree.value
     else:
-        raise TypeError(f"Unexpected AST type: {type(input_tree.value)}")
+        raise ProflowParsingAstError(f"Unexpected AST type: {type(input_tree.value)}", input_tree)
 
+def parse_unary_op(v: ast.UnaryOp):
+    if isinstance(v.op, ast.USub):
+        return "-" + str(parse_arg_val(v.operand))
+    else:
+        raise ProflowParsingAstError(f"AST UnaryOp type not implemented: {type(v.op)}", v)
+
+
+def parse_arg_val(v) -> str:
+    if isinstance(v, ast.UnaryOp):
+        return parse_unary_op(v)
+    elif isinstance(v, ast.Name):
+        return v.id
+    elif isinstance(v, ast.Constant):
+        return v.value
+    else:
+        raise ProflowParsingAstError(f"AST value type not implemented: {type(v)}", v)
 
 def parse_arg_index(i: ast.Index):
     if isinstance(i.value, ast.Constant):
         return i.value.value
     elif isinstance(i, ast.Index):
-        return i.value.id
+        return parse_arg_val(i.value)
     else:
-        print("Failed to parse index")
-        print(ast.dump(i))
-        raise ValueError(f"AST type not implemented: {type(i)}")
+        raise ProflowParsingAstError(f"AST index type not implemented: {type(i)}", i)
 
 
-def parse_arg(attr: ast.Attribute):
+def parse_arg(attr: ast.Attribute) -> List[str]:
     """Takes a parameter path such as config.a.b and recursively pulls out the string rep"""
     arg_list = []
     if isinstance(attr, ast.Attribute):
@@ -302,6 +238,25 @@ def parse_arg(attr: ast.Attribute):
     elif isinstance(attr, ast.Subscript):
         arg_list.append(parse_arg_index(attr.slice))
         arg_list = arg_list + parse_arg(attr.value)
+    elif isinstance(attr, ast.ListComp):
+        # TODO: parse rest of attr
+        arg_list = arg_list + parse_arg(attr.elt)
+    elif isinstance(attr, ast.BinOp):
+        lhs = '.'.join(reversed(parse_arg(attr.left)))
+        rhs = '.'.join(reversed(parse_arg(attr.right)))
+        arg_list.append(f"{lhs},{rhs}")
+    elif isinstance(attr, ast.Compare):
+        lhs = '.'.join(reversed(parse_arg(attr.left)))
+        # TODO: Check this handles all comparitors
+        rhs = '.'.join(reversed(parse_arg(attr.comparators[0])))
+        arg_list.append(f"{lhs},{rhs}")
+    elif isinstance(attr, ast.Call):
+        if attr.func.id == "lget":
+            print(ast.dump(attr))
+            arg_list = arg_list + parse_arg(attr.args[1]) + parse_arg(attr.args[0])
+        else:
+            ProflowParsingAstError(
+                f"Parsing for func: {attr.func.id} has not been implemented", attr)
     # elif isinstance(attr, ast.List): # NOTE: Not currently supported
     #     arg_list.append(parse_arg_index(attr.slice))
     #     arg_list = arg_list + parse_arg(attr.value)
@@ -389,8 +344,10 @@ def get_outputs_from_lambda_body(input_list: ast.List):
     return input_mapping
 
 
-def parse_inputs(map_inputs_fn: Callable[[any], List[I]]) -> dict:
+def parse_inputs(map_inputs_fn: Callable[[any], List[I]], allow_errors: bool = True) -> dict:
     source_code = textwrap.dedent(inspect.getsource(map_inputs_fn))
+    if source_code[0:5] == "field":
+        return {}  # input function is not set
     try:
         ast_tree = ast.parse(source_code)
         lambda_fn = get_lambda_func(ast_tree.body[0])
@@ -398,9 +355,13 @@ def parse_inputs(map_inputs_fn: Callable[[any], List[I]]) -> dict:
         inputs_map = get_inputs(inputs_list)
         return inputs_map
     except Exception as e:
-        raise e
-        print(e)
-        raise Exception(f"Failed to get inputs for \n{source_code}")
+        if not allow_errors:
+            print(e)
+            raise ProflowParsingFunctionError(f"Failed to get inputs for source", map_inputs_fn)
+        else:
+            return str(e)
+            # print(e)
+            # return "UNKNOWN"
 
 
 def parse_outputs_b(map_inputs_fn: Callable[[any], List[I]]) -> dict:
@@ -416,32 +377,57 @@ def parse_outputs_b(map_inputs_fn: Callable[[any], List[I]]) -> dict:
 
 
 def parse_outputs(map_outputs_fn: Callable[[any], List[I]], allow_errors: bool = True) -> dict:
-    output_lines = parse_outputs_to_interface(map_outputs_fn, allow_errors)
-    outputs_map = {
-        parse_key(i.from_): f'{rm_inv_comma(i.as_.strip())}'
-        for i in output_lines}
-    return outputs_map
+    try:
+        output_lines = parse_outputs_to_interface(map_outputs_fn, allow_errors)
+        outputs_map = {
+            parse_key(i.from_): f'{rm_inv_comma(i.as_.strip())}'
+            for i in output_lines}
+        return outputs_map
+    except Exception as e:
+        if not allow_errors:
+            raise e
+        else:
+            return "UNKNOWN"
+
+
+def fieldNotEmpty(f: Union[any, Callable]) -> bool:
+    return f and callable(f)
 
 
 def inspect_process(process: 'Process'):
     Parsed = namedtuple(
         'Parsed', 'config_inputs state_inputs parameter_inputs additional_inputs state_outputs')
-    return Parsed(
-        config_inputs=parse_inputs(process.config_inputs),
-        state_inputs=parse_inputs(process.state_inputs),
-        parameter_inputs=parse_inputs(process.state_inputs),
-        additional_inputs=parse_inputs(process.additional_inputs),
-        state_outputs=parse_outputs(process.state_outputs),
-    )
+    try:
+        return Parsed(
+            config_inputs=fieldNotEmpty(
+                process.config_inputs) and parse_inputs(process.config_inputs),
+            state_inputs=fieldNotEmpty(process.state_inputs) and parse_inputs(process.state_inputs),
+            parameter_inputs=fieldNotEmpty(
+                process.state_inputs) and parse_inputs(process.state_inputs),
+            additional_inputs=fieldNotEmpty(
+                process.additional_inputs) and parse_inputs(process.additional_inputs),
+            state_outputs=fieldNotEmpty(
+                process.state_outputs) and parse_outputs(process.state_outputs),
+        )
+    except Exception as e:
+        raise ProflowParsingError(str(e), process)
 
 
 def inspect_process_to_interfaces(process: 'Process'):
     Parsed = namedtuple(
         'Parsed', 'config_inputs state_inputs parameter_inputs additional_inputs state_outputs')
-    return Parsed(
-        config_inputs=parse_inputs_to_interface(process.config_inputs),
-        state_inputs=parse_inputs_to_interface(process.state_inputs),
-        parameter_inputs=parse_inputs_to_interface(process.state_inputs),
-        additional_inputs=parse_inputs_to_interface(process.additional_inputs),
-        state_outputs=parse_outputs_to_interface(process.state_outputs),
-    )
+    try:
+        return Parsed(
+            config_inputs=fieldNotEmpty(
+                process.config_inputs) and parse_inputs_to_interface(process.config_inputs),
+            state_inputs=fieldNotEmpty(
+                process.state_inputs) and parse_inputs_to_interface(process.state_inputs),
+            parameter_inputs=fieldNotEmpty(
+                process.state_inputs) and parse_inputs_to_interface(process.state_inputs),
+            additional_inputs=fieldNotEmpty(
+                process.additional_inputs) and parse_inputs_to_interface(process.additional_inputs),
+            state_outputs=fieldNotEmpty(
+                process.state_outputs) and parse_outputs_to_interface(process.state_outputs),
+        )
+    except Exception as e:
+        raise ProflowParsingError(str(e), process)

@@ -1,11 +1,11 @@
 from dataclasses import dataclass, field
-from typing import Callable, List, Tuple
+from typing import Callable, List, Tuple, Union
 from enum import Enum
 
 from proflow.external_state import External_State_Shape
 from proflow.parameters import Parameters_Shape
 from proflow.config import Config_Shape
-from proflow.process_inspector import parse_inputs, parse_outputs
+from proflow.process_inspector import parse_inputs, parse_outputs, fieldNotEmpty
 from proflow.internal_state import Model_State_Shape
 from .Interface import I
 
@@ -15,6 +15,7 @@ class ProcessType(Enum):
     TIME = 1
     LOG = 2
     # TODO: Add NONMUTABLE type
+
 
 @dataclass
 class Process:
@@ -93,11 +94,11 @@ class Process:
             'comment': self.comment,
             'gate': self.gate,
             'group': self.group,
-            'config_inputs': parse_inputs(self.config_inputs),
-            'parameters_inputs': parse_inputs(self.parameters_inputs),
-            'external_state_inputs': parse_inputs(self.external_state_inputs),
-            'additional_inputs': parse_inputs(self.additional_inputs),
-            'state_inputs': parse_inputs(self.state_inputs),
-            'state_outputs': parse_outputs(self.state_outputs),
+            'config_inputs': fieldNotEmpty(self.config_inputs) and parse_inputs(self.config_inputs, False),
+            'parameters_inputs': fieldNotEmpty(self.parameters_inputs) and parse_inputs(self.parameters_inputs, False),
+            'external_state_inputs': fieldNotEmpty(self.external_state_inputs) and parse_inputs(self.external_state_inputs, False),
+            'additional_inputs': fieldNotEmpty(self.additional_inputs) and parse_inputs(self.additional_inputs, False),
+            'state_inputs': fieldNotEmpty(self.state_inputs) and parse_inputs(self.state_inputs, False),
+            'state_outputs': fieldNotEmpty(self.state_outputs) and parse_outputs(self.state_outputs),
             'args': self.args,
         }

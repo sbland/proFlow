@@ -15,6 +15,7 @@ from proflow.process_inspector import (
 
 from proflow.Objects.Interface import I
 from proflow.Objects.Process import Process
+from proflow.helpers import lget
 
 
 def DEMO_FUNC(x, y, z):
@@ -26,7 +27,7 @@ DEMO_PROCESS = Process(
     comment="This is the process comment",
     gate=True,
     config_inputs=lambda config: [
-            I(config.a, as_='x'),
+        I(config.a, as_='x'),
     ],
     state_inputs=lambda state: [
         I(state.a, as_='y'),
@@ -85,16 +86,80 @@ def test_inspect_process_empty(snapshot):
     assert list(process_inputs.state_outputs) == ['result']
 
 
+def test_inspect_process_unassigned(snapshot):
+    def test_func(x, y, z):
+        return x + y + z
+
+    demo_process = Process(
+        func=test_func,
+        comment="This is the process comment",
+        gate=True,
+        state_outputs=lambda result: [
+            (result, 'x'),
+        ]
+    )
+
+    process_inputs = inspect_process(demo_process)
+    print(process_inputs.additional_inputs)
+    assert list(process_inputs.additional_inputs) == []
+    assert list(process_inputs.config_inputs) == []
+    assert list(process_inputs.parameter_inputs) == []
+    assert list(process_inputs.state_inputs) == []
+    assert list(process_inputs.state_outputs) == ['result']
+
+
 class TestParseInputs:
 
-    def test_parse_inputs(self):
-        """Test parse_inputs returns correct value."""
+    def test_parse(self):
         DEMO_INPUTS = lambda config: [  # noqa: E731
             I(config.a.foo.bar, as_='x'),
             I(config.a.foo[0], as_='y'),
+            I(config.a.foo[-1], as_='z'),
         ]
-        out = parse_inputs(DEMO_INPUTS)
-        assert out == {"config.a.foo.bar": "x", "config.a.foo.0": "y"}
+        out = parse_inputs(DEMO_INPUTS, False)
+        # Should we retain some info on the [0] here?
+        assert out == {"config.a.foo.bar": "x", "config.a.foo.0": "y", "config.a.foo.-1": "z"}
+
+    def test_parse_lget(self):
+        DEMO_INPUTS = lambda e_state: [  # noqa: E731
+            I(lget(e_state.foo, 1, "missing"), as_='y'),
+        ]
+        out = parse_inputs(DEMO_INPUTS, False)
+        assert out == {"e_state.foo.1": "y"}
+
+    def test_parse_binop(self):
+        DEMO_INPUTS = lambda state: [  # noqa: E731
+            I(state.a.foo - state.a.bar, as_='x'),
+        ]
+        out = parse_inputs(DEMO_INPUTS, False)
+        assert out == {"state.a.foo,state.a.bar": "x"}
+
+    def test_parse_compare(self):
+        DEMO_INPUTS = lambda state: [  # noqa: E731
+            I(state.a.foo > state.a.bar, as_='x'),
+        ]
+        out = parse_inputs(DEMO_INPUTS, False)
+        assert out == {"state.a.foo,state.a.bar": "x"}
+
+    def test_parse_listcomp(self):
+        iLC = 1
+        nP = 3
+        DEMO_INPUTS = lambda state, iLC=iLC: [
+            I([state.foo[iLC][iP].a for iP in range(nP)], as_='x'),
+        ]
+
+        out = parse_inputs(DEMO_INPUTS, False)
+        assert out == {"state.foo.iLC.iP.a": "x"}
+
+    def test_parse_param_as_index(self):
+        DEMO_INPUTS = lambda config: [
+            I(config.foo[config.bar].a,
+              as_='x')
+        ]
+
+        out = parse_inputs(DEMO_INPUTS, False)
+        assert out == {"config.foo.*y.a": "x", "config.bar": "*y"}
+
 
 
 class TestExtractOutputLines:

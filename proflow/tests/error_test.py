@@ -33,7 +33,7 @@ def test_process_error():
     run_processes = process_runner.initialize_processes(processes)
     with pytest.raises(Run_Process_Error) as exc:
         run_processes(initial_state=state)
-    assert exc.value.message == 'Failed to run process_add'
+    assert exc.value.message == 'Failed to run "process_add"'
     assert exc.value.state == state
 
 
@@ -56,7 +56,7 @@ def test_process_error_with_comment():
     run_processes = process_runner.initialize_processes(processes)
     with pytest.raises(Run_Process_Error) as exc:
         run_processes(initial_state=state)
-    assert exc.value.message == 'Failed to run Demo Process'
+    assert exc.value.message == 'Failed to run "Demo Process"'
 
     # with pytest.raises(TypeError) as exc:
     #     run_processes(initial_state=state)

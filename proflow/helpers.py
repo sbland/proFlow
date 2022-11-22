@@ -1,5 +1,5 @@
 from .Objects.Process import Process
-from typing import Any, Union, List
+from typing import Any, Union, List, Optional
 from functools import reduce
 
 
@@ -91,3 +91,52 @@ def rsetattr(obj: object, attr: Union[str, List[str]], val: Any):
     else:
         setattr(target, post, val)
     return obj_copy
+
+
+def lget(v: Optional[List[any]], i: int, fallback_value=None) -> any:
+    """Safely get a value from a list with index and fallback value.
+
+    Parameters
+    ----------
+    v : Optional[List[any]]
+        Input list may be null
+    i : int
+        Index
+    fallback_value : [type], optional
+        Value to use if v is null, by default None
+
+    Returns
+    -------
+    any
+        Return value
+
+    """
+    try:
+        return v[i]
+    except (TypeError, IndexError):
+        return fallback_value
+
+
+def nullop():
+    return None
+
+
+def tag_process(comment):
+    return Process(
+        func=nullop,
+        comment=comment,
+    )
+
+
+def perNlc(nLC, fn, *args, **kwargs):
+    return [fn(iLC, *args, **kwargs) for iLC in range(nLC)],
+
+
+def raise_error(e):
+    """Allow raising an error in a lambda function."""
+    raise e
+
+
+def accumulate(**kwargs):
+    out = sum(kwargs.values())
+    return out
