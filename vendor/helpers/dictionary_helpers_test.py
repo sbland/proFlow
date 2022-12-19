@@ -124,6 +124,6 @@ def test_get_nested_val_time(benchmark_fixture):
 
     time = min(repeat(test_all, number=15000, repeat=5))
     print(1 - (time / 0.158))
-    low = 0.130/benchmark_fixture
-    high = 0.174/benchmark_fixture
+    low = 0.130 / benchmark_fixture
+    high = 0.284 / benchmark_fixture
     assert low < time < high

@@ -37,20 +37,25 @@ DEMO_PROCESS = Process(
     ],
     state_outputs=lambda result: [
         (result, 'x'),
-    ]
+    ],
 )
 
 
-def test_inspect_process(snapshot):
+def test_inspect_process():
     process_inputs = inspect_process(DEMO_PROCESS)
-    assert process_inputs.additional_inputs == {'10': 'z'}
-    assert process_inputs.config_inputs == {'config.a': 'x'}
-    assert process_inputs.parameter_inputs == {'state.a': 'y'}
-    assert process_inputs.state_inputs == {'state.a': 'y'}
+    # assert process_inputs.additional_inputs == {'10': 'z'}
+    # assert process_inputs.config_inputs == {'config.a': 'x'}
+    # assert process_inputs.parameter_inputs == {'state.a': 'y'}
+    # assert process_inputs.state_inputs == {'state.a': 'y'}
+    # assert process_inputs.state_outputs == {'result': 'state.x'}
+    assert process_inputs.additional_inputs == {'z': '10'}
+    assert process_inputs.config_inputs == {'x': 'config.a'}
+    assert process_inputs.parameter_inputs == {'y': 'state.a'}
+    assert process_inputs.state_inputs == {'y': 'state.a'}
     assert process_inputs.state_outputs == {'result': 'state.x'}
 
 
-def test_inspect_process_to_interfaces(snapshot):
+def test_inspect_process_to_interfaces():
     process_inputs = inspect_process_to_interfaces(DEMO_PROCESS)
     assert list(process_inputs.additional_inputs) == [I('10', as_='z')]
     assert list(process_inputs.config_inputs) == [I('config.a', as_='x')]
@@ -59,7 +64,7 @@ def test_inspect_process_to_interfaces(snapshot):
     assert list(process_inputs.state_outputs) == [I('result', as_='state.x')]
 
 
-def test_inspect_process_empty(snapshot):
+def test_inspect_process_empty():
     def test_func(x, y, z):
         return x + y + z
 
@@ -118,28 +123,36 @@ class TestParseInputs:
         ]
         out = parse_inputs(DEMO_INPUTS, False)
         # Should we retain some info on the [0] here?
-        assert out == {"config.a.foo.bar": "x", "config.a.foo.0": "y", "config.a.foo.-1": "z"}
+        assert out == {"x": "config.a.foo.bar", "y": "config.a.foo.0", "z": "config.a.foo.-1"}
 
     def test_parse_lget(self):
         DEMO_INPUTS = lambda e_state: [  # noqa: E731
             I(lget(e_state.foo, 1, "missing"), as_='y'),
         ]
         out = parse_inputs(DEMO_INPUTS, False)
-        assert out == {"e_state.foo.1": "y"}
+        assert out == {"y": "e_state.foo.1"}
+
+    def test_parse_sum(self):
+        DEMO_INPUTS = lambda e_state: [  # noqa: E731
+            I(sum(e_state.foo), as_='y'),
+        ]
+        out = parse_inputs(DEMO_INPUTS, False)
+        # TODO: should store "sum" somewhere
+        assert out == {"y": "e_state.foo._SUM()"}
 
     def test_parse_binop(self):
         DEMO_INPUTS = lambda state: [  # noqa: E731
             I(state.a.foo - state.a.bar, as_='x'),
         ]
         out = parse_inputs(DEMO_INPUTS, False)
-        assert out == {"state.a.foo,state.a.bar": "x"}
+        assert out == {"x": "state.a.foo,state.a.bar"}
 
     def test_parse_compare(self):
         DEMO_INPUTS = lambda state: [  # noqa: E731
             I(state.a.foo > state.a.bar, as_='x'),
         ]
         out = parse_inputs(DEMO_INPUTS, False)
-        assert out == {"state.a.foo,state.a.bar": "x"}
+        assert out == {"x": "state.a.foo,state.a.bar"}
 
     def test_parse_listcomp(self):
         iLC = 1
@@ -149,7 +162,13 @@ class TestParseInputs:
         ]
 
         out = parse_inputs(DEMO_INPUTS, False)
-        assert out == {"state.foo.iLC.iP.a": "x"}
+        assert out == {
+            'x': 'LIST_COMP(list_comp_id)',
+            'iP': 'GEN',
+            'GEN': ['RANGE PLACEHOLDER'],
+            'ELT': 'state.foo.iLC.iP.a',
+            'LIST_COMP(list_comp_id)': 'ELT'
+        }
 
     def test_parse_param_as_index(self):
         DEMO_INPUTS = lambda config: [
@@ -158,8 +177,30 @@ class TestParseInputs:
         ]
 
         out = parse_inputs(DEMO_INPUTS, False)
-        assert out == {"config.foo.*y.a": "x", "config.bar": "*y"}
+        assert out == {"x": "config.foo.*X.a", "*X": "config.bar"}
 
+    def test_parse_inputs_sum_of_listcomp(self):
+        # iL = 1
+        # nLC = 3
+        # nL = 2
+        # DEMO_INPUTS = lambda state, iL=iL: [
+        #     # We calculate cumulative Lai here
+        #     I(sum([state.canopy_layer_component[jL][jLC].SAI for jLC in range(nLC)
+        #            for jL in range(iL + 1, nL)]), as_='LAI_c'),
+        # ]
+        DEMO_INPUTS = lambda config: [
+            I(sum([i + v for i, v in range(config.bar)]), as_='x'),
+        ]
+
+        out = parse_inputs(DEMO_INPUTS, False)
+        assert out == {
+            'x': 'LIST_COMP(list_comp_id)._SUM()',
+            'i': 'GEN',
+            'v': 'GEN',
+            'GEN': ['RANGE PLACEHOLDER'],
+            'ELT': 'i,v',
+            'LIST_COMP(list_comp_id)': 'ELT',
+        }
 
 
 class TestExtractOutputLines:
@@ -175,8 +216,6 @@ class TestExtractOutputLines:
 
     def test_extract_output_lines_dict_result(self):
         """Test parse_inputs returns correct value."""
-        iLC = 0
-
         DEMO_OUTPUTS = lambda result: [  # noqa: E731
             (result['a'], 'a'),
             (result['b'], 'b'),
@@ -198,10 +237,10 @@ class TestExtractOutputLines:
     def test_extract_output_lines_complex_01(self):
         """Test parse_inputs returns correct value."""
         DEMO_OUTPUTS = lambda result: [  # noqa E731
-                [(result[iL][iLC], f'foo.{iL}.{iLC}.bar')
-                    for iL in range(3) for iLC in range(3)],
-                (result.a.foo.bar, 'x'),
-            ]
+            [(result[iL][iLC], f'foo.{iL}.{iLC}.bar')
+                for iL in range(3) for iLC in range(3)],
+            (result.a.foo.bar, 'x'),
+        ]
         out = list(extract_output_lines(DEMO_OUTPUTS))
         # TODO: We are stripping out the for loop here. Can we include it
         assert out == ["result[iL][iLC], f'foo.{iL}.{iLC}.bar'", "result.a.foo.bar, 'x'"]
@@ -216,7 +255,6 @@ class TestExtractOutputLines:
     @pytest.mark.skip(reason="Star not implemented")
     def test_extract_output_lines_with_star(self):
         """Test parse_inputs returns correct value."""
-        deepcopy = lambda: None
         DEMO_OUTPUTS = lambda result: [
             *[('a', 'b') for _ in range(3)],
         ]
