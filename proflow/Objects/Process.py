@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Callable, List, Tuple, Union
+from typing import Callable, List, Tuple
 from enum import Enum
 
 from proflow.external_state import External_State_Shape
@@ -47,7 +47,9 @@ class Process:
         args: Callable
             additional args as a list (*args)
         format_output: Callable
-            If true then we use old system(SLOW!) to map the output string to the state (can then use special characters)
+            If true then we use old system(SLOW!) to map the output string
+            to the state (can then use special characters)
+
     """
     func: Callable[[Model_State_Shape],
                    Model_State_Shape] = lambda: NotImplementedError()  # The function to call
@@ -87,18 +89,24 @@ class Process:
             f'args={self.args}',
         ]) + ')'
 
-    def human(self) -> dict:
+    def human(self, strict=False) -> dict:
         return {
             'func': self.func.__name__,
             'ptype': self.ptype,
             'comment': self.comment,
             'gate': self.gate,
             'group': self.group,
-            'config_inputs': fieldNotEmpty(self.config_inputs) and parse_inputs(self.config_inputs, False),
-            'parameters_inputs': fieldNotEmpty(self.parameters_inputs) and parse_inputs(self.parameters_inputs, False),
-            'external_state_inputs': fieldNotEmpty(self.external_state_inputs) and parse_inputs(self.external_state_inputs, False),
-            'additional_inputs': fieldNotEmpty(self.additional_inputs) and parse_inputs(self.additional_inputs, False),
-            'state_inputs': fieldNotEmpty(self.state_inputs) and parse_inputs(self.state_inputs, False),
-            'state_outputs': fieldNotEmpty(self.state_outputs) and parse_outputs(self.state_outputs),
+            'config_inputs': fieldNotEmpty(self.config_inputs) and
+            parse_inputs(self.config_inputs, strict),
+            'parameters_inputs': fieldNotEmpty(self.parameters_inputs) and
+            parse_inputs(self.parameters_inputs, strict),
+            'external_state_inputs': fieldNotEmpty(self.external_state_inputs) and
+            parse_inputs(self.external_state_inputs, strict),
+            'additional_inputs': fieldNotEmpty(self.additional_inputs) and
+            parse_inputs(self.additional_inputs, strict),
+            'state_inputs': fieldNotEmpty(self.state_inputs) and
+            parse_inputs(self.state_inputs, strict),
+            'state_outputs': fieldNotEmpty(self.state_outputs) and
+            parse_outputs(self.state_outputs),
             'args': self.args,
         }

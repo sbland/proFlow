@@ -11,6 +11,7 @@ from proflow.process_inspector import (
     inspect_process_to_interfaces,
     extract_output_lines,
     strip_out_comments,
+    reset_id,
 )
 
 from proflow.Objects.Interface import I
@@ -39,6 +40,11 @@ DEMO_PROCESS = Process(
         (result, 'x'),
     ],
 )
+
+
+@pytest.fixture(autouse=True)
+def clear_id():
+    reset_id()
 
 
 def test_inspect_process():
@@ -74,6 +80,34 @@ def test_inspect_process_empty():
         gate=True,
         config_inputs=lambda config: [
         ],
+        state_inputs=lambda state: [
+        ],
+        additional_inputs=lambda: [
+        ],
+        state_outputs=lambda result: [
+            (result, 'x'),
+        ]
+    )
+
+    process_inputs = inspect_process(demo_process)
+    assert list(process_inputs.additional_inputs) == []
+    assert list(process_inputs.config_inputs) == []
+    assert list(process_inputs.parameter_inputs) == []
+    assert list(process_inputs.state_inputs) == []
+    assert list(process_inputs.state_outputs) == ['result']
+
+
+@pytest.mark.skip(reason="NOT IMPLEMENTED")
+def test_inspect_process_ifelse():
+    def test_func(x, y, z):
+        return x + y + z
+
+    demo_process = Process(
+        func=test_func,
+        comment="This is the process comment",
+        gate=True,
+        config_inputs=lambda config: [
+        ] if False else [],
         state_inputs=lambda state: [
         ],
         additional_inputs=lambda: [
@@ -160,14 +194,15 @@ class TestParseInputs:
         DEMO_INPUTS = lambda state, iLC=iLC: [
             I([state.foo[iLC][iP].a for iP in range(nP)], as_='x'),
         ]
-
+        # TODO: Not currently storing source of ILC
         out = parse_inputs(DEMO_INPUTS, False)
         assert out == {
-            'x': 'LIST_COMP(list_comp_id)',
-            'iP': 'GEN',
-            'GEN': ['RANGE PLACEHOLDER'],
+            'x': '(LIST_COMP(list_comp_0))',
             'ELT': 'state.foo.iLC.iP.a',
-            'LIST_COMP(list_comp_id)': 'ELT'
+            'iP': 'GEN_0',
+            'GEN_0': 'RANGE_ARG_0._RANGE()',
+            'LIST_COMP(list_comp_0)': 'ELT.0',
+            'RANGE_ARG_0.0': 'nP',
         }
 
     def test_parse_param_as_index(self):
@@ -180,27 +215,125 @@ class TestParseInputs:
         assert out == {"x": "config.foo.*X.a", "*X": "config.bar"}
 
     def test_parse_inputs_sum_of_listcomp(self):
-        # iL = 1
-        # nLC = 3
-        # nL = 2
-        # DEMO_INPUTS = lambda state, iL=iL: [
-        #     # We calculate cumulative Lai here
-        #     I(sum([state.canopy_layer_component[jL][jLC].SAI for jLC in range(nLC)
-        #            for jL in range(iL + 1, nL)]), as_='LAI_c'),
-        # ]
         DEMO_INPUTS = lambda config: [
             I(sum([i + v for i, v in range(config.bar)]), as_='x'),
         ]
 
         out = parse_inputs(DEMO_INPUTS, False)
         assert out == {
-            'x': 'LIST_COMP(list_comp_id)._SUM()',
-            'i': 'GEN',
-            'v': 'GEN',
-            'GEN': ['RANGE PLACEHOLDER'],
+            'x': '(LIST_COMP(list_comp_0))._SUM()',
+            'i': 'GEN_0',
+            'v': 'GEN_0',
+            'RANGE_ARG_0.0': 'config.bar',
+            'GEN_0': 'RANGE_ARG_0._RANGE()',
             'ELT': 'i,v',
-            'LIST_COMP(list_comp_id)': 'ELT',
+            'LIST_COMP(list_comp_0)': 'ELT.0',
         }
+
+    def test_parse_inputs_sum_of_listcomp_multi_gen(self):
+        DEMO_INPUTS = lambda config: [
+            I(sum([i + v for i in range(config.bar) for v in range(config.foo)]), as_='x'),
+        ]
+
+        out = parse_inputs(DEMO_INPUTS, False)
+
+        assert out == {
+            'x': '(LIST_COMP(list_comp_0),LIST_COMP(list_comp_1))._SUM()',
+            'i': 'GEN_0',
+            'v': 'GEN_1',
+            'GEN_0': 'RANGE_ARG_0._RANGE()',
+            'GEN_1': 'RANGE_ARG_1._RANGE()',
+            'ELT': 'i,v',
+            'LIST_COMP(list_comp_0)': 'ELT.0',
+            'LIST_COMP(list_comp_1)': 'ELT.1',
+            'RANGE_ARG_0.0': 'config.bar',
+            'RANGE_ARG_1.0': 'config.foo',
+        }
+
+    @pytest.mark.skip(reason="NOT IMPLEMENTED")
+    def test_parse_inputs_sum_of_listcomp_multi_gen_nested(self):
+        DEMO_INPUTS = lambda config: [
+            I(sum([[i + v for i in range(config.bar)] for v in range(config.foo)]), as_='x'),
+        ]
+
+        out = parse_inputs(DEMO_INPUTS, False)
+        # TODO: Work out how to handle this
+        assert out == {
+            'x': '(LIST_COMP(list_comp_0))._SUM()',
+            'i': 'GEN_0',
+            'v': 'GEN_1',
+            'GEN_0': 'RANGE_ARG_0._RANGE()',
+            'GEN_1': 'RANGE_ARG_1._RANGE()',
+            'ELT_0': 'LIST_COMP(list_comp_1)',
+            'ELT_1': 'i,v',
+            'LIST_COMP(list_comp_0)': 'ELT_0.0',
+            'LIST_COMP(list_comp_1)': 'ELT_1.1',
+            'RANGE_ARG_0.0': 'config.bar',
+            'RANGE_ARG_1.0': 'config.foo',
+        }
+        {
+            'x': '(LIST_COMP(list_comp_0))._SUM()',
+            'ELT': '(LIST_COMP(list_comp_0))',
+            'RANGE_ARG_0.0': 'config.bar',
+            'i': 'GEN_0',
+            'GEN_0': 'RANGE_ARG_1._RANGE()',
+            'LIST_COMP(list_comp_0)': 'ELT.0',
+            'RANGE_ARG_1.0': 'config.foo',
+            'v': 'GEN_0',
+        }
+
+    def test_parse_inputs_range(self):
+        DEMO_INPUTS = lambda config: [
+            I(range(config.bar, config.foo), as_='x'),
+        ]
+
+        out = parse_inputs(DEMO_INPUTS, False)
+
+        assert out == {
+            'x': 'RANGE_ARG_0._RANGE()',
+            'RANGE_ARG_0.0': "config.bar",
+            "RANGE_ARG_0.1": "config.foo",
+        }
+
+    def test_parse_inputs_reversed(self):
+        DEMO_INPUTS = lambda config: [
+            I(reversed(config.bar), as_='x'),
+        ]
+
+        out = parse_inputs(DEMO_INPUTS, False)
+
+        assert out == {
+            'x': 'REVERSED_ARG_0._REVERSED()',
+            'REVERSED_ARG_0.0': "config.bar",
+        }
+
+    def test_parse_inputs_range_and_op(self):
+        DEMO_INPUTS = lambda config: [
+            I(range(config.bar + 1), as_='x'),
+        ]
+
+        out = parse_inputs(DEMO_INPUTS, False)
+
+        # TODO: Handle BinOp better here
+        assert out == {
+            'x': 'RANGE_ARG_0._RANGE()',
+            'RANGE_ARG_0.0': "config.bar,1",
+        }
+    # def test_parse_inputs_check(self):
+    #     nL = 1
+    #     nLC = 2
+    #     DEMO_INPUTS=lambda state: [
+    #         I([[state.canopy_layer_component[iL][iLC].SAI for iLC in range(nLC)]
+    #            for iL in reversed(range(nL))], as_='LAI'),
+    #     ]
+
+    #     out = parse_inputs(DEMO_INPUTS, False)
+
+    #     # TODO: Handle BinOp better here
+    #     assert out == {
+    #         'x': 'RANGE_ARG_0._RANGE()',
+    #         'RANGE_ARG_0.0': "config.bar,1",
+    #     }
 
 
 class TestExtractOutputLines:

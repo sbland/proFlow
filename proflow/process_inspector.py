@@ -11,6 +11,19 @@ from proflow.Objects.Interface import I
 if TYPE_CHECKING:
     from proflow.Objects.Process import Process
 
+NEXT_ID = -1
+
+
+def get_id():
+    global NEXT_ID
+    NEXT_ID += 1
+    return NEXT_ID
+
+
+def reset_id():
+    global NEXT_ID
+    NEXT_ID = -1
+
 
 class ProflowParsingError(Exception):
     def __init__(self, message, process: "Process"):
@@ -168,14 +181,14 @@ def parse_outputs_to_interface(
             for args in args_and_kwargs]
         return output_objects
     except ProflowParsingLineError as e:
-        warnings.warn(Warning(e.message))
-        warnings.warn(Warning(e.source))
+        # warnings.warn(Warning(e.message))
+        # warnings.warn(Warning(e.source))
         if not allow_errors:
             raise e
         return [I(from_='UNKNOWN', as_='UNKNOWN')]
     except ProflowParsingAstError as e:
-        warnings.warn(Warning(e.message))
-        warnings.warn(Warning(e.ast))
+        # warnings.warn(Warning(e.message))
+        # warnings.warn(Warning(e.ast))
         if not allow_errors:
             raise e
         return [I(from_='UNKNOWN', as_='UNKNOWN')]
@@ -276,29 +289,35 @@ def parse_list_comp(attr: ast.ListComp):
     # ELT
     elt_arg, _additional_args = parse_arg(attr.elt)
     additional_args = {**additional_args, **_additional_args}
-
-    # KEYS
-    assert len(attr.generators) == 1, "list comp with more than 1 generator is not implemented"
-    comprehension = attr.generators[0]
-    key_arg, _additional_args = parse_arg(comprehension.target)
-    additional_args = {**additional_args, **_additional_args}
-
-    # GEN
-    gen_arg, _additional_args = parse_arg(comprehension.iter)
-    additional_args = {**additional_args, **_additional_args}
-
-    for k in key_arg:
-        additional_args[k] = "GEN"
-
-    additional_args["GEN"] = gen_arg
-
+    ELT_ID = "ELT"
     ELT = ".".join(reversed(elt_arg))
-    # for k in elt_arg:
-    #     additional_args[k] = "ELT"
-    additional_args["ELT"] = ELT
-    list_comp_id = "LIST_COMP(list_comp_id)"  # TODO: Randomly gen id
-    additional_args[list_comp_id] = "ELT"
-    return [list_comp_id], additional_args
+    additional_args[ELT_ID] = ELT
+    list_comp_ids = []
+    for i, comprehension in enumerate(attr.generators):
+        # KEYS
+        # comprehension = attr.generators[0]
+        key_arg, _additional_args = parse_arg(comprehension.target)
+        additional_args = {**additional_args, **_additional_args}
+
+        # GEN
+        # assert isinstance(
+        #     comprehension.iter, ast.Call
+        # ) and comprehension.iter.func.id == "range", "Only Range comprehension is implemented"
+        gen_arg, _additional_args = parse_arg(comprehension.iter)
+        additional_args = {**additional_args, **_additional_args}
+
+        GEN_ID = f"GEN_{i}"
+        for k in key_arg:
+            additional_args[k] = GEN_ID
+
+        additional_args[GEN_ID] = ".".join(reversed(gen_arg))
+
+        # for k in elt_arg:
+        #     additional_args[k] = "ELT"
+        list_comp_id = f"LIST_COMP(list_comp_{i})"  # TODO: Randomly gen id
+        additional_args[list_comp_id] = f"{ELT_ID}.{i}"
+        list_comp_ids.append(list_comp_id)
+    return ["(" + ",".join(list_comp_ids) + ")"], additional_args
 
 
 def parse_arg(attr: ast.Attribute) -> Tuple[List[str], ArgMap]:
@@ -338,8 +357,8 @@ def parse_arg(attr: ast.Attribute) -> Tuple[List[str], ArgMap]:
         additional_args = {**additional_args, **_additional_args}
         parsed_arg_right, _additional_args = parse_arg(attr.right)
         additional_args = {**additional_args, **_additional_args}
-        lhs = '.'.join(reversed(parsed_arg_left))
-        rhs = '.'.join(reversed(parsed_arg_right))
+        lhs = '.'.join(map(str, reversed(parsed_arg_left)))
+        rhs = '.'.join(map(str, reversed(parsed_arg_right)))
         arg_list.append(f"{lhs},{rhs}")
     elif isinstance(attr, ast.Compare):
         parsed_arg_left, _additional_args = parse_arg(attr.left)
@@ -347,7 +366,6 @@ def parse_arg(attr: ast.Attribute) -> Tuple[List[str], ArgMap]:
         lhs = '.'.join(reversed(parsed_arg_left))
         parsed_arg_comparator, _additional_args = parse_arg(attr.comparators[0])
         additional_args = {**additional_args, **_additional_args}
-
         # TODO: Check this handles all comparitors
         rhs = '.'.join(reversed(parsed_arg_comparator))
         arg_list.append(f"{lhs},{rhs}")
@@ -359,16 +377,36 @@ def parse_arg(attr: ast.Attribute) -> Tuple[List[str], ArgMap]:
             additional_args = {**additional_args, **_additional_args}
             arg_list = arg_list + parsed_arg_1 + parsed_arg_0
         elif attr.func.id == "sum":
-            print(ast.dump(attr))
             assert len(attr.args) == 1, "Sum only implemented when arg length is 1"
             parsed_arg, _additional_args = parse_arg(attr.args[0])
             additional_args = {**additional_args, **_additional_args}
             arg_list = ["_SUM()"] + arg_list + parsed_arg
         elif attr.func.id == "range":
-            arg_list.append("RANGE PLACEHOLDER")
+            RANGE_ARG_ID = f"RANGE_ARG_{get_id()}"
+            out = f"{RANGE_ARG_ID}._RANGE()"
+            for i, arg in enumerate(attr.args):
+                # assert len(attr.args) == 1, "Range only implemented when arg length is 1"
+                ARG_ID = f"{RANGE_ARG_ID}.{i}"  # TODO: Generate this
+                parsed_arg, _additional_args = parse_arg(arg)
+                additional_args = {**additional_args, **_additional_args}
+                additional_args[ARG_ID] = ".".join(reversed(parsed_arg))
+            arg_list.append(out)
+        elif attr.func.id == "reversed":
+            REVERSED_ARG_ID = f"REVERSED_ARG_{get_id()}"
+            out = f"{REVERSED_ARG_ID}._REVERSED()"
+            for i, arg in enumerate(attr.args):
+                # assert len(attr.args) == 1, "REVERSED only implemented when arg length is 1"
+                ARG_ID = f"{REVERSED_ARG_ID}.{i}"  # TODO: Generate this
+                parsed_arg, _additional_args = parse_arg(arg)
+                additional_args = {**additional_args, **_additional_args}
+                additional_args[ARG_ID] = ".".join(reversed(parsed_arg))
+            arg_list.append(out)
         else:
             raise ProflowParsingAstError(
                 f"Parsing for func: {attr.func.id} has not been implemented", attr)
+    elif isinstance(attr, ast.IfExp):
+        # TODO: Implement this
+        arg_list.append("NOT_IMPLEMENTED")
     elif isinstance(attr, ast.Tuple):
         for elt in attr.elts:
             parsed_arg, _additional_args = parse_arg(elt)
@@ -449,10 +487,8 @@ def get_inputs(input_list: ast.List) -> ArgMap:
         assert in_args, "Could not get input args!"
         k = parse_input_map_to_arg(i)
         map_from = '.'.join(map(str, in_args))
-        print("in as arg: ", map_from)
         input_mapping[k] = map_from
         input_mapping = {**input_mapping, **additional_mappings}
-    print(input_mapping)
     return input_mapping
 
 
