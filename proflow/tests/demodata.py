@@ -2,7 +2,6 @@ from proflow.Objects.Interface import I
 from proflow.Objects.Process import Process
 
 DEMO_PROCESSES = [
-
     Process(
         func=lambda x, y, z: x + y + z,
         comment="Demo process a",
@@ -13,7 +12,7 @@ DEMO_PROCESSES = [
             I(state.info.today, as_='y'),
             I(state.info.hour, as_='z')
         ],
-        state_outputs=lambda result: lambda result: [
+        state_outputs=lambda result: [
             (result, 'info.tomorrow'),
         ]
     ),

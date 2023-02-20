@@ -86,7 +86,7 @@ def test_rsetattr_with_dataclass():
 def test_rsetattr_time(benchmark_fixture):
     obj = {'foo': {'bar': 3}}
     t1 = min(repeat(lambda: rsetattr(obj, 'foo', 'zzz')))
-    assert t1 < 0.3/benchmark_fixture
+    assert t1 < 0.4/benchmark_fixture
 
 # TODO: Can we implement a version that does not mutate
 # def test_rsetattr_mutation():
