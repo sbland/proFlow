@@ -63,3 +63,31 @@ def test_process_error_with_comment():
     # print(exc._excinfo[1].__repr__())
     # print(exc._excinfo[1])
     # assert list(exc.__dict__.values())[0][1] == "hello"
+
+
+def test_process_error_string():
+    state = Mock_Model_State_Shape(a=2.1, b=4.1)
+    processes = flatten_list([
+        Process(
+            func=process_add,
+            comment="Demo Process",
+            additional_inputs=lambda: [
+                I(None, as_='x'),
+                I(4, as_='y'),
+            ],
+            state_outputs=lambda result: [
+                (result, 'c'),
+            ],
+        ),
+    ])
+    process_runner.DEBUG_MODE = True
+    run_processes = process_runner.initialize_processes(processes)
+    with pytest.raises(Run_Process_Error) as exc:
+        run_processes(initial_state=state)
+    assert """kwargs:
+           -------
+           {
+               "x": null,
+               "y": 4
+           }
+     """.replace('\n', ' ').replace(' ', '') in str(exc.value).replace('\n', ' ').replace(' ', '')

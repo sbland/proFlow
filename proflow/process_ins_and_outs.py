@@ -1,7 +1,7 @@
 """Functions that get input args from the process and modify state from outputs in process."""
 from typing import Any, Callable, List
 
-from .helpers import rgetattr, rsetattr
+from .helpers import rsetattr
 from .Objects.Process import Process
 from .internal_state import Model_State_Shape
 from .config import Config_Shape
@@ -48,11 +48,11 @@ def get_inputs_from_process(
     state_args = process.state_inputs(prev_state)
     args = process.args
     kwargs = {i.as_: i.from_ for i
-              in config_args
-              + state_args
-              + additional_inputs
-              + external_state_args
-              + parameters_args
+              in config_args +
+              state_args +
+              additional_inputs +
+              external_state_args +
+              parameters_args
               if i.as_ is not None}
     args = process.args + [i.from_ for i in config_args +
                            state_args + additional_inputs + external_state_args

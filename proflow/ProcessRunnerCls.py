@@ -218,7 +218,7 @@ class ProcessRunner():
         external_state: External_State_Shape = self.external_state
         IMMUTABLE_MODE: bool = self.IMMUTABLE_MODE
         row_index: int = self.tm.row_index
-
+        args, kwargs = None, None
         if not process.gate:
             return prev_state
         try:
@@ -269,7 +269,7 @@ class ProcessRunner():
             return output_state
 
         except Exception as e:
-            raise Run_Process_Error(process, e, modified_state) from e
+            raise Run_Process_Error(process, e, modified_state, args, kwargs) from e
 
     def reset_logs(self):
         self.time_logs = []
