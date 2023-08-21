@@ -1,4 +1,5 @@
 import json
+from data_helpers.encoders import AdvancedJsonEncoder
 
 
 class Run_Process_Error(Exception):
@@ -10,9 +11,9 @@ class Run_Process_Error(Exception):
         self.state = state
         self.process = process
         # self.args = args
-        self.args_str = json.dumps(args, indent=4)
+        self.args_str = json.dumps(args, indent=4, cls=AdvancedJsonEncoder)
         # self.kwargs = kwargs
-        self.kwargs_str = json.dumps(kwargs, indent=4)
+        self.kwargs_str = json.dumps(kwargs, indent=4, cls=AdvancedJsonEncoder)
 
     def __str__(self):
         # state_str = str(self.state)
