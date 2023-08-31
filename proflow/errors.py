@@ -10,15 +10,18 @@ class Run_Process_Error(Exception):
         self.error = error
         self.state = state
         self.process = process
-        # self.args = args
         self.args_str = json.dumps(args, indent=4, cls=AdvancedJsonEncoder)
-        # self.kwargs = kwargs
         self.kwargs_str = json.dumps(kwargs, indent=4, cls=AdvancedJsonEncoder)
+        try:
+            self.human = json.dumps(self.process.human(), indent=4, cls=AdvancedJsonEncoder)
+        except Exception as e:
+            self.human = f"""Could not parse process for error message!
+
+            Error:
+            {e}
+            """
 
     def __str__(self):
-        # state_str = str(self.state)
-        # state_print = state_str[0:100] + '...' + \
-        #     state_str[:-100] if len(state_str) > 200 else state_str
         return f"""{self.message}
 ---------- Python Error ----------
 
@@ -33,6 +36,10 @@ args
 kwargs:
 -------
 {self.kwargs_str}
+
+
+------------- Code -------------
+{self.human}
 
         """
         # TODO: Find better way of showing state in error
