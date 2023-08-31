@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Callable, List, Tuple
 from enum import Enum
+import dill as pickle
 
 from proflow.external_state import External_State_Shape
 from proflow.parameters import Parameters_Shape
@@ -15,6 +16,22 @@ class ProcessType(Enum):
     TIME = 1
     LOG = 2
     # TODO: Add NONMUTABLE type
+
+
+def NOT_IMPLEMENTED():
+    raise NotImplementedError()
+
+
+def GET_STANDARD_TYPE_FACTORY():
+    return ProcessType.STANDARD
+
+
+def GET_INPUT_FACTORY_INNER(*args, **kwargs):
+    return []
+
+
+def GET_INPUT_FACTORY(**kwargs):
+    return GET_INPUT_FACTORY_INNER
 
 
 @dataclass
@@ -52,61 +69,92 @@ class Process:
 
     """
     func: Callable[[Model_State_Shape],
-                   Model_State_Shape] = lambda: NotImplementedError()  # The function to call
-    ptype: ProcessType = field(default_factory=lambda: ProcessType.STANDARD)
+                   Model_State_Shape] = NOT_IMPLEMENTED  # The function to call
+    ptype: ProcessType = field(default_factory=GET_STANDARD_TYPE_FACTORY)
     gate: bool = True  # if False process is skipped
     comment: str = ""  # used for logging
     group: str = None  # group tag
     # Inputs to function
     # TODO: The below objects could be set as the actual State Shape objects instead
     state_inputs: Callable[[Model_State_Shape], List[I]] = \
-        field(default_factory=lambda: lambda state: [])
+        field(default_factory=GET_INPUT_FACTORY)
     config_inputs: Callable[[Config_Shape], List[I]] = \
-        field(default_factory=lambda: lambda config: [])
+        field(default_factory=GET_INPUT_FACTORY)
     parameters_inputs: Callable[[Parameters_Shape], List[I]] = \
-        field(default_factory=lambda: lambda params: [])
+        field(default_factory=GET_INPUT_FACTORY)
     external_state_inputs: Callable[[External_State_Shape, int], List[I]] = \
-        field(default_factory=lambda: lambda e_state, row_index: [])
+        field(default_factory=GET_INPUT_FACTORY)
     additional_inputs: Callable[[], List[I]] = \
-        field(default_factory=lambda: lambda: [])
-    state_outputs: Callable[[any], List[Tuple]] = field(default_factory=lambda: lambda result: [])
+        field(default_factory=GET_INPUT_FACTORY)
+    state_outputs: Callable[[any], List[Tuple]] = field(default_factory=GET_INPUT_FACTORY)
     args: List[any] = field(default_factory=list)  # additional args
     format_output: bool = False  # If true we process the target output string
 
     def __repr__(self) -> str:
         return 'Process(' + '; '.join([
             f'func={self.func.__name__}',
-            f'ptype={self.ptype}',
-            f'comment="{self.comment}"',
-            f'gate={self.gate}',
-            f'group={self.group}',
-            f'config_inputs={parse_inputs(self.config_inputs)}',
-            f'parameters_inputs={parse_inputs(self.parameters_inputs)}',
-            f'external_state_inputs={parse_inputs(self.external_state_inputs)}',
-            f'additional_inputs={parse_inputs(self.additional_inputs)}',
-            f'state_inputs={parse_inputs(self.state_inputs)}',
-            f'state_outputs={parse_outputs(self.state_outputs)}',
-            f'args={self.args}',
+            f'ptype={getattr(self, "ptype", None)}',
+            f'comment="{getattr(self, "comment", None)}"',
+            f'gate={getattr(self, "gate", None)}',
+            f'group={getattr(self, "group", None)}',
+            f'config_inputs={parse_inputs(getattr(self, "config_inputs", None))}',
+            f'parameters_inputs={parse_inputs(getattr(self, "parameters_inputs", None))}',
+            f'external_state_inputs={parse_inputs(getattr(self, "external_state_inputs", None))}',
+            f'additional_inputs={parse_inputs(getattr(self, "additional_inputs", None))}',
+            f'state_inputs={parse_inputs(getattr(self, "state_inputs", None))}',
+            f'state_outputs={parse_outputs(getattr(self, "state_outputs", None))}',
+            f'args={getattr(self, "args", None)}',
         ]) + ')'
 
     def human(self, strict=False) -> dict:
         return {
             'func': self.func.__name__,
-            'ptype': self.ptype,
-            'comment': self.comment,
-            'gate': self.gate,
-            'group': self.group,
-            'config_inputs': fieldNotEmpty(self.config_inputs) and
-            parse_inputs(self.config_inputs, strict),
-            'parameters_inputs': fieldNotEmpty(self.parameters_inputs) and
-            parse_inputs(self.parameters_inputs, strict),
-            'external_state_inputs': fieldNotEmpty(self.external_state_inputs) and
-            parse_inputs(self.external_state_inputs, strict),
-            'additional_inputs': fieldNotEmpty(self.additional_inputs) and
-            parse_inputs(self.additional_inputs, strict),
-            'state_inputs': fieldNotEmpty(self.state_inputs) and
-            parse_inputs(self.state_inputs, strict),
-            'state_outputs': fieldNotEmpty(self.state_outputs) and
-            parse_outputs(self.state_outputs),
-            'args': self.args,
+            'ptype': getattr(self, "ptype", None),
+            'comment': getattr(self, "comment", None),
+            'gate': getattr(self, "gate", None),
+            'group': getattr(self, "group", None),
+            'config_inputs': fieldNotEmpty(getattr(self, "config_inputs", None)) and
+            parse_inputs(getattr(self, "config_inputs", None), strict),
+            'parameters_inputs': fieldNotEmpty(getattr(self, "parameters_inputs", None)) and
+            parse_inputs(getattr(self, "parameters_inputs", None), strict),
+            'external_state_inputs': fieldNotEmpty(getattr(self, "external_state_inputs", None)) and
+            parse_inputs(getattr(self, "external_state_inputs", None), strict),
+            'additional_inputs': fieldNotEmpty(getattr(self, "additional_inputs", None)) and
+            parse_inputs(getattr(self, "additional_inputs", None), strict),
+            'state_inputs': fieldNotEmpty(getattr(self, "state_inputs", None)) and
+            parse_inputs(getattr(self, "state_inputs", None), strict),
+            'state_outputs': fieldNotEmpty(getattr(self, "state_outputs", None)) and
+            parse_outputs(getattr(self, "state_outputs", None)),
+            'args': getattr(self, "args", None),
         }
+
+    def __getnewargs__(self):
+        return (1, 2, 3)
+
+    def __getstate__(self):
+        return {
+            # 'func': marshal.dumps(self.func.__code__),
+            'func': pickle.dumps(self.func),
+            'ptype': getattr(self, 'ptype', None),
+            'comment': getattr(self, 'comment', None),
+            'gate': getattr(self, 'gate', None),
+            'group': getattr(self, 'group', None),
+            'config_inputs': pickle.dumps(getattr(self, "config_inputs", None)),
+            'parameters_inputs': pickle.dumps(getattr(self, "parameters_inputs", None)),
+            'external_state_inputs': pickle.dumps(getattr(self, "external_state_inputs", None)),
+            'additional_inputs': pickle.dumps(getattr(self, "additional_inputs", None)),
+            'state_inputs': pickle.dumps(getattr(self, "state_inputs", None)),
+            'state_outputs': pickle.dumps(getattr(self, "state_outputs", None)),
+            'args': getattr(self, 'args', None),
+        }
+
+    def __setstate__(self, state):
+        # print(state)
+        for key, value in state.items():
+            if key in ["func", "config_inputs", "parameters_inputs", "external_state_inputs",
+                       "additional_inputs", "state_inputs",
+                       "state_outputs"]:
+                v = pickle.loads(value)
+                setattr(self, key, v)
+            else:
+                setattr(self, key, value)

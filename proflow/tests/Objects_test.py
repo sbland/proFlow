@@ -2,7 +2,7 @@
 
 from proflow.Objects.Interface import I
 from proflow.Objects.Process import Process
-from pprint import pprint
+
 
 def test_Process_object(snapshot):
     def test_func(x, y, z):
@@ -26,6 +26,7 @@ def test_Process_object(snapshot):
         ]
     )
     snapshot.assert_match(demo_process, 'demo_process')
+
 
 def test_process_object_human(snapshot):
     def test_func(x, y, z):
