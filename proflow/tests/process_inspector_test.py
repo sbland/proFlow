@@ -1,9 +1,10 @@
 """Tests for the process inspector."""
 
+import ast
 import pytest
 from proflow.process_inspector import (
-    ProflowParsingAstError,
     inspect_process,
+    parse_arg,
     parse_outputs,
     parse_outputs_to_interface,
     parse_inputs,
@@ -313,11 +314,31 @@ class TestParseInputs:
         ]
 
         out = parse_inputs(DEMO_INPUTS, False)
-
+        print(out)
         # TODO: Handle BinOp better here
         assert out == {
             'x': 'RANGE_ARG_0._RANGE()',
             'RANGE_ARG_0.0': "config.bar,1",
+        }
+
+    def test_parse_with_external_val(self):
+        k = 1
+        DEMO_INPUTS = lambda k=k: [
+            I(k, as_='k'),
+        ]
+
+        out = parse_inputs(DEMO_INPUTS, False)
+
+        assert out == {'k': 'k'}
+
+    def test_example(self):
+        k = 1
+        DEMO_INPUTS = lambda state, k=k: [
+            I(len(getattr(state, "row_index")), as_='row_count'),
+        ]
+        out = parse_inputs(DEMO_INPUTS, False)
+        assert out == {
+            'row_count': 'state.row_index',
         }
     # def test_parse_inputs_check(self):
     #     nL = 1
@@ -464,15 +485,6 @@ class TestParseOutputs:
         assert output_interface[0].from_ == "result['a']"
         assert output_interface[0].as_ == "state.a"
 
-    def test_parse_outputs_throws_error_for_unknown_input(self):
-        DEMO_OUTPUTS = lambda result: [
-            (['some info', ['other into']], 'a'),
-        ]
-        with pytest.raises(ProflowParsingAstError) as e:
-            output_interface = list(parse_outputs_to_interface(DEMO_OUTPUTS, allow_errors=False))
-        assert "AST type parse arg not implemented: <class '_ast.List'>" in repr(
-            e)
-
     def test_parse_outputs_returns_invalid_for_unknown_input(self):
         DEMO_OUTPUTS = lambda result: [
             # This setup is not valid
@@ -495,3 +507,163 @@ class TestParseOutputs:
         assert len(output_interface) == nP
         assert output_interface[0].from_ == "result['a']"
         assert output_interface[0].as_ == "state.a"
+
+
+class TestParseArg:
+
+    def test_parse_max(self):
+        # max([1,2,3])
+        attr = ast.Call(
+            func=ast.Name(id='max', ctx=ast.Load()),
+            args=[
+                ast.List(
+                    elts=[
+                        ast.Constant(value=1, kind=None),
+                        ast.Constant(value=2, kind=None),
+                        ast.Constant(value=3, kind=None)
+                    ],
+                    ctx=ast.Load()
+                )
+            ],
+            keywords=[]
+        )
+        out = parse_arg(attr)
+        assert out == (['_MAX()', 1, 2, 3], {})
+
+    def test_parse_subscript_index(self):
+        attr = ast.Subscript(
+            value=ast.Attribute(
+                value=ast.Name(
+                    id='foo', ctx=ast.Load()
+                ),
+                attr='bar',
+                ctx=ast.Load()
+            ),
+            slice=ast.Index(value=ast.Constant(value='1', kind=None)),
+            ctx=ast.Load()
+        )
+        out = parse_arg(attr)
+        assert out == (['1', 'bar', 'foo'], {})
+
+    def test_parse_subscript_slice(self):
+        # e_state.Ts_C[row_index:row_index + 24]
+        attr = ast.Subscript(
+            value=ast.Attribute(value=ast.Name(
+                id='foo', ctx=ast.Load()), attr='bar', ctx=ast.Load()
+            ),
+            slice=ast.Slice(
+                lower=ast.Constant(value=1, kind=None),
+                upper=ast.Constant(value=24, kind=None),
+                step=None
+            ),
+            ctx=ast.Load()
+        )
+        out = parse_arg(attr)
+        assert out == (['1:24', 'bar', 'foo'], {})
+
+    def test_parse_subscript_binop(self):
+        # foo.bar[row_index + 24]
+        attr = ast.Subscript(
+            value=ast.Attribute(value=ast.Name(
+                id='foo', ctx=ast.Load()), attr='bar', ctx=ast.Load()
+            ),
+            slice=ast.BinOp(left=ast.Name(id='row_index', ctx=ast.Load()), op=ast.Add(),
+                            right=ast.Constant(value=24, kind=None)),
+            ctx=ast.Load()
+        )
+        out = parse_arg(attr)
+        assert out == (['row_index,24', 'bar', 'foo'], {})
+
+    def test_can_parse_max_example(self):
+        # max(foo.bar[row_index:row_index + 24])
+        attr = ast.Call(
+            func=ast.Name(id='max', ctx=ast.Load()),
+            args=[
+                ast.Subscript(
+                    value=ast.Attribute(value=ast.Name(
+                        id='foo', ctx=ast.Load()), attr='bar', ctx=ast.Load()
+                    ),
+                    slice=ast.Slice(
+                        lower=ast.Name(id='row_index', ctx=ast.Load()),
+                        upper=ast.BinOp(left=ast.Name(
+                            id='row_index', ctx=ast.Load()),
+                            op=ast.Add(),
+                            right=ast.Constant(value=24, kind=None)),
+                        step=None
+                    ),
+                    ctx=ast.Load()
+                )
+            ],
+            keywords=[]
+        )
+        out = parse_arg(attr)
+        assert out == (['_MAX()', 'row_index:row_index,24', 'bar', 'foo'], {})
+        # TODO: Should be (['_MAX()', 'row_index:row_index + 24', 'bar', 'foo'], {})
+        #  but we are not currently parsing the BinOp
+
+    def test_list_and_reversed_functions(self):
+        attr = ast.Call(
+            func=ast.Name(
+                id='list',
+                ctx=ast.Load()
+            ),
+            args=[
+                ast.Call(
+                    func=ast.Name(
+                        id='reversed',
+                        ctx=ast.Load()
+                    ),
+                    args=[
+                        ast.Attribute(
+                            value=ast.Name(
+                                id='foo',
+                                ctx=ast.Load()
+                            ),
+                            attr='bar',
+                            ctx=ast.Load()
+                        )
+                    ],
+                    keywords=[]
+                )
+            ],
+            keywords=[]
+        )
+
+        out = parse_arg(attr)
+        assert out == (['REVERSED_ARG_0._REVERSED()'], {'REVERSED_ARG_0.0': 'foo.bar'})
+
+    def test_getattr_func(self):
+        attr = ast.Call(func=ast.Name(id='getattr', ctx=ast.Load()), args=[ast.Name(
+            id='foo', ctx=ast.Load()), ast.Name(id='bar', ctx=ast.Load())], keywords=[])
+        out = parse_arg(attr)
+        assert out == (['bar', 'foo'], {})
+
+        attr = ast.Call(func=ast.Name(id='getattr', ctx=ast.Load()), args=[ast.Name(
+            id='foo', ctx=ast.Load()), ast.Constant(value='bar', kind=None)], keywords=[])
+        out = parse_arg(attr)
+        assert out == (['bar', 'foo'], {})
+
+    def test_len_func(self):
+        attr = ast.Call(func=ast.Name(id='len', ctx=ast.Load()), args=[ast.Name(
+            id='foo', ctx=ast.Load())], keywords=[])
+        out = parse_arg(attr)
+        assert out == (['foo'], {})
+
+    def test_bin_op(self):
+        attr = ast.BinOp(left=ast.Name(id='nL', ctx=ast.Load()), op=ast.Sub(),
+                         right=ast.Constant(value=1, kind=None))
+        out = parse_arg(attr)
+        assert out == (['nL,1'], {})
+
+    def test_bool_op(self):
+        attr = ast.BoolOp(
+            op=ast.And(),
+            values=[
+                ast.Name(id='foo', ctx=ast.Load()),
+                ast.Call(
+                    func=ast.Name(id='asdict', ctx=ast.Load()),
+                    args=[ast.Name(id='bar', ctx=ast.Load())], keywords=[]
+                )
+            ])
+        out = parse_arg(attr)
+        assert out == (['foo,bar'], {"op": "And"})

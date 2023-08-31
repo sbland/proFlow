@@ -41,7 +41,18 @@ class ProflowParsingFunctionError(Exception):
     def __init__(self, message, func):
         self.message = message
         self.source = inspect.getsource(func)
-        self.full_message = f'Proflow parsing function error: {self.message} \n {self.source}'
+        try:
+            source_code = textwrap.dedent(inspect.getsource(func))
+            ast_tree = ast.parse(source_code)
+            ast_dump = ast.dump(ast_tree)
+        except Exception:
+            ast_dump = "Failed to dump ast!"
+
+        self.full_message = f"""Proflow parsing function error: {self.message}
+         {self.source}
+         AST:
+         {ast_dump}
+"""
         super().__init__(self.full_message)
 
     def __repr__(self):
@@ -194,13 +205,33 @@ def parse_outputs_to_interface(
         return [I(from_='UNKNOWN', as_='UNKNOWN')]
 
 
-def get_lambda_func(input_tree: ast.Assign) -> ast.Lambda:
+def get_inputs_list_from_lambda_fn(input_tree: ast.Assign) -> ast.List:
     if isinstance(input_tree.value, ast.Tuple):
-        return input_tree.value.elts[0]
+        return input_tree.value.elts[0].body
     elif isinstance(input_tree.value, ast.Lambda):
-        return input_tree.value
+        return input_tree.value.body
     else:
-        raise ProflowParsingAstError(f"Unexpected AST type: {type(input_tree.value)}", input_tree)
+        raise ProflowParsingAstError(
+            f"Unexpected AST type: {type(input_tree.value)}", input_tree)
+
+
+def get_inputs_list_from_function_def(input_tree: ast.FunctionDef) -> ast.List:
+    try:
+        return input_tree.body[0].value
+    except Exception as e:
+        warnings.warn(Warning(e))
+        raise ProflowParsingAstError(
+            f"Failed to get Process inputs from function: {ast.dump(input_tree)}", input_tree)
+
+
+def get_inputs_list(input_tree: Union[ast.Assign, ast.FunctionDef]) -> ast.List:
+    if isinstance(input_tree, ast.Assign):
+        return get_inputs_list_from_lambda_fn(input_tree)
+    elif isinstance(input_tree, ast.FunctionDef):
+        return get_inputs_list_from_function_def(input_tree)
+    else:
+        raise ProflowParsingAstError(
+            f"Unexpected AST type: {type(input_tree)}", input_tree)
 
 
 def parse_unary_op(v: ast.UnaryOp):
@@ -250,7 +281,7 @@ def parse_arg_val(v) -> Tuple[str, ArgMap]:
         raise ProflowParsingAstError(f"AST value type not implemented: {type(v)}", v)
 
 
-def parse_arg_index(i: ast.Index) -> Tuple[str, ArgMap]:
+def parse_arg_index(i: Union[ast.Index, ast.Slice]) -> Tuple[str, ArgMap]:
     """Parse an ast Index.
 
     If the index is a constant value it just returns it as a string.
@@ -273,13 +304,25 @@ def parse_arg_index(i: ast.Index) -> Tuple[str, ArgMap]:
     ------
     ProflowParsingAstError
         _description_
+
     """
-    if isinstance(i.value, ast.Constant):
-        return [i.value.value, {}]
-    elif isinstance(i, ast.Index):
-        return parse_arg_val(i.value)
-    else:
-        raise ProflowParsingAstError(f"AST index type not implemented: {type(i)}", i)
+    return parse_arg(i)
+    # if isinstance(i, ast.Slice):
+    #     [top], _additional_args_top = parse_arg(i.upper)
+    #     [bottom], _additional_args_bottom = parse_arg(i.lower)
+    #     step, _additional_args_step = parse_arg(i.step)if i.step else [None, {}]
+    #     out = f"{bottom}:{top}" + (f":{step}" if step else "")
+    #     out_args = {**_additional_args_top, **_additional_args_bottom, **_additional_args_step}
+    #     return out, out_args
+    # elif isinstance(i, ast.Index):
+    #     if isinstance(i.value, ast.Constant):
+    #         return [i.value.value, {}]
+    #     elif isinstance(i, ast.Index):
+    #         return parse_arg_val(i.value)
+    #     else:
+    #         raise ProflowParsingAstError(f"AST index type not implemented: {type(i)}", i)
+    # else:
+    #     raise ProflowParsingAstError(f"AST index type not implemented: {type(i)}", i)
 
 
 def parse_list_comp(attr: ast.ListComp):
@@ -320,6 +363,27 @@ def parse_list_comp(attr: ast.ListComp):
     return ["(" + ",".join(list_comp_ids) + ")"], additional_args
 
 
+def parse_list(attr: ast.List):
+    out = ""
+    for i, elt in enumerate(attr.elts):
+        parsed_arg, _additional_args = parse_arg(elt)
+        out = out + ".".join(reversed([str(v) for v in parsed_arg]))
+        if i != len(attr.elts) - 1:
+            out = out + ","
+    print(out)
+    return out, _additional_args
+
+
+def parse_fn_getattr(attr: ast.Call):
+    key = attr.args[0].id
+    args, additional_args = parse_arg(attr.args[1])
+    return [[*args, key], additional_args]
+
+
+def parse_fn_len(attr: ast.Call):
+    return parse_arg(attr.args[0])
+
+
 def parse_arg(attr: ast.Attribute) -> Tuple[List[str], ArgMap]:
     """Takes a parameter path such as config.a.b and recursively pulls out the string rep.
 
@@ -340,11 +404,14 @@ def parse_arg(attr: ast.Attribute) -> Tuple[List[str], ArgMap]:
     elif isinstance(attr, ast.Constant):
         arg_list.append(attr.value)
     elif isinstance(attr, ast.Index):
-        arg_list.append(attr.value.id)
+        parsed_arg, _additional_args = parse_arg_val(attr.value)
+        arg_list.append(parsed_arg)
+        additional_args = {**additional_args, **_additional_args}
     elif isinstance(attr, ast.Subscript):
         index, _additional_args = parse_arg_index(attr.slice)
         additional_args = {**additional_args, **_additional_args}
-        arg_list.append(index)
+        arg_list = arg_list + index
+        # arg_list.append(index)
         parsed_arg, _additional_args = parse_arg(attr.value)
         arg_list = arg_list + parsed_arg
         additional_args = {**additional_args, **_additional_args}
@@ -359,6 +426,19 @@ def parse_arg(attr: ast.Attribute) -> Tuple[List[str], ArgMap]:
         additional_args = {**additional_args, **_additional_args}
         lhs = '.'.join(map(str, reversed(parsed_arg_left)))
         rhs = '.'.join(map(str, reversed(parsed_arg_right)))
+        # TODO: Should we include op here?
+        arg_list.append(f"{lhs},{rhs}")
+    elif isinstance(attr, ast.BoolOp):
+        _addtional_args_op = {
+            "op": attr.op.__class__.__name__,
+        }
+        additional_args = {**additional_args, **_addtional_args_op}
+        parsed_arg_left, _additional_args = parse_arg(attr.values[0])
+        additional_args = {**additional_args, **_additional_args}
+        parsed_arg_right, _additional_args = parse_arg(attr.values[1])
+        additional_args = {**additional_args, **_additional_args}
+        lhs = '.'.join(map(str, reversed(parsed_arg_left)))
+        rhs = '.'.join(map(str, reversed(parsed_arg_right)))
         arg_list.append(f"{lhs},{rhs}")
     elif isinstance(attr, ast.Compare):
         parsed_arg_left, _additional_args = parse_arg(attr.left)
@@ -369,18 +449,57 @@ def parse_arg(attr: ast.Attribute) -> Tuple[List[str], ArgMap]:
         # TODO: Check this handles all comparitors
         rhs = '.'.join(reversed(parsed_arg_comparator))
         arg_list.append(f"{lhs},{rhs}")
+    elif isinstance(attr, ast.Slice):
+        # TODO: Check this ok
+        [top], _additional_args_top = parse_arg(attr.upper)
+        [bottom], _additional_args_bottom = parse_arg(attr.lower)
+        step, _additional_args_step = parse_arg(attr.step)if attr.step else [None, {}]
+        index = f"{bottom}:{top}" + (f":{step}" if step else "")
+        _additional_args = {**_additional_args_top, **
+                            _additional_args_bottom, **_additional_args_step}
+        arg_list.append(index)
+        additional_args = {**additional_args, **_additional_args}
     elif isinstance(attr, ast.Call):
-        if attr.func.id == "lget":
+        if attr.func.id == "getattr":
+            parsed_args, _additional_args = parse_fn_getattr(attr)
+            additional_args = {**additional_args, **_additional_args}
+            arg_list = arg_list + parsed_args
+        elif attr.func.id == "asdict":
+            parsed_args, _additional_args = parse_arg(attr.args[0])
+            additional_args = {**additional_args, **_additional_args}
+            arg_list = arg_list + parsed_args
+        elif attr.func.id == "len":
+            parsed_args, _additional_args = parse_fn_len(attr)
+            additional_args = {**additional_args, **_additional_args}
+            arg_list = arg_list + parsed_args
+        elif attr.func.id == "lget":
             parsed_arg_1, _additional_args = parse_arg(attr.args[1])
             additional_args = {**additional_args, **_additional_args}
             parsed_arg_0, _additional_args = parse_arg(attr.args[0])
             additional_args = {**additional_args, **_additional_args}
             arg_list = arg_list + parsed_arg_1 + parsed_arg_0
+        elif attr.func.id == "list":
+            # NOTE: We disregard that list function is called and just parse contents
+            parsed_args, _additional_args = parse_arg(attr.args[0])
+            additional_args = {**additional_args, **_additional_args}
+            arg_list = arg_list + parsed_args
+        elif attr.func.id == "dict":
+            raise NotImplementedError("Dict not implemented")
         elif attr.func.id == "sum":
             assert len(attr.args) == 1, "Sum only implemented when arg length is 1"
             parsed_arg, _additional_args = parse_arg(attr.args[0])
             additional_args = {**additional_args, **_additional_args}
             arg_list = ["_SUM()"] + arg_list + parsed_arg
+        elif attr.func.id == "max":
+            assert len(attr.args) == 1, "Max only implemented when arg length is 1"
+            parsed_arg, _additional_args = parse_arg(attr.args[0])
+            additional_args = {**additional_args, **_additional_args}
+            arg_list = ["_MAX()"] + arg_list + parsed_arg
+        elif attr.func.id == "min":
+            assert len(attr.args) == 1, "Min only implemented when arg length is 1"
+            parsed_arg, _additional_args = parse_arg(attr.args[0])
+            additional_args = {**additional_args, **_additional_args}
+            arg_list = ["_MIN()"] + arg_list + parsed_arg
         elif attr.func.id == "range":
             RANGE_ARG_ID = f"RANGE_ARG_{get_id()}"
             out = f"{RANGE_ARG_ID}._RANGE()"
@@ -406,19 +525,25 @@ def parse_arg(attr: ast.Attribute) -> Tuple[List[str], ArgMap]:
                 f"Parsing for func: {attr.func.id} has not been implemented", attr)
     elif isinstance(attr, ast.IfExp):
         # TODO: Implement this
-        arg_list.append("NOT_IMPLEMENTED")
+        arg_list.append("AST PARSE NOT_IMPLEMENTED")
     elif isinstance(attr, ast.Tuple):
         for elt in attr.elts:
             parsed_arg, _additional_args = parse_arg(elt)
             additional_args = {**additional_args, **_additional_args}
             arg_list = arg_list + parsed_arg
 
-    # elif isinstance(attr, ast.List): # NOTE: Not currently supported
-    #     arg_list.append(parse_arg_index(attr.slice))
-    #     arg_list = arg_list + parse_arg(attr.value)
+    elif isinstance(attr, ast.List):  # NOTE: Not currently supported
+        for elt in attr.elts:
+            parsed_arg, _additional_args = parse_arg(elt)
+            additional_args = {**additional_args, **_additional_args}
+            arg_list = arg_list + parsed_arg
+            # # TODO: Fix this
+            # parsed_arg, _additional_args = parse_arg(elt)
+            # arg_list.append(parse_list(attr))
+            # arg_list = arg_list + parse_arg(attr.value)
     else:
-        print("Failed to parse args")
-        print(ast.dump(attr))
+        warnings.warn("Failed to parse args")
+        # warnings.warn(ast.dump(attr))
         raise ProflowParsingAstError(f"AST type parse arg not implemented: {type(attr)}", attr)
     return arg_list, additional_args
 
@@ -475,8 +600,8 @@ def parse_input_map_to_arg(inp: ast.Call) -> str:
     str
         _description_
     """
+    assert len(inp.keywords) >= 0 and inp.keywords[0].arg == "as_", "first keyword should be as_"
     as_arg = inp.keywords[0]
-    assert as_arg.arg == "as_", "first keyword should be as_"
     return parse_as_arg(as_arg.value)
 
 
@@ -536,30 +661,49 @@ def get_outputs_from_lambda_body(input_list: ast.List):
 
 def parse_inputs(map_inputs_fn: Callable[[any], List[I]], allow_errors: bool = True) -> dict:
     source_code = textwrap.dedent(inspect.getsource(map_inputs_fn))
+    ast_tree = ast.parse(source_code)
     if source_code[0:5] == "field":
         return {}  # input function is not set
     try:
-        ast_tree = ast.parse(source_code)
-        lambda_fn = get_lambda_func(ast_tree.body[0])
-        inputs_list = lambda_fn.body
+        inputs_list = get_inputs_list(ast_tree.body[0])
         inputs_map = get_inputs(inputs_list)
         return inputs_map
+    except ProflowParsingError as e:
+        if not allow_errors:
+            raise e
+        else:
+            print(e)
+            return {}
+    except ProflowParsingLineError as e:
+        if not allow_errors:
+            raise e
+        else:
+            print(e)
+            return {}
+    except ProflowParsingAstError as e:
+        if not allow_errors:
+            raise e
+        else:
+            print(e)
+            return {}
     except Exception as e:
         if not allow_errors:
             print(e)
-            raise ProflowParsingFunctionError("Failed to get inputs for source", map_inputs_fn)
+            print(ast.dump(ast_tree))
+            raise ProflowParsingFunctionError(
+                "Failed to get inputs for source", map_inputs_fn) from e
         else:
-            return str(e)
+            # raise e
+            # return str(e)
             # print(e)
-            # return "UNKNOWN"
+            return "FAILED_TO_PARSE_PROCESS"
 
 
 def parse_outputs_b(map_inputs_fn: Callable[[any], List[I]]) -> dict:
     source_code = textwrap.dedent(inspect.getsource(map_inputs_fn))
     try:
         ast_tree = ast.parse(source_code)
-        lambda_fn = get_lambda_func(ast_tree.body[0])
-        inputs_list = lambda_fn.body
+        inputs_list = get_inputs_list(ast_tree.body[0])
         inputs_map = get_outputs_from_lambda_body(inputs_list)
         return inputs_map
     except Exception as e:
@@ -577,6 +721,7 @@ def parse_outputs(map_outputs_fn: Callable[[any], List[I]], allow_errors: bool =
         if not allow_errors:
             raise e
         else:
+            print(inspect.getsource(map_outputs_fn))
             return "UNKNOWN"
 
 
