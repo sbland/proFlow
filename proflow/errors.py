@@ -2,6 +2,10 @@ import json
 from data_helpers.encoders import AdvancedJsonEncoder
 
 
+MAX_ERROR_STRING_LENGTH = 1000
+new_line = '\n'
+
+
 class Run_Process_Error(Exception):
     def __init__(self, process: 'Process', error: Exception, state, args, kwargs):  # noqa F821
 
@@ -31,11 +35,11 @@ class Run_Process_Error(Exception):
 
 args
 ----
-{self.args_str}
+{ self.args_str[0:MAX_ERROR_STRING_LENGTH] + new_line + "...." if len(self.args_str) > MAX_ERROR_STRING_LENGTH else self.args_str}
 
 kwargs:
 -------
-{self.kwargs_str}
+{ self.kwargs_str[0:MAX_ERROR_STRING_LENGTH] + new_line + "...." if len(self.kwargs_str) > MAX_ERROR_STRING_LENGTH else self.kwargs_str}
 
 
 ------------- Code -------------

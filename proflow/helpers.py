@@ -134,7 +134,7 @@ def perNlc(nLC, fn, *args, **kwargs):
 
 def raise_error(e):
     """Allow raising an error in a lambda function."""
-    raise e
+    raise e from e
 
 
 def accumulate(**kwargs):

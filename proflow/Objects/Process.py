@@ -106,7 +106,7 @@ class Process:
             f'args={getattr(self, "args", None)}',
         ]) + ')'
 
-    def human(self, strict=False) -> dict:
+    def human(self, allow_errors=False, silent=True) -> dict:
         return {
             'func': self.func.__name__,
             'ptype': getattr(self, "ptype", None),
@@ -114,15 +114,15 @@ class Process:
             'gate': getattr(self, "gate", None),
             'group': getattr(self, "group", None),
             'config_inputs': fieldNotEmpty(getattr(self, "config_inputs", None)) and
-            parse_inputs(getattr(self, "config_inputs", None), strict),
+            parse_inputs(getattr(self, "config_inputs", None), allow_errors, silent),
             'parameters_inputs': fieldNotEmpty(getattr(self, "parameters_inputs", None)) and
-            parse_inputs(getattr(self, "parameters_inputs", None), strict),
+            parse_inputs(getattr(self, "parameters_inputs", None), allow_errors, silent),
             'external_state_inputs': fieldNotEmpty(getattr(self, "external_state_inputs", None)) and
-            parse_inputs(getattr(self, "external_state_inputs", None), strict),
+            parse_inputs(getattr(self, "external_state_inputs", None), allow_errors, silent),
             'additional_inputs': fieldNotEmpty(getattr(self, "additional_inputs", None)) and
-            parse_inputs(getattr(self, "additional_inputs", None), strict),
+            parse_inputs(getattr(self, "additional_inputs", None), allow_errors, silent),
             'state_inputs': fieldNotEmpty(getattr(self, "state_inputs", None)) and
-            parse_inputs(getattr(self, "state_inputs", None), strict),
+            parse_inputs(getattr(self, "state_inputs", None), allow_errors, silent),
             'state_outputs': fieldNotEmpty(getattr(self, "state_outputs", None)) and
             parse_outputs(getattr(self, "state_outputs", None)),
             'args': getattr(self, "args", None),

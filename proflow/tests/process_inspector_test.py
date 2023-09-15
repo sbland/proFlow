@@ -416,6 +416,18 @@ class TestExtractOutputLines:
         print(out)
         assert out == ["a, b", "a, b", "a, b"]
 
+    def test_example(self):
+        iLC = 1
+        iP = 1
+        DEMO_OUTPUTS = lambda result, iLC=iLC, iP=iP: [
+            (result['V_cmax_25'],
+             f'canopy_component_population.{iLC}.{iP}.V_cmax_25_per_layer.{0}'),
+            (result['J_max_25'], f'canopy_component_population.{iLC}.{iP}.J_max_25'),
+        ]
+        out = list(extract_output_lines(DEMO_OUTPUTS))
+        print(out)
+        assert out == ["a, b", "a, b", "a, b"]
+
 
 def test_strip_out_comments():
     out = strip_out_comments("""
