@@ -1,8 +1,8 @@
 from collections.abc import Callable
 
 from .internal_state import Model_State_Shape
-from .Objects.Interface import I
-from .Objects.Process import Process, ProcessType
+from .objects.interface import I
+from .objects.process import Process, ProcessType
 
 
 def merge_logs(logs, index, **kwargs):

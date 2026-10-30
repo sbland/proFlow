@@ -1,4 +1,4 @@
-from .ProcessRunner import Process
+from .process_runner import Process
 
 
 def switch(gate: str, comment: str = None, options={}, default_option=None, **kwargs) -> Process:

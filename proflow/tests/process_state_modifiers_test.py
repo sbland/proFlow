@@ -7,8 +7,8 @@ from proflow.process_state_modifiers import (
     replace_state_val,
 )
 
-from ..Objects.Interface import I
-from ..Objects.Process import Process
+from ..objects.interface import I
+from ..objects.process import Process
 from .mocks import Mock_Model_State_Shape
 
 

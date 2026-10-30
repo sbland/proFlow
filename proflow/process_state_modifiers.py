@@ -6,7 +6,7 @@ from functools import partial, reduce
 
 from .helpers import rgetattr
 from .internal_state import Model_State_Shape
-from .Objects.Interface import I
+from .objects.interface import I
 
 
 def get_new_val_fn(attr, acc):

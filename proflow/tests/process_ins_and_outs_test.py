@@ -1,6 +1,6 @@
 from ..helpers import rsetattr
-from ..Objects.Interface import I
-from ..Objects.Process import Process
+from ..objects.interface import I
+from ..objects.process import Process
 from ..process_ins_and_outs import get_inputs_from_process, map_result_to_state
 from .mocks import (
     Mock_Config_Shape,

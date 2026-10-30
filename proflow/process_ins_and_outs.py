@@ -7,7 +7,7 @@ from .config import Config_Shape
 from .external_state import External_State_Shape
 from .helpers import rsetattr
 from .internal_state import Model_State_Shape
-from .Objects.Process import Process
+from .objects.process import Process
 from .parameters import Parameters_Shape
 
 

@@ -1,7 +1,7 @@
 import re
 from collections import namedtuple
 
-from proflow.Objects import Process
+from proflow.objects import process
 from vendor.polyviz.bezier import bezier_curve_4pt
 
 
@@ -50,7 +50,7 @@ def t_wrap(text: str, max_length: int = 4) -> str:
 
 def link_processes_to_state(
     canvas,
-    processes: list[Process],
+    processes: list[process],
     seperation: int = 300,
     process_node_width: int = 200,
     process_node_height: int = 70,
@@ -154,14 +154,14 @@ if __name__ == "__main__":
 
     from ipycanvas import Canvas
 
-    from proflow.Objects import I, Process
+    from proflow.objects import I
 
     def demo_func(x, y):
         """DEMO FUNC"""
         return x - y
 
     processes = [
-        Process(
+        process(
             func=lambda x, y, z: x + y + z,
             comment="Demo process a",
             config_inputs=[
@@ -172,7 +172,7 @@ if __name__ == "__main__":
                 I("_result", as_="info.tomorrow"),
             ],
         ),
-        Process(
+        process(
             func=lambda x, y, z: x + y + z,
             comment="Demo process a",
             config_inputs=[
@@ -183,7 +183,7 @@ if __name__ == "__main__":
                 I("_result", as_="info.tomorrow"),
             ],
         ),
-        Process(
+        process(
             func=demo_func,
             comment="Demo process b",
             config_inputs=[
@@ -196,7 +196,7 @@ if __name__ == "__main__":
                 I("_result", as_="info.today"),
             ],
         ),
-        Process(
+        process(
             func=lambda x, y: x + y,
             comment="Demo process c with a really long comment and info",
             config_inputs=[
@@ -209,7 +209,7 @@ if __name__ == "__main__":
                 I("_result", as_="info.today"),
             ],
         ),
-        Process(
+        process(
             func=lambda x, y: x + y,
             comment="Demo process d",
             config_inputs=[

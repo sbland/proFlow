@@ -7,12 +7,12 @@ from typing import NamedTuple
 from proflow.internal_state import Model_State_Shape
 from proflow.process_ins_and_outs import get_inputs_from_process, map_result_to_state
 from proflow.process_state_modifiers import map_result_to_state_fn
-from proflow.TimeManager import TimeManager, TimeScale
+from proflow.time_manager import TimeManager, TimeScale
 
 from .config import Config_Shape
 from .errors import Run_Process_Error
 from .external_state import External_State_Shape
-from .Objects.Process import Process, ProcessType
+from .objects.process import Process, ProcessType
 from .parameters import Parameters_Shape
 
 

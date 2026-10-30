@@ -10,7 +10,7 @@ from proflow.internal_state import Model_State_Shape
 from proflow.parameters import Parameters_Shape
 from proflow.process_inspector import fieldNotEmpty, parse_inputs, parse_outputs
 
-from .Interface import I
+from .interface import I
 
 
 class ProcessType(Enum):

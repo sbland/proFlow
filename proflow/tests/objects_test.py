@@ -4,8 +4,8 @@ import json
 
 from data_helpers.encoders import AdvancedJsonEncoder
 
-from proflow.Objects.Interface import I
-from proflow.Objects.Process import Process
+from proflow.objects.interface import I
+from proflow.objects.process import Process
 
 
 def test_Process_object(snapshot):

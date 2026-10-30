@@ -1,4 +1,4 @@
-from proflow.TimeManager import TimeManager, TimeScale
+from proflow.time_manager import TimeManager, TimeScale
 
 
 def test_creating_a_time_manager():

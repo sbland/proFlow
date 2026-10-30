@@ -1,6 +1,6 @@
 import pytest
 
-from .Switch import __s__, switch
+from ..switch import __s__, switch
 
 
 def test_switch():

@@ -1,5 +1,5 @@
-from proflow.Objects.Interface import I
-from proflow.Objects.Process import Process
+from proflow.objects.interface import I
+from proflow.objects.process import Process
 
 DEMO_PROCESSES = [
     Process(

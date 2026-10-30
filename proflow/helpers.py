@@ -1,7 +1,7 @@
 from functools import reduce
 from typing import Any
 
-from .Objects.Process import Process
+from .objects.process import Process
 
 
 def check_types(self):

@@ -5,8 +5,8 @@ import ast
 import pytest
 
 from proflow.helpers import lget
-from proflow.Objects.Interface import I
-from proflow.Objects.Process import Process
+from proflow.objects.interface import I
+from proflow.objects.process import Process
 from proflow.process_inspector import (
     extract_output_lines,
     inspect_process,

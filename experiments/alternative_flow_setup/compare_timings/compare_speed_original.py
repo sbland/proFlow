@@ -11,8 +11,8 @@ if module_path not in sys.path:
     sys.path.append(module_path)
 # %%
 # Allow relative import
-from proflow.ProcessRunner import run_process
-from proflow.Objects import Process, I
+from proflow.process_runner import run_process
+from proflow.objects import I, process
 import numpy as np
 import pytest
 
@@ -38,7 +38,7 @@ config = {
 
 # %%
 
-demo_process = Process(
+demo_process = process(
     func=process_add,
     gate=True,
     config_inputs=[

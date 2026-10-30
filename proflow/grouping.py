@@ -1,6 +1,6 @@
 from collections.abc import Callable
 
-from .Objects.Process import Process
+from .objects.process import Process
 
 
 def group(name: str) -> Callable[[list[Process]], list[Process]]:

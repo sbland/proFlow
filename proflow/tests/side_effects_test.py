@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from data_helpers.list_helpers import flatten_list
 
-from proflow.ProcessRunnerCls import ProcessRunner
+from proflow.process_runner import ProcessRunner
 from proflow.tests.mocks import (
     Mock_Config_Shape,
     Mock_External_State_Shape,
@@ -11,8 +11,8 @@ from proflow.tests.mocks import (
     Mock_Parameters_Shape,
 )
 
-from ..Objects.Interface import I
-from ..Objects.Process import Process
+from ..objects.interface import I
+from ..objects.process import Process
 
 
 def process_add(x, y):
@@ -27,7 +27,7 @@ process_runner = ProcessRunner(
 @pytest.fixture(scope="module", autouse=True)
 def _():
     with patch(
-        "proflow.ProcessRunner.Model_State_Shape", side_effect=Mock_Model_State_Shape
+        "proflow.process_runner.Model_State_Shape", side_effect=Mock_Model_State_Shape
     ) as Mocked_State_Shape:
         Mocked_State_Shape.__annotations__ = Mock_Model_State_Shape.__annotations__
         yield Mocked_State_Shape
@@ -35,14 +35,14 @@ def _():
 
 @pytest.fixture(scope="module", autouse=True)
 def __():
-    with patch("proflow.ProcessRunner.Config_Shape", return_value=Mock_Config_Shape) as _fixture:
+    with patch("proflow.process_runner.Config_Shape", return_value=Mock_Config_Shape) as _fixture:
         yield _fixture
 
 
 @pytest.fixture(scope="module", autouse=True)
 def ____():
     with patch(
-        "proflow.ProcessRunner.Parameters_Shape", return_value=Mock_Parameters_Shape
+        "proflow.process_runner.Parameters_Shape", return_value=Mock_Parameters_Shape
     ) as _fixture:
         yield _fixture
 
@@ -50,7 +50,7 @@ def ____():
 @pytest.fixture(scope="module", autouse=True)
 def ______():
     with patch(
-        "proflow.ProcessRunner.External_State_Shape", return_value=Mock_External_State_Shape
+        "proflow.process_runner.External_State_Shape", return_value=Mock_External_State_Shape
     ) as _fixture:
         yield _fixture
 

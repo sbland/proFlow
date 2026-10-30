@@ -1,7 +1,7 @@
 from proflow.logger import log_values
-from proflow.Objects.Interface import I
-from proflow.Objects.Process import Process
-from proflow.ProcessRunnerCls import ProcessRunner
+from proflow.objects.interface import I
+from proflow.objects.process import Process
+from proflow.process_runner import ProcessRunner
 from proflow.tests.mocks import Mock_Model_State_Shape
 
 

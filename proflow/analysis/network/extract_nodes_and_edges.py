@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from proflow.Objects.Process import Process
+from proflow.objects.process import Process
 from proflow.process_inspector import inspect_process_to_interfaces
 
 

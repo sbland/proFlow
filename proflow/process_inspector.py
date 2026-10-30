@@ -7,10 +7,10 @@ from collections import namedtuple
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from proflow.Objects.Interface import I
+from proflow.objects.interface import I
 
 if TYPE_CHECKING:
-    from proflow.Objects.Process import Process
+    from proflow.objects.process import Process
 
 NEXT_ID = -1
 MAX_AST_DUMP_LENGTH = 1000
