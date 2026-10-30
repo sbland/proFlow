@@ -9,11 +9,11 @@ class TimeScale(Enum):
     MINUTE = 2
     HOUR = 3
     DAY = 4
-    ms = 0
-    s = 1
-    m = 2
-    h = 3
-    d = 4
+    ms = 0  # noqa: PIE796 - preserve the short-name aliases
+    s = 1  # noqa: PIE796 - preserve the short-name aliases
+    m = 2  # noqa: PIE796 - preserve the short-name aliases
+    h = 3  # noqa: PIE796 - preserve the short-name aliases
+    d = 4  # noqa: PIE796 - preserve the short-name aliases
 
 
 class TimeManager:

@@ -46,7 +46,7 @@ def get_new_val_fn(attr, acc):
 
     # TODO: Handle named tuple
     # TODO: Handle numpy
-    raise Exception(f"Invalid type: {type(attr)}")
+    raise TypeError(f"Invalid type: {type(attr)}")
 
 
 def build_up_args(

@@ -47,7 +47,7 @@ class ProflowParsingFunctionError(Exception):
             source_code = textwrap.dedent(inspect.getsource(func))
             ast_tree = ast.parse(source_code)
             ast_dump = ast.dump(ast_tree)
-        except Exception:
+        except (OSError, TypeError, SyntaxError):
             ast_dump = "Failed to dump ast!"
 
         self.full_message = f"""Proflow parsing function error: {self.message}
@@ -238,7 +238,7 @@ def get_inputs_list_from_lambda_fn(input_tree: ast.Assign) -> ast.List:
 def get_inputs_list_from_function_def(input_tree: ast.FunctionDef) -> ast.List:
     try:
         return input_tree.body[0].value
-    except Exception as e:
+    except (IndexError, AttributeError) as e:
         warnings.warn(Warning(e))
         raise ProflowParsingAstError(
             f"Failed to get Process inputs from function: {ast.dump(input_tree)}", input_tree
@@ -570,7 +570,7 @@ def parse_arg(attr: ast.Attribute) -> tuple[list[str], ArgMap]:
     elif isinstance(attr, ast.IfExp):
         # TODO: Implement this
         arg_list.append("AST PARSE NOT_IMPLEMENTED")
-    elif isinstance(attr, ast.Tuple) or isinstance(attr, ast.List):
+    elif isinstance(attr, (ast.Tuple, ast.List)):
         for elt in attr.elts:
             parsed_arg, _additional_args = parse_arg(elt)
             additional_args = {**additional_args, **_additional_args}
@@ -663,7 +663,7 @@ def get_inputs(input_list: ast.List) -> ArgMap:
     for input_el in input_list.elts:
         in_args, additional_mappings = parse_input_element(input_el)
         assert in_args is not None, "Could not get input args!"
-        k = parse_input_map_to_arg(i)
+        k = parse_input_map_to_arg(input_el)
         map_from = ".".join(map(str, in_args))
         input_mapping[k] = map_from
         input_mapping = {**input_mapping, **additional_mappings}
@@ -820,7 +820,7 @@ def inspect_process(process: "Process"):
             state_outputs=fieldNotEmpty(process.state_outputs)
             and parse_outputs(process.state_outputs),
         )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - normalize parsing failures into the process-level error
         raise ProflowParsingError(str(e), process)
 
 
@@ -841,5 +841,5 @@ def inspect_process_to_interfaces(process: "Process"):
             state_outputs=fieldNotEmpty(process.state_outputs)
             and parse_outputs_to_interface(process.state_outputs),
         )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - normalize parsing failures into the process-level error
         raise ProflowParsingError(str(e), process)

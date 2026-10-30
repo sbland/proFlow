@@ -1,7 +1,11 @@
 from .process_runner import Process
 
 
-def switch(gate: str, comment: str = None, options={}, default_option=None, **kwargs) -> Process:
+def switch(
+    gate: str, comment: str | None = None, options=None, default_option=None, **kwargs
+) -> Process:
+    if options is None:
+        options = {}
     options = {**options, **kwargs}
     try:
         return options.get(gate, default_option) if default_option is not None else options[gate]

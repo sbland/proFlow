@@ -1,4 +1,5 @@
 import pytest
+
 from vendor.test_helpers import benchmark_time, get_benchmark_time
 
 

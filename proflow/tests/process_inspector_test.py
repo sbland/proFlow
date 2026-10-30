@@ -30,7 +30,6 @@ DEMO_PROCESS = Process(
     comment="This is the process comment",
     gate=True,
     config_inputs=lambda config: [
-    config_inputs=lambda config: [
         I(config.a, as_="x"),
     ],
     state_inputs=lambda state: [
@@ -106,7 +105,7 @@ def test_inspect_process_ifelse():
         func=test_func,
         comment="This is the process comment",
         gate=True,
-        config_inputs=lambda config: [] if False else [],
+        config_inputs=lambda config: [],
         state_inputs=lambda state: [],
         additional_inputs=list,
         state_outputs=lambda result: [

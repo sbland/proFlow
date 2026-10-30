@@ -59,10 +59,10 @@ def get_successive_edges(
                 for oput in lookup_state_outputs
                 if oput.state_key == s_input.state_key
             )
-        except Exception as e:
+        except StopIteration:
             # If not found link is null
             target_output_index = -1
-            print(f"Exception occurred while finding target output: {e}")
+            print("No target output found; using null link.")
         # print(n)
         edge = Edge(source=s_input.node_index, target=target_output_index, name=s_input.state_key)
         links.append(edge)

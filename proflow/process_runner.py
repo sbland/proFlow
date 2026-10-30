@@ -21,16 +21,18 @@ class ProcessRunner:
 
     def __init__(
         self,
-        config_in: Config_Shape = Config_Shape(),
-        external_state_in: External_State_Shape = External_State_Shape(),
-        parameters_in: Parameters_Shape = Parameters_Shape(),
+        config_in: Config_Shape | None = None,
+        external_state_in: External_State_Shape | None = None,
+        parameters_in: Parameters_Shape | None = None,
         DEBUG_MODE: bool = False,
         IMMUTABLE_MODE: bool = False,
         row_per: TimeScale = TimeScale.HOUR,
     ):
-        self.config = config_in
-        self.parameters = parameters_in
-        self.external_state = external_state_in
+        self.config = Config_Shape() if config_in is None else config_in
+        self.parameters = Parameters_Shape() if parameters_in is None else parameters_in
+        self.external_state = (
+            External_State_Shape() if external_state_in is None else external_state_in
+        )
         self.DEBUG_MODE = DEBUG_MODE
         self.IMMUTABLE_MODE = IMMUTABLE_MODE
         self.state_logs = [{}]
@@ -47,8 +49,8 @@ class ProcessRunner:
     # Define the process runner
     def run_processes(
         self,
-        processes: list[Process] = None,
-        initial_state: NamedTuple = None,  # initial state or parameters
+        processes: list[Process] | None = None,
+        initial_state: NamedTuple | None = None,  # initial state or parameters
     ) -> NamedTuple:
         """Takes the initial state and a list of processes
         returns the new state as modified by the processes
@@ -93,7 +95,7 @@ class ProcessRunner:
         if row_index >= len(self.state_logs):
             new_rows = [{} for i in range(row_index - len(self.state_logs) + 1)]
             self.state_logs += new_rows
-        args, kwargs = get_inputs_from_process(
+        _args, kwargs = get_inputs_from_process(
             process,
             prev_state,
             self.config,

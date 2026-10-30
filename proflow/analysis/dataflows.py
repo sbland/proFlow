@@ -1,20 +1,20 @@
 import re
 from collections import namedtuple
 
-from proflow.objects import process
+from proflow.objects.process import Process
 from vendor.polyviz.bezier import bezier_curve_4pt
 
 
 def get_all_unique_inputs(processes):
-    inputs_list = list(set([inp.from_ for p in processes for inp in p.state_inputs])) + list(
-        set([inp.as_ for p in processes for inp in p.state_outputs])
+    inputs_list = list({inp.from_ for p in processes for inp in p.state_inputs}) + list(
+        {inp.as_ for p in processes for inp in p.state_outputs}
     )
     unique_inputs = list(set(inputs_list))
     return unique_inputs[::-1]
 
 
 def get_inputs_map(inputs_list):
-    return dict((inp, i) for i, inp in enumerate(inputs_list))
+    return {inp: i for i, inp in enumerate(inputs_list)}
 
 
 def get_links(inputs_map, process):
@@ -50,7 +50,7 @@ def t_wrap(text: str, max_length: int = 4) -> str:
 
 def link_processes_to_state(
     canvas,
-    processes: list[process],
+    processes: list[Process],
     seperation: int = 300,
     process_node_width: int = 200,
     process_node_height: int = 70,
@@ -80,7 +80,7 @@ def link_processes_to_state(
     filter_re = (
         filter_state_string
         if type(filter_state_string) is re.Pattern
-        else re.compile(f".*{filter_state_string}.*" or ".*")
+        else re.compile(f".*{filter_state_string}.*")
     )
     filtered_inputs = [i for i in unique_inputs if filter_re.match(i)]
     inputs_map = get_inputs_map(filtered_inputs)
@@ -161,7 +161,7 @@ if __name__ == "__main__":
         return x - y
 
     processes = [
-        process(
+        Process(
             func=lambda x, y, z: x + y + z,
             comment="Demo process a",
             config_inputs=[
@@ -172,7 +172,7 @@ if __name__ == "__main__":
                 I("_result", as_="info.tomorrow"),
             ],
         ),
-        process(
+        Process(
             func=lambda x, y, z: x + y + z,
             comment="Demo process a",
             config_inputs=[
@@ -183,7 +183,7 @@ if __name__ == "__main__":
                 I("_result", as_="info.tomorrow"),
             ],
         ),
-        process(
+        Process(
             func=demo_func,
             comment="Demo process b",
             config_inputs=[
@@ -196,7 +196,7 @@ if __name__ == "__main__":
                 I("_result", as_="info.today"),
             ],
         ),
-        process(
+        Process(
             func=lambda x, y: x + y,
             comment="Demo process c with a really long comment and info",
             config_inputs=[
@@ -209,7 +209,7 @@ if __name__ == "__main__":
                 I("_result", as_="info.today"),
             ],
         ),
-        process(
+        Process(
             func=lambda x, y: x + y,
             comment="Demo process d",
             config_inputs=[

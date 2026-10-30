@@ -224,7 +224,7 @@ def test_procces_runner_nested_simple():
                     config_inputs=lambda config: [
                         I(config.bar, as_="y"),
                     ],
-                    additional_inputs=lambda: [
+                    additional_inputs=lambda i=i: [
                         I(i, as_="x"),
                     ],
                     state_outputs=lambda result: [
@@ -700,11 +700,11 @@ def test_process_using_gate():
         [
             Process(
                 func=fn_1,
-                gate=1 == 2,  # False
+                gate=False,
             ),
             Process(
                 func=fn_2,
-                gate=2 == 2,  # True
+                gate=True,
             ),
         ]
     )

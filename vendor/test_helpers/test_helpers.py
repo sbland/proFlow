@@ -35,6 +35,6 @@ def use_benchmark_time(func):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        return func(benchmark_time=benchmark_time, *args, **kwargs)
+        return func(*args, benchmark_time=benchmark_time, **kwargs)
 
     return wrapper

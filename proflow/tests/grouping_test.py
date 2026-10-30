@@ -28,4 +28,4 @@ def test_can_group_processes():
     ]
     grouped_processes = group("group a")(lambda: demo_processes)()
     assert len(grouped_processes) == len(demo_processes)
-    assert all([p.group == "group a" for p in grouped_processes])
+    assert all(p.group == "group a" for p in grouped_processes)
