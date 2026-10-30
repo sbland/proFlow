@@ -1,14 +1,14 @@
 """Using CProfile to find bottlenecks."""
 # %%
 from proflow.helpers import rsetattr
-from proflow.Objects.Interface import I
-from proflow.Objects.Process import Process
+from proflow.objects.interface import I
+from proflow.objects.process import Process
 from pstats import SortKey
 from timeit import repeat
 import pstats
 import cProfile
-from vendor.helpers.list_helpers import flatten_list
-from proflow.ProcessRunnerCls import ProcessRunner
+from data_helpers.list_helpers import flatten_list
+from proflow.process_runner import ProcessRunner
 from proflow.tests.mocks import Mock_Model_State_Shape, Mock_Config_Shape, Mock_External_State_Shape, Mock_Nested_State
 # from proflow.process_ins_and_outs import map_result_to_state
 from proflow.process_state_modifiers import map_result_to_state_fn
@@ -97,4 +97,3 @@ timetorun
 # # %%
 # p = pstats.Stats(profile_output_file)
 # p.strip_dirs().sort_stats(SortKey.CUMULATIVE).print_callees(30)#.print_callers(.5)
-

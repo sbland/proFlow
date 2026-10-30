@@ -1,6 +1,6 @@
 from proflow.grouping import group
-from proflow.Objects.Interface import I
-from proflow.Objects.Process import Process
+from proflow.objects.interface import I
+from proflow.objects.process import Process
 
 
 def test_can_group_processes():
@@ -9,23 +9,23 @@ def test_can_group_processes():
             func=lambda x: x + 1,
             comment="A demo process A",
             config_inputs=lambda config: [
-                I(config.a, as_='x'),
+                I(config.a, as_="x"),
             ],
             state_outputs=[
-                I('_result', as_='y'),
-            ]
+                I("_result", as_="y"),
+            ],
         ),
         Process(
             func=lambda x: x + 1,
             comment="A demo process B",
             config_inputs=lambda config: [
-                I(config.y, as_='x'),
+                I(config.y, as_="x"),
             ],
             state_outputs=[
-                I('_result', as_='b'),
-            ]
+                I("_result", as_="b"),
+            ],
         ),
     ]
-    grouped_processes = group('group a')(lambda: demo_processes)()
+    grouped_processes = group("group a")(lambda: demo_processes)()
     assert len(grouped_processes) == len(demo_processes)
-    assert all([p.group == 'group a' for p in grouped_processes])
+    assert all(p.group == "group a" for p in grouped_processes)

@@ -1,0 +1,22 @@
+{
+    "additional_inputs": {
+        "z": "10"
+    },
+    "args": [],
+    "comment": "This is the process comment",
+    "config_inputs": {
+        "x": "config.a"
+    },
+    "external_state_inputs": {},
+    "func": "test_func",
+    "gate": true,
+    "group": null,
+    "parameters_inputs": {},
+    "ptype": 0,
+    "state_inputs": {
+        "y": "state.a"
+    },
+    "state_outputs": {
+        "result": "state.x"
+    }
+}

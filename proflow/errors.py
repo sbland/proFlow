@@ -1,15 +1,15 @@
 import json
+
 from data_helpers.encoders import AdvancedJsonEncoder
 
-
 MAX_ERROR_STRING_LENGTH = 1000
-new_line = '\n'
+new_line = "\n"
 
 
 class Run_Process_Error(Exception):
-    def __init__(self, process: 'Process', error: Exception, state, args, kwargs):  # noqa F821
+    def __init__(self, process: "Process", error: Exception, state, args, kwargs):  # noqa F821
 
-        process_id = process.comment or getattr(process.func, '__name__', 'Unknown')
+        process_id = process.comment or getattr(process.func, "__name__", "Unknown")
         self.message = f'Failed to run "{process_id}"'
         self.error = error
         self.state = state
@@ -18,7 +18,7 @@ class Run_Process_Error(Exception):
         self.kwargs_str = json.dumps(kwargs, indent=4, cls=AdvancedJsonEncoder)
         try:
             self.human = json.dumps(self.process.human(), indent=4, cls=AdvancedJsonEncoder)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - error formatting must fall back if process.human() fails
             self.human = f"""Could not parse process for error message!
 
             Error:
@@ -29,17 +29,17 @@ class Run_Process_Error(Exception):
         return f"""{self.message}
 ---------- Python Error ----------
 
-{str(self.error)}
+{self.error!s}
 
 ------------ Inputs ------------
 
 args
 ----
-{ self.args_str[0:MAX_ERROR_STRING_LENGTH] + new_line + "...." if len(self.args_str) > MAX_ERROR_STRING_LENGTH else self.args_str}
+{self.args_str[0:MAX_ERROR_STRING_LENGTH] + new_line + "...." if len(self.args_str) > MAX_ERROR_STRING_LENGTH else self.args_str}
 
 kwargs:
 -------
-{ self.kwargs_str[0:MAX_ERROR_STRING_LENGTH] + new_line + "...." if len(self.kwargs_str) > MAX_ERROR_STRING_LENGTH else self.kwargs_str}
+{self.kwargs_str[0:MAX_ERROR_STRING_LENGTH] + new_line + "...." if len(self.kwargs_str) > MAX_ERROR_STRING_LENGTH else self.kwargs_str}
 
 
 ------------- Code -------------

@@ -1,6 +1,6 @@
 """The TimeManager manages the current row index."""
+
 from enum import Enum
-from proflow.Objects.Process import Process
 
 
 class TimeScale(Enum):
@@ -9,14 +9,14 @@ class TimeScale(Enum):
     MINUTE = 2
     HOUR = 3
     DAY = 4
-    ms = 0
-    s = 1
-    m = 2
-    h = 3
-    d = 4
+    ms = 0  # noqa: PIE796 - preserve the short-name aliases
+    s = 1  # noqa: PIE796 - preserve the short-name aliases
+    m = 2  # noqa: PIE796 - preserve the short-name aliases
+    h = 3  # noqa: PIE796 - preserve the short-name aliases
+    d = 4  # noqa: PIE796 - preserve the short-name aliases
 
 
-class TimeManager():
+class TimeManager:
     """The TimeManager manages the current row index."""
 
     def __init__(
@@ -96,4 +96,3 @@ class TimeManager():
         while self.millisecond >= 1000:
             self.advance_second()
             self.millisecond = self.millisecond - 1000
-

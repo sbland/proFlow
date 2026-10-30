@@ -2,7 +2,7 @@ import flask
 
 
 def run(port=8000, datalocation="force/data.json"):
-    app = flask.Flask(__name__, static_folder='static')
+    app = flask.Flask(__name__, static_folder="static")
 
     @app.route("/")
     def static_proxy():

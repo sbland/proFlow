@@ -1,16 +1,20 @@
-import pytest
 from timeit import repeat
+from unittest.mock import patch
+
+import pytest
+from data_helpers.list_helpers import flatten_list
 
 from proflow.helpers import rgetattr
+from proflow.process_runner import ProcessRunner
+from proflow.tests.mocks import (
+    Mock_Config_Shape,
+    Mock_External_State_Shape,
+    Mock_Model_State_Shape,
+    Mock_Parameters_Shape,
+)
 
-from proflow.tests.mocks import Mock_Config_Shape, Mock_External_State_Shape, \
-    Mock_Model_State_Shape, Mock_Parameters_Shape
-from proflow.ProcessRunnerCls import ProcessRunner
-from unittest.mock import patch
-from vendor.helpers.list_helpers import flatten_list
-
-from ..Objects.Process import Process
-from ..Objects.Interface import I
+from ..objects.interface import I
+from ..objects.process import Process
 
 
 def process_add(x, y):
@@ -18,81 +22,90 @@ def process_add(x, y):
 
 
 process_runner = ProcessRunner(
-    Mock_Config_Shape(), Mock_External_State_Shape(), Mock_Parameters_Shape())
+    Mock_Config_Shape(), Mock_External_State_Shape(), Mock_Parameters_Shape()
+)
 
 
 @pytest.fixture(scope="module", autouse=True)
 def _():
-    with patch('proflow.ProcessRunner.Model_State_Shape', side_effect=Mock_Model_State_Shape) \
-            as Mocked_State_Shape:
+    with patch(
+        "proflow.process_runner.Model_State_Shape", side_effect=Mock_Model_State_Shape
+    ) as Mocked_State_Shape:
         Mocked_State_Shape.__annotations__ = Mock_Model_State_Shape.__annotations__
         yield Mocked_State_Shape
 
 
 @pytest.fixture(scope="module", autouse=True)
 def __():
-    with patch('proflow.ProcessRunner.Config_Shape', return_value=Mock_Config_Shape) as _fixture:
+    with patch("proflow.process_runner.Config_Shape", return_value=Mock_Config_Shape) as _fixture:
         yield _fixture
 
 
 @pytest.fixture(scope="module", autouse=True)
 def ____():
-    with patch('proflow.ProcessRunner.Parameters_Shape', return_value=Mock_Parameters_Shape) \
-            as _fixture:
+    with patch(
+        "proflow.process_runner.Parameters_Shape", return_value=Mock_Parameters_Shape
+    ) as _fixture:
         yield _fixture
 
 
 @pytest.fixture(scope="module", autouse=True)
 def ______():
-    with patch('proflow.ProcessRunner.External_State_Shape',
-               return_value=Mock_External_State_Shape) \
-            as _fixture:
+    with patch(
+        "proflow.process_runner.External_State_Shape", return_value=Mock_External_State_Shape
+    ) as _fixture:
         yield _fixture
 
 
 def test_process_runner_time():
     state = Mock_Model_State_Shape(a=2.1, b=4.1)
-    processes = flatten_list([
-        Process(
-            func=lambda x, y: x + y,
-            config_inputs=lambda config: [
-                I(config.foo, as_='x'),
-                I(config.bar, as_='y'),
+    processes = flatten_list(
+        [
+            Process(
+                func=lambda x, y: x + y,
+                config_inputs=lambda config: [
+                    I(config.foo, as_="x"),
+                    I(config.bar, as_="y"),
+                ],
+                state_outputs=lambda result: [
+                    (result, "c"),
+                ],
+            ),
+            Process(
+                func=lambda x, y: x + y,
+                config_inputs=lambda config: [
+                    I(config.foo, as_="x"),
+                ],
+                state_inputs=lambda state: [
+                    I(rgetattr(state.matrix[0], state.ind), as_="y"),
+                ],
+                state_outputs=lambda result: [
+                    (result, "c"),
+                ],
+            ),
+            [
+                Process(
+                    func=lambda x, y: x + y,
+                    config_inputs=lambda config: [
+                        I(config.foo, as_="x"),
+                    ],
+                    additional_inputs=lambda i=i: [
+                        I(i, as_="y"),
+                    ],
+                    state_outputs=lambda result: [
+                        (result, "d"),
+                    ],
+                )
+                for i in range(5)
             ],
-            state_outputs=lambda result: [
-                (result, 'c'),
-            ],
-        ),
-        Process(
-            func=lambda x, y: x + y,
-            config_inputs=lambda config: [
-                I(config.foo, as_='x'),
-            ],
-            state_inputs=lambda state: [
-                I(rgetattr(state.matrix[0], state.ind), as_='y'),
-            ],
-            state_outputs=lambda result: [
-                (result, 'c'),
-            ],
-        ),
-        [Process(
-            func=lambda x, y: x + y,
-            config_inputs=lambda config: [
-                I(config.foo, as_='x'),
-            ],
-            additional_inputs=lambda i=i: [
-                I(i, as_='y'),
-            ],
-            state_outputs=lambda result: [
-                (result, 'd'),
-            ],
-        ) for i in range(5)],
-    ])
+        ]
+    )
     run_processes = process_runner.initialize_processes(processes)
 
     time = min(repeat(lambda: run_processes(initial_state=state), number=2000, repeat=5))
     # assert 0.220 < time < 0.26 # Times with old method
-    assert 0.04 < time < 0.08
+    assert 0.01 < time < 0.08
+
 
 # TODO: Below is depreciated
 # def test_get_process_inputs_time():

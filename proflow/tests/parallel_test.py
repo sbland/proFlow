@@ -1,8 +1,8 @@
-from proflow.Objects.Interface import I
-from proflow.Objects.Process import Process
+import pickle
 from dataclasses import dataclass, field
 
-import pickle
+from proflow.objects.interface import I
+from proflow.objects.process import Process
 
 
 def example_func(x, y, z):
@@ -31,17 +31,17 @@ class TestRunningInParallel:
             comment="This is the process comment",
             gate=True,
             config_inputs=lambda config: [
-                I(config.a, as_='x'),
+                I(config.a, as_="x"),
             ],
             state_inputs=lambda state: [
-                I(state.a, as_='y'),
+                I(state.a, as_="y"),
             ],
             additional_inputs=lambda: [
-                I(10, as_='z'),
+                I(10, as_="z"),
             ],
             state_outputs=lambda result: [
-                (result, 'x'),
-            ]
+                (result, "x"),
+            ],
         )
         pickled_process = pickle.dumps(demo_process)
         loaded_pickled_process = pickle.loads(pickled_process)

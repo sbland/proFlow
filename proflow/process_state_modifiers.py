@@ -1,12 +1,12 @@
 """Functions that modify state without mutation."""
+
+from copy import deepcopy
 from dataclasses import is_dataclass, replace
 from functools import partial, reduce
-from typing import List
-from copy import deepcopy
 
 from .helpers import rgetattr
-from .Objects.Interface import I
 from .internal_state import Model_State_Shape
+from .objects.interface import I
 
 
 def get_new_val_fn(attr, acc):
@@ -30,10 +30,10 @@ def get_new_val_fn(attr, acc):
     # NOTE: We can speed this up by removeing the replace and deepcopy functions
     if is_dataclass(attr):
         return replace(attr, **acc)
-    if isinstance(attr, list) or type(attr).__module__ == 'numpy':
+    if isinstance(attr, list) or type(attr).__module__ == "numpy":
         list_copy = deepcopy(attr)
         for k, v in acc.items():
-            if k == '+':
+            if k == "+":
                 list_copy.append(v)
             else:
                 list_copy[int(k)] = v
@@ -46,13 +46,13 @@ def get_new_val_fn(attr, acc):
 
     # TODO: Handle named tuple
     # TODO: Handle numpy
-    raise Exception(f'Invalid type: {type(attr)}')
+    raise TypeError(f"Invalid type: {type(attr)}")
 
 
 def build_up_args(
     acc: dict,
     i: int,
-    target_split: List[str],
+    target_split: list[str],
     initial_state: object,
 ) -> dict:
     """Part of iterator to replace part of object starting at bottom.
@@ -76,7 +76,7 @@ def build_up_args(
 
     # TODO: Test me
     t = target_split[i]
-    t_2_h = '.'.join(target_split[0:i+1])
+    t_2_h = ".".join(target_split[0 : i + 1])
     attr = rgetattr(initial_state, t_2_h)
     new_val = get_new_val_fn(attr, acc)
     new_args = {t: new_val}
@@ -84,7 +84,7 @@ def build_up_args(
 
 
 def replace_state_val(initial_state, target, val):
-    target_split = target.split('.')
+    target_split = target.split(".")
     target_indexes = reversed(list(range(len(target_split[0:-1]))))
 
     build_up_args_part = partial(
@@ -101,7 +101,7 @@ def replace_state_val(initial_state, target, val):
 # TODO: Find optimized version of implementing non mutable version
 def map_result_to_state_fn(
     prev_state: Model_State_Shape,
-    output_map: List[I],
+    output_map: list[I],
     result,
 ) -> Model_State_Shape:
     """Update the state based on an output mapping.
