@@ -15,5 +15,7 @@ def group(name: str) -> Callable[[List[Process]], List[Process]]:
                 p.group = name
 
             return processes_out
+
         return wrapped_fn
+
     return decorator

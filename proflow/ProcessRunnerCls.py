@@ -14,17 +14,18 @@ from .Objects.Process import Process, ProcessType
 from .errors import Run_Process_Error
 
 
-class ProcessRunner():
+class ProcessRunner:
     """A class for initializing the process runner"""
 
-    def __init__(self,
-                 config_in: Config_Shape = Config_Shape(),
-                 external_state_in: External_State_Shape = External_State_Shape(),
-                 parameters_in: Parameters_Shape = Parameters_Shape(),
-                 DEBUG_MODE: bool = False,
-                 IMMUTABLE_MODE: bool = False,
-                 row_per: TimeScale = TimeScale.HOUR,
-                 ):
+    def __init__(
+        self,
+        config_in: Config_Shape = Config_Shape(),
+        external_state_in: External_State_Shape = External_State_Shape(),
+        parameters_in: Parameters_Shape = Parameters_Shape(),
+        DEBUG_MODE: bool = False,
+        IMMUTABLE_MODE: bool = False,
+        row_per: TimeScale = TimeScale.HOUR,
+    ):
         self.config = config_in
         self.parameters = parameters_in
         self.external_state = external_state_in
@@ -47,7 +48,7 @@ class ProcessRunner():
         processes: List[Process] = None,
         initial_state: NamedTuple = None,  # initial state or parameters
     ) -> NamedTuple:
-        """ Takes the initial state and a list of processes
+        """Takes the initial state and a list of processes
         returns the new state as modified by the processes
 
         new state is the state after we have run all the processes
@@ -58,10 +59,7 @@ class ProcessRunner():
         self.current_state = reduce(self.process_switcher, processes, _initial_state)
         return self.current_state
 
-    def initialize_processes(
-        self,
-        processes: List[Process]
-    ) -> Callable[[NamedTuple], NamedTuple]:
+    def initialize_processes(self, processes: List[Process]) -> Callable[[NamedTuple], NamedTuple]:
         """HOC component to assign processes to the run_processes function
         which can then be ran later with the state"""
         return partial(self.run_processes, processes)
@@ -167,9 +165,11 @@ class ProcessRunner():
         # RUN PROCESS FUNC
         result = process.func(*args, **kwargs)
 
-        output_state = map_result_to_state(modified_state, process.state_outputs, result) \
-            if not process.format_output else \
-            map_result_to_state_fn(modified_state, process.state_outputs, result)
+        output_state = (
+            map_result_to_state(modified_state, process.state_outputs, result)
+            if not process.format_output
+            else map_result_to_state_fn(modified_state, process.state_outputs, result)
+        )
 
         return output_state
 
@@ -223,7 +223,7 @@ class ProcessRunner():
             return prev_state
         try:
             modified_state = deepcopy(prev_state) if IMMUTABLE_MODE else prev_state
-            process_id = process.comment or getattr(process.func, '__name__', 'Unknown')
+            process_id = process.comment or getattr(process.func, "__name__", "Unknown")
             start_time_input_setup = datetime.now()
 
             args, kwargs = get_inputs_from_process(
@@ -236,7 +236,7 @@ class ProcessRunner():
             )
 
             end_time_input_setup = datetime.now()
-            time_diff_input_setup = (end_time_input_setup - start_time_input_setup)
+            time_diff_input_setup = end_time_input_setup - start_time_input_setup
             execution_time_input_setup = time_diff_input_setup.total_seconds() * 1000
 
             # RUN PROCESS FUNC
@@ -244,7 +244,7 @@ class ProcessRunner():
             start_time = datetime.now()
             result = process.func(*args, **kwargs)
             end_time = datetime.now()
-            time_diff = (end_time - start_time)
+            time_diff = end_time - start_time
             execution_time = time_diff.total_seconds() * 1000
 
             self.time_logs.append((process_id, execution_time))
@@ -252,19 +252,23 @@ class ProcessRunner():
             start_time_output_setup = datetime.now()
 
             # TODO: This is expensive!
-            output_state = map_result_to_state(modified_state, process.state_outputs, result) \
-                if not process.format_output else \
-                map_result_to_state_fn(modified_state, process.state_outputs, result)
+            output_state = (
+                map_result_to_state(modified_state, process.state_outputs, result)
+                if not process.format_output
+                else map_result_to_state_fn(modified_state, process.state_outputs, result)
+            )
 
             end_time_output_setup = datetime.now()
-            time_diff_output_setup = (end_time_output_setup - start_time_output_setup)
+            time_diff_output_setup = end_time_output_setup - start_time_output_setup
             execution_time_output_setup = time_diff_output_setup.total_seconds() * 1000
 
-            self.debug_time_logs.append({
-                "id": process_id,
-                "input_time": execution_time_input_setup,
-                "output_time": execution_time_output_setup,
-            })
+            self.debug_time_logs.append(
+                {
+                    "id": process_id,
+                    "input_time": execution_time_input_setup,
+                    "output_time": execution_time_output_setup,
+                }
+            )
 
             return output_state
 
@@ -278,8 +282,10 @@ class ProcessRunner():
 
 def advance_time_step_process():
     """Helper Process to advance a time step."""
+
     def advance_time_step(tm: TimeManager):
         tm.advance_row()
+
     return Process(
         func=advance_time_step,
         ptype=ProcessType.TIME,

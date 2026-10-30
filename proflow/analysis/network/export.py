@@ -15,9 +15,7 @@ def asjson(nodes: List[Node], edges: List[Edge], output_file: str):
 
     # %%
     json_graph_data = nx.json_graph.node_link_data(
-        G,
-        dict(source='source', target='target', name='id',
-             key='key', link='links')
+        G, dict(source="source", target="target", name="id", key="key", link="links")
     )
 
     json.dump(json_graph_data, open(output_file, "w"))

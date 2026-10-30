@@ -4,6 +4,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class I:  # noqa: E742
     """interface Named Tuple"""
+
     from_: str
     as_: str = None
     required: bool = False  # If true then is asserted != null on debug mode

@@ -57,7 +57,7 @@ class ProflowParsingFunctionError(Exception):
         super().__init__(self.full_message)
 
     def __repr__(self):
-        return f'Proflow parsing function error: {self.message} \n {self.source}'
+        return f"Proflow parsing function error: {self.message} \n {self.source}"
 
 
 class ProflowParsingLineError(Exception):
@@ -67,19 +67,19 @@ class ProflowParsingLineError(Exception):
         super().__init__(self.message)
 
     def __repr__(self):
-        return f'Proflow parsing line error: {self.message} \n {self.source}'
+        return f"Proflow parsing line error: {self.message} \n {self.source}"
 
 
 class ProflowParsingAstError(Exception):
     def __init__(self, message, failed_ast):
         ast_dump = ast.dump(failed_ast)[0:MAX_AST_DUMP_LENGTH]
-        message = f'{message} \n ======= ast.dump: \n {ast_dump} \n ==='
+        message = f"{message} \n ======= ast.dump: \n {ast_dump} \n ==="
         self.message = message
         self.ast = failed_ast
         super().__init__(self.message)
 
     def __repr__(self):
-        return f'Proflow parsing line error: {self.message}'
+        return f"Proflow parsing line error: {self.message}"
 
 
 #: Mapping of argument to the value
@@ -87,27 +87,27 @@ ArgMap = Dict[str, str]
 
 
 def strip_out_comments(string: str) -> str:
-    r = re.compile(r'#.*?$', re.MULTILINE)
-    return r.sub('', string)
+    r = re.compile(r"#.*?$", re.MULTILINE)
+    return r.sub("", string)
 
 
 def extract_output_lines(map_inputs_fn: Callable[[object], List[str]]) -> List[str]:
     outputs_source = None
     try:
         outputs_source = strip_out_comments(inspect.getsource(map_inputs_fn))
-        if outputs_source[0:len("def GET_INPUT_FACTORY_INNER")] == "def GET_INPUT_FACTORY_INNER":
+        if outputs_source[0 : len("def GET_INPUT_FACTORY_INNER")] == "def GET_INPUT_FACTORY_INNER":
             return []
 
-        r_list = re.compile(r'lambda result.*?:.*?\[(?P<con>.*)\]', re.DOTALL | re.MULTILINE)
+        r_list = re.compile(r"lambda result.*?:.*?\[(?P<con>.*)\]", re.DOTALL | re.MULTILINE)
         output_map_raw = r_list.search(outputs_source).groups()[0]
-        print(f"Output map raw: {output_map_raw.replace('\n', ' ').replace(" ", "")}")
         # Get lines
-        r = re.compile(r'(?: |\[|^)\((.*?)\)(?:,|$| for .*)$', re.DOTALL | re.MULTILINE)
+        r = re.compile(r"(?: |\[|^)\((.*?)\)(?:,|$| for .*)$", re.DOTALL | re.MULTILINE)
         matches = r.finditer(output_map_raw)
         lines = (g for match in matches if match is not None for g in match.groups())
         return lines
     except AttributeError as error:
-        warnings.warn(Warning(f"""Failed to parse output lines
+        warnings.warn(
+            Warning(f"""Failed to parse output lines
 
 Error
 =====
@@ -117,7 +117,8 @@ Source
 ======
 {outputs_source}
 
-                              """))
+                              """)
+        )
         return []
 
 
@@ -145,24 +146,24 @@ def parse_key(k: str) -> str:
 
     def replace_var_fn(x):
         if x.groups()[0] is not None:
-            return f'.{x.groups()[0]}.'
+            return f".{x.groups()[0]}."
         elif x.groups()[1] is not None:
-            return f'.{x.groups()[1]}.'
+            return f".{x.groups()[1]}."
         elif x.groups()[2] is not None:
-            return f'.{x.groups()[2]}.'
+            return f".{x.groups()[2]}."
         elif x.groups()[3] is not None:
-            return f'.[{x.groups()[3]}].'
+            return f".[{x.groups()[3]}]."
         else:
             return 'INVALID_KEY!'
     # step 1. Find state or config
-    find_square_brackets = r'\[(\d*?)\]|\[\'(\D*?)\'\]|\[\"(\D*?)\"\]|\[(\D*?)\]'
+    find_square_brackets = r"\[(\d*?)\]|\[\'(\D*?)\'\]|\[\"(\D*?)\"\]|\[(\D*?)\]"
     r = re.compile(find_square_brackets, re.DOTALL)
 
     replaced_parts = re.sub(r, replace_var_fn, k)
-    replaced_double_dots = re.sub(r'\.\.+', '.', replaced_parts)
-    out = re.sub(r'^\'|\'$|\.$|^\.|\.\'$', '', replaced_double_dots)
+    replaced_double_dots = re.sub(r"\.\.+", ".", replaced_parts)
+    out = re.sub(r"^\'|\'$|\.$|^\.|\.\'$", "", replaced_double_dots)
     # Replace trailing dots and surrounding quotes
-    out = re.sub(r'\.\.+', '.', out)
+    out = re.sub(r"\.\.+", ".", out)
     return out
 
 
@@ -182,18 +183,17 @@ def parse_inputs_to_interface(
         # warnings.warn(Warning(e.source))
         if not allow_errors:
             raise e from e
-        return [I(from_='UNKNOWN', as_='UNKNOWN')]
+        return [I(from_="UNKNOWN", as_="UNKNOWN")]
     except TypeError:
         # warnings.warn(Warning(e))
-        return [I(from_='ERROR', as_='ERROR')]
+        return [I(from_="ERROR", as_="ERROR")]
     return input_objects
 
 
 def parse_output_line(output_line: str) -> List[str]:
-    output_args = output_line.split(',')
-    print(f"Parsing output line: {output_line}")
+    output_args = output_line.split(",")
     if len(output_args) != 2:
-        raise ProflowParsingLineError('Failed to parse output line', output_line)
+        raise ProflowParsingLineError("Failed to parse output line", output_line)
     return output_args
 
 
@@ -202,28 +202,27 @@ def parse_outputs_to_interface(
     allow_errors=True,
 ) -> List[I]:
     output_lines_row = None
-    print("Parsing outputs")
     try:
         parse_outputs_b(process_outputs)
         output_lines_row = extract_output_lines(process_outputs)
         args_and_kwargs = [parse_output_line(line) for line in output_lines_row]
         output_objects = [
-            I(from_=args[0], as_=f'state.{rm_inv_comma(args[1].strip())}')
-            for args in args_and_kwargs]
-        print(f"Output objects: {output_objects}")
+            I(from_=args[0], as_=f"state.{rm_inv_comma(args[1].strip())}")
+            for args in args_and_kwargs
+        ]
         return output_objects
     except ProflowParsingLineError as e:
         # warnings.warn(Warning(e.message))
         # warnings.warn(Warning(e.source))
         if not allow_errors:
             raise e from e
-        return [I(from_='UNKNOWN', as_='UNKNOWN')]
+        return [I(from_="UNKNOWN", as_="UNKNOWN")]
     except ProflowParsingAstError as e:
         # warnings.warn(Warning(e.message))
         # warnings.warn(Warning(e.ast))
         if not allow_errors:
             raise e from e
-        return [I(from_='UNKNOWN', as_='UNKNOWN')]
+        return [I(from_="UNKNOWN", as_="UNKNOWN")]
 
 
 def get_inputs_list_from_lambda_fn(input_tree: ast.Assign) -> ast.List:
@@ -232,8 +231,7 @@ def get_inputs_list_from_lambda_fn(input_tree: ast.Assign) -> ast.List:
     elif isinstance(input_tree.value, ast.Lambda):
         return input_tree.value.body
     else:
-        raise ProflowParsingAstError(
-            f"Unexpected AST type: {type(input_tree.value)}", input_tree)
+        raise ProflowParsingAstError(f"Unexpected AST type: {type(input_tree.value)}", input_tree)
 
 
 def get_inputs_list_from_function_def(input_tree: ast.FunctionDef) -> ast.List:
@@ -242,7 +240,8 @@ def get_inputs_list_from_function_def(input_tree: ast.FunctionDef) -> ast.List:
     except Exception as e:
         warnings.warn(Warning(e))
         raise ProflowParsingAstError(
-            f"Failed to get Process inputs from function: {ast.dump(input_tree)}", input_tree)
+            f"Failed to get Process inputs from function: {ast.dump(input_tree)}", input_tree
+        )
 
 
 def get_inputs_list(input_tree: Union[ast.Assign, ast.FunctionDef]) -> ast.List:
@@ -251,8 +250,7 @@ def get_inputs_list(input_tree: Union[ast.Assign, ast.FunctionDef]) -> ast.List:
     elif isinstance(input_tree, ast.FunctionDef):
         return get_inputs_list_from_function_def(input_tree)
     else:
-        raise ProflowParsingAstError(
-            f"Unexpected AST type: {type(input_tree)}", input_tree)
+        raise ProflowParsingAstError(f"Unexpected AST type: {type(input_tree)}", input_tree)
 
 
 def parse_unary_op(v: ast.UnaryOp):
@@ -270,8 +268,8 @@ def parse_bin_op(attr: ast.BinOp):
     additional_args = {**additional_args, **_additional_args}
     parsed_arg_right, _additional_args = parse_arg(attr.right)
     additional_args = {**additional_args, **_additional_args}
-    lhs = '.'.join(map(str, reversed(parsed_arg_left)))
-    rhs = '.'.join(map(str, reversed(parsed_arg_right)))
+    lhs = ".".join(map(str, reversed(parsed_arg_left)))
+    rhs = ".".join(map(str, reversed(parsed_arg_right)))
     # TODO: Should we include op here?
     arg_list.append(f"{lhs},{rhs}")
     return arg_list, additional_args
@@ -502,7 +500,6 @@ def parse_arg(attr: ast.Attribute) -> Tuple[List[str], ArgMap]:
     """
     arg_list = []
     additional_args = {}
-    print(f"Parsing argument: {attr}")
     if isinstance(attr, ast.Attribute):
         arg_list.append(attr.attr)
         parsed_arg, _additional_args = parse_arg(attr.value)
@@ -517,14 +514,10 @@ def parse_arg(attr: ast.Attribute) -> Tuple[List[str], ArgMap]:
         arg_list.append(parsed_arg)
         additional_args = {**additional_args, **_additional_args}
     elif isinstance(attr, ast.Subscript):
-        print(f"Parsing subscript: {attr}")
         index, _additional_args = parse_arg_index(attr.slice)
         additional_args = {**additional_args, **_additional_args}
         arg_list = arg_list + index
-        print(f"Parsed index: {index}")
-        # arg_list.append(index)
         parsed_arg, _additional_args = parse_arg(attr.value)
-        print(f"Parsed argument: {parsed_arg}")
         arg_list = arg_list + parsed_arg
         additional_args = {**additional_args, **_additional_args}
     elif isinstance(attr, ast.ListComp):
@@ -544,26 +537,29 @@ def parse_arg(attr: ast.Attribute) -> Tuple[List[str], ArgMap]:
         additional_args = {**additional_args, **_additional_args}
         parsed_arg_right, _additional_args = parse_arg(attr.values[1])
         additional_args = {**additional_args, **_additional_args}
-        lhs = '.'.join(map(str, reversed(parsed_arg_left)))
-        rhs = '.'.join(map(str, reversed(parsed_arg_right)))
+        lhs = ".".join(map(str, reversed(parsed_arg_left)))
+        rhs = ".".join(map(str, reversed(parsed_arg_right)))
         arg_list.append(f"{lhs},{rhs}")
     elif isinstance(attr, ast.Compare):
         parsed_arg_left, _additional_args = parse_arg(attr.left)
         additional_args = {**additional_args, **_additional_args}
-        lhs = '.'.join(reversed(parsed_arg_left))
+        lhs = ".".join(reversed(parsed_arg_left))
         parsed_arg_comparator, _additional_args = parse_arg(attr.comparators[0])
         additional_args = {**additional_args, **_additional_args}
         # TODO: Check this handles all comparitors
-        rhs = '.'.join(reversed(parsed_arg_comparator))
+        rhs = ".".join(reversed(parsed_arg_comparator))
         arg_list.append(f"{lhs},{rhs}")
     elif isinstance(attr, ast.Slice):
         # TODO: Check this ok
         [top], _additional_args_top = parse_arg(attr.upper)
         [bottom], _additional_args_bottom = parse_arg(attr.lower)
-        step, _additional_args_step = parse_arg(attr.step)if attr.step else [None, {}]
+        step, _additional_args_step = parse_arg(attr.step) if attr.step else [None, {}]
         index = f"{bottom}:{top}" + (f":{step}" if step else "")
-        _additional_args = {**_additional_args_top, **
-                            _additional_args_bottom, **_additional_args_step}
+        _additional_args = {
+            **_additional_args_top,
+            **_additional_args_bottom,
+            **_additional_args_step,
+        }
         arg_list.append(index)
         additional_args = {**additional_args, **_additional_args}
     elif isinstance(attr, ast.Call):
@@ -623,7 +619,6 @@ def parse_input_element(inp: ast.Call) -> Tuple[List[str], ArgMap]:
         raise NotImplementedError("Starred not implemented")
     assert inp.func.id == "I", "input must be instance of a I object"
     in_arg_tree: ast.Attribute = inp.args[0]
-    print(f"Input argument tree: {in_arg_tree}")
     args_out, additional_argmap = parse_arg(in_arg_tree)
     in_args = list(reversed(args_out))
     return in_args, additional_argmap
@@ -671,17 +666,12 @@ def parse_input_map_to_arg(inp: ast.Call) -> str:
 def get_inputs(input_list: ast.List) -> ArgMap:
     input_mapping = {}
     for input_el in input_list.elts:
-        print(f"Parsing input element: {input_el}")
         in_args, additional_mappings = parse_input_element(input_el)
-        print(f"Additional mappings: {additional_mappings}")
-        print(f"In args: {in_args}")
         assert in_args is not None, "Could not get input args!"
-        k = parse_input_map_to_arg(input_el)
-        map_from = '.'.join(map(str, in_args))
-        print(f"Mapping input '{k}' to '{map_from}'")
+        k = parse_input_map_to_arg(i)
+        map_from = ".".join(map(str, in_args))
         input_mapping[k] = map_from
         input_mapping = {**input_mapping, **additional_mappings}
-        print(f"Current input mapping: {input_mapping}")
     return input_mapping
 
 
@@ -692,7 +682,7 @@ def parse_output_target(out_el):
         return f"{{{out_el.value.id}}}"
     elif isinstance(out_el, ast.JoinedStr):
         elts = list(map(parse_output_target, out_el.values))
-        return '.'.join(elts)
+        return ".".join(elts)
     else:
         raise NotImplementedError(f"Ast type not implemented: {type(out_el)}")
 
@@ -713,14 +703,14 @@ def get_outputs_from_lambda_body(input_list: ast.List):
             in_args, out_as_arg = parse_output(i)
             assert in_args, "Could not get input args!"
             assert out_as_arg, "Could not get input args!"
-            k = '.'.join(map(str, in_args))
+            k = ".".join(map(str, in_args))
             input_mapping[k] = out_as_arg
     elif isinstance(input_list, ast.ListComp):
         # For now we just treat a list comp as a single output
         in_args, out_as_arg = parse_output(input_list.elt)
         assert in_args, "Could not get input args!"
         assert out_as_arg, "Could not get input args!"
-        k = '.'.join(map(str, in_args))
+        k = ".".join(map(str, in_args))
         input_mapping[k] = out_as_arg
     else:
         raise NotImplementedError(f"Ast type not implemented: {type(input_list)}")
@@ -728,7 +718,9 @@ def get_outputs_from_lambda_body(input_list: ast.List):
 
 
 def parse_inputs(
-    map_inputs_fn: Callable[[any], List[I]], allow_errors: bool = True, silent=False,
+    map_inputs_fn: Callable[[any], List[I]],
+    allow_errors: bool = True,
+    silent=False,
 ) -> dict:
     source_code = textwrap.dedent(inspect.getsource(map_inputs_fn))
     ast_tree = ast.parse(source_code)
@@ -736,9 +728,7 @@ def parse_inputs(
         return {}  # input function is not set
     try:
         inputs_list = get_inputs_list(ast_tree.body[0])
-        print(f"Parsing inputs list...\n{inputs_list}")
         inputs_map = get_inputs(inputs_list)
-        print(f"Parsing inputs map...\n{inputs_map}")
         return inputs_map
     except ProflowParsingError as e:
         if not silent:
@@ -747,7 +737,6 @@ def parse_inputs(
         if not allow_errors:
             raise e from e
         else:
-
             return {}
     except ProflowParsingLineError as e:
         if not silent:
@@ -777,7 +766,8 @@ def parse_inputs(
             print(e)
             print(ast.dump(ast_tree))
             raise ProflowParsingFunctionError(
-                "Failed to get inputs for source", map_inputs_fn) from e
+                "Failed to get inputs for source", map_inputs_fn
+            ) from e
         else:
             # raise e
             # return str(e)
@@ -797,13 +787,13 @@ def parse_outputs_b(map_inputs_fn: Callable[[any], List[I]]) -> dict:
 
 
 def parse_outputs(
-    map_outputs_fn: Callable[[any], List[I]], allow_errors: bool = True, silent=True,
+    map_outputs_fn: Callable[[any], List[I]],
+    allow_errors: bool = True,
+    silent=True,
 ) -> dict:
     try:
         output_lines = parse_outputs_to_interface(map_outputs_fn, allow_errors)
-        outputs_map = {
-            parse_key(i.from_): f'{rm_inv_comma(i.as_.strip())}'
-            for i in output_lines}
+        outputs_map = {parse_key(i.from_): f"{rm_inv_comma(i.as_.strip())}" for i in output_lines}
         return outputs_map
     except Exception as e:
         if not silent:
@@ -819,40 +809,42 @@ def fieldNotEmpty(f: Union[any, Callable]) -> bool:
     return f and callable(f)
 
 
-def inspect_process(process: 'Process'):
+def inspect_process(process: "Process"):
     Parsed = namedtuple(
-        'Parsed', 'config_inputs state_inputs parameter_inputs additional_inputs state_outputs')
+        "Parsed", "config_inputs state_inputs parameter_inputs additional_inputs state_outputs"
+    )
     try:
         return Parsed(
-            config_inputs=fieldNotEmpty(
-                process.config_inputs) and parse_inputs(process.config_inputs),
+            config_inputs=fieldNotEmpty(process.config_inputs)
+            and parse_inputs(process.config_inputs),
             state_inputs=fieldNotEmpty(process.state_inputs) and parse_inputs(process.state_inputs),
-            parameter_inputs=fieldNotEmpty(
-                process.state_inputs) and parse_inputs(process.state_inputs),
-            additional_inputs=fieldNotEmpty(
-                process.additional_inputs) and parse_inputs(process.additional_inputs),
-            state_outputs=fieldNotEmpty(
-                process.state_outputs) and parse_outputs(process.state_outputs),
+            parameter_inputs=fieldNotEmpty(process.state_inputs)
+            and parse_inputs(process.state_inputs),
+            additional_inputs=fieldNotEmpty(process.additional_inputs)
+            and parse_inputs(process.additional_inputs),
+            state_outputs=fieldNotEmpty(process.state_outputs)
+            and parse_outputs(process.state_outputs),
         )
     except Exception as e:
         raise ProflowParsingError(str(e), process)
 
 
-def inspect_process_to_interfaces(process: 'Process'):
+def inspect_process_to_interfaces(process: "Process"):
     Parsed = namedtuple(
-        'Parsed', 'config_inputs state_inputs parameter_inputs additional_inputs state_outputs')
+        "Parsed", "config_inputs state_inputs parameter_inputs additional_inputs state_outputs"
+    )
     try:
         return Parsed(
-            config_inputs=fieldNotEmpty(
-                process.config_inputs) and parse_inputs_to_interface(process.config_inputs),
-            state_inputs=fieldNotEmpty(
-                process.state_inputs) and parse_inputs_to_interface(process.state_inputs),
-            parameter_inputs=fieldNotEmpty(
-                process.state_inputs) and parse_inputs_to_interface(process.state_inputs),
-            additional_inputs=fieldNotEmpty(
-                process.additional_inputs) and parse_inputs_to_interface(process.additional_inputs),
-            state_outputs=fieldNotEmpty(
-                process.state_outputs) and parse_outputs_to_interface(process.state_outputs),
+            config_inputs=fieldNotEmpty(process.config_inputs)
+            and parse_inputs_to_interface(process.config_inputs),
+            state_inputs=fieldNotEmpty(process.state_inputs)
+            and parse_inputs_to_interface(process.state_inputs),
+            parameter_inputs=fieldNotEmpty(process.state_inputs)
+            and parse_inputs_to_interface(process.state_inputs),
+            additional_inputs=fieldNotEmpty(process.additional_inputs)
+            and parse_inputs_to_interface(process.additional_inputs),
+            state_outputs=fieldNotEmpty(process.state_outputs)
+            and parse_outputs_to_interface(process.state_outputs),
         )
     except Exception as e:
         raise ProflowParsingError(str(e), process)

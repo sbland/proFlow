@@ -1,4 +1,5 @@
 """Functions that modify state without mutation."""
+
 from dataclasses import is_dataclass, replace
 from functools import partial, reduce
 from typing import List
@@ -30,10 +31,10 @@ def get_new_val_fn(attr, acc):
     # NOTE: We can speed this up by removeing the replace and deepcopy functions
     if is_dataclass(attr):
         return replace(attr, **acc)
-    if isinstance(attr, list) or type(attr).__module__ == 'numpy':
+    if isinstance(attr, list) or type(attr).__module__ == "numpy":
         list_copy = deepcopy(attr)
         for k, v in acc.items():
-            if k == '+':
+            if k == "+":
                 list_copy.append(v)
             else:
                 list_copy[int(k)] = v
@@ -46,7 +47,7 @@ def get_new_val_fn(attr, acc):
 
     # TODO: Handle named tuple
     # TODO: Handle numpy
-    raise Exception(f'Invalid type: {type(attr)}')
+    raise Exception(f"Invalid type: {type(attr)}")
 
 
 def build_up_args(
@@ -76,7 +77,7 @@ def build_up_args(
 
     # TODO: Test me
     t = target_split[i]
-    t_2_h = '.'.join(target_split[0:i+1])
+    t_2_h = ".".join(target_split[0 : i + 1])
     attr = rgetattr(initial_state, t_2_h)
     new_val = get_new_val_fn(attr, acc)
     new_args = {t: new_val}
@@ -84,7 +85,7 @@ def build_up_args(
 
 
 def replace_state_val(initial_state, target, val):
-    target_split = target.split('.')
+    target_split = target.split(".")
     target_indexes = reversed(list(range(len(target_split[0:-1]))))
 
     build_up_args_part = partial(

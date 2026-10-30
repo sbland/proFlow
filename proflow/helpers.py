@@ -4,12 +4,11 @@ from functools import reduce
 
 
 def check_types(self):
-    """ Checks all input types are correct. Raises Exception if not"""
+    """Checks all input types are correct. Raises Exception if not"""
     for field, field_type in self.__annotations__.items():
         actual_field_type = getattr(self, field)
         if actual_field_type is not None and not isinstance(actual_field_type, field_type):
-            raise TypeError('{} must be {} but is {}'
-                            .format(field, field_type, actual_field_type))
+            raise TypeError("{} must be {} but is {}".format(field, field_type, actual_field_type))
     return self
 
 
@@ -29,22 +28,19 @@ def NOT_IMPLEMENTED_PROCESS(message: str):
 
 
 def set_value(**kwargs) -> dict:
-    '''A simple helper function to use in process runner to set a value
-    It works by returning th input value within a dict'''
+    """A simple helper function to use in process runner to set a value
+    It works by returning th input value within a dict"""
     return kwargs
 
 
 def log_value(*args, **kwargs) -> dict:
-    '''A simple helper function to use in process runner to log a value'''
+    """A simple helper function to use in process runner to log a value"""
     print(*args, *kwargs.values())
     return None
 
 
 def print_process(**kwargs) -> Process:
-    return Process(
-        func=log_value,
-        **kwargs
-    )
+    return Process(func=log_value, **kwargs)
 
 
 def rgetattr(obj: object, attr: Union[str, List[str]], *args):
@@ -57,13 +53,21 @@ def rgetattr(obj: object, attr: Union[str, List[str]], *args):
     obj: object  [description]
     attr: OneOf[str, List[str]]  Either a dot notation string or list of strings
     """
+
     def _getattr(obj, attr):
-        return obj[int(attr)] if isinstance(obj, list) \
-            else obj[int(attr)] if type(obj).__module__ == 'numpy' \
-            else obj[attr] if isinstance(obj, dict) \
+        return (
+            obj[int(attr)]
+            if isinstance(obj, list)
+            else obj[int(attr)]
+            if type(obj).__module__ == "numpy"
+            else obj[attr]
+            if isinstance(obj, dict)
             else getattr(obj, attr, *args)
-    attr_list = attr if isinstance(attr, list) else attr.split(
-        '.') if isinstance(attr, str) else [attr]
+        )
+
+    attr_list = (
+        attr if isinstance(attr, list) else attr.split(".") if isinstance(attr, str) else [attr]
+    )
     return reduce(_getattr, [obj] + attr_list)
 
 
@@ -80,8 +84,13 @@ def rsetattr(obj: object, attr: Union[str, List[str]], val: Any):
     """
     # obj_copy = deepcopy(obj) # deep copy takes 10 times as long!
     obj_copy = obj
-    pre, _, post = [attr[0], '.', '.'.join(attr[1:])] if isinstance(attr, list) \
-        else attr.rpartition('.') if isinstance(attr, str) else [None, None, attr]
+    pre, _, post = (
+        [attr[0], ".", ".".join(attr[1:])]
+        if isinstance(attr, list)
+        else attr.rpartition(".")
+        if isinstance(attr, str)
+        else [None, None, attr]
+    )
     # target = deepcopy(rgetattr(obj, pre) if pre else obj)
     target = rgetattr(obj_copy, pre) if pre else obj_copy
     if isinstance(target, list):
@@ -129,7 +138,7 @@ def tag_process(comment):
 
 
 def perNlc(nLC, fn, *args, **kwargs):
-    return [fn(iLC, *args, **kwargs) for iLC in range(nLC)],
+    return ([fn(iLC, *args, **kwargs) for iLC in range(nLC)],)
 
 
 def raise_error(e):

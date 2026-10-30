@@ -32,8 +32,7 @@ def test_switch_with_defined_options():
         options={
             "this one": process_a,
             "not this one": process_b,
-        }
-
+        },
     )
     assert process_to_run == process_a
 
@@ -41,4 +40,4 @@ def test_switch_with_defined_options():
 def test_switch_missing_option():
     with pytest.raises(KeyError) as e:
         switch(comment="missing gate", gate="other option", options={})
-    assert "\"other option\" is not an option in \"missing gate\" switch" in str(e)
+    assert '"other option" is not an option in "missing gate" switch' in str(e)

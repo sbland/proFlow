@@ -37,7 +37,9 @@ def get_process_link_data(
     ]
     state_outputs_link_data = [
         # TODO: Can we avoid adding state. here?
-        Node_Link_Data(i, outp.as_) for i, p in enumerate(process_links) for outp in p.state_outputs
+        Node_Link_Data(i, outp.as_)
+        for i, p in enumerate(process_links)
+        for outp in p.state_outputs
     ]
     return state_inputs_link_data, state_outputs_link_data
 
@@ -54,7 +56,10 @@ def get_successive_edges(
         try:
             # Find the most recent node to output this input
             target_output_index = next(
-                oput.node_index for oput in lookup_state_outputs if oput.state_key == s_input.state_key)
+                oput.node_index
+                for oput in lookup_state_outputs
+                if oput.state_key == s_input.state_key
+            )
         except:
             # If not found link is null
             target_output_index = -1
@@ -62,6 +67,8 @@ def get_successive_edges(
         edge = Edge(source=s_input.node_index, target=target_output_index, name=s_input.state_key)
         links.append(edge)
     return links
+
+
 # edges = get_successive_edges(state_inputs, state_outputs)
 
 

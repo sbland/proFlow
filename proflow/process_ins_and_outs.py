@@ -1,4 +1,5 @@
 """Functions that get input args from the process and modify state from outputs in process."""
+
 from typing import Any, Callable, List
 
 from .helpers import rsetattr
@@ -42,21 +43,26 @@ def get_inputs_from_process(
     config_args = process.config_inputs(config)
     parameters_args = process.parameters_inputs(parameters)
     external_state_args = process.external_state_inputs(
-        external_state, row_index,
+        external_state,
+        row_index,
     )
     additional_inputs = process.additional_inputs()
     state_args = process.state_inputs(prev_state)
     args = process.args
-    kwargs = {i.as_: i.from_ for i
-              in config_args +
-              state_args +
-              additional_inputs +
-              external_state_args +
-              parameters_args
-              if i.as_ is not None}
-    args = process.args + [i.from_ for i in config_args +
-                           state_args + additional_inputs + external_state_args
-                           if i.as_ is None]
+    kwargs = {
+        i.as_: i.from_
+        for i in config_args
+        + state_args
+        + additional_inputs
+        + external_state_args
+        + parameters_args
+        if i.as_ is not None
+    }
+    args = process.args + [
+        i.from_
+        for i in config_args + state_args + additional_inputs + external_state_args
+        if i.as_ is None
+    ]
     return args, kwargs
 
 

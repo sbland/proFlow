@@ -15,19 +15,19 @@ def test_Process_object(snapshot):
         comment="This is the process comment",
         gate=True,
         config_inputs=lambda config: [
-            I(config.a, as_='x'),
+            I(config.a, as_="x"),
         ],
         state_inputs=lambda state: [
-            I(state.a, as_='y'),
+            I(state.a, as_="y"),
         ],
         additional_inputs=lambda: [
-            I(10, as_='z'),
+            I(10, as_="z"),
         ],
         state_outputs=lambda result: [
-            (result, 'x'),
-        ]
+            (result, "x"),
+        ],
     )
-    snapshot.assert_match(str(demo_process), 'demo_process')
+    snapshot.assert_match(str(demo_process), "demo_process")
 
 
 def test_process_object_human(snapshot):
@@ -39,17 +39,20 @@ def test_process_object_human(snapshot):
         comment="This is the process comment",
         gate=True,
         config_inputs=lambda config: [
-            I(config.a, as_='x'),
+            I(config.a, as_="x"),
         ],
         state_inputs=lambda state: [
-            I(state.a, as_='y'),
+            I(state.a, as_="y"),
         ],
         additional_inputs=lambda: [
-            I(10, as_='z'),
+            I(10, as_="z"),
         ],
         state_outputs=lambda result: [
-            (result, 'x'),
-        ]
+            (result, "x"),
+        ],
     )
 
-    snapshot.assert_match(json.dumps(demo_process.human(), indent=4, cls=AdvancedJsonEncoder, sort_keys=True), 'demo_process_human')
+    snapshot.assert_match(
+        json.dumps(demo_process.human(), indent=4, cls=AdvancedJsonEncoder, sort_keys=True),
+        "demo_process_human",
+    )

@@ -378,7 +378,7 @@ class TestExtractOutputLines:
         ]
         out = list(extract_output_lines(DEMO_OUTPUTS))
         print(out)
-        assert out == ["result[\"a\"], \"a\"", "result[\"b\"], \"b\""]
+        assert out == ['result["a"], "a"', 'result["b"], "b"']
 
     @pytest.mark.skip("Not currently supported")
     def test_extract_output_lines_with_copy(self):
@@ -388,7 +388,7 @@ class TestExtractOutputLines:
             (deepcopy(result["b"]), "b"),
         ]
         out = list(extract_output_lines(DEMO_OUTPUTS))
-        assert out == ["deepcopy(result[\"a\"]", "deepcopy(result[\"b\"]"]
+        assert out == ['deepcopy(result["a"]', 'deepcopy(result["b"]']
 
     def test_extract_output_lines_complex_01(self):
         """Test parse_inputs returns correct value."""
@@ -488,7 +488,7 @@ class TestParseOutputs:
 
         output_interface = list(parse_outputs_to_interface(DEMO_OUTPUTS))
         assert len(output_interface) == 1
-        assert output_interface[0].from_ == "result[\"a\"]"
+        assert output_interface[0].from_ == 'result["a"]'
         assert output_interface[0].as_ == "state.a"
 
     def test_parse_outputs_returns_invalid_for_unknown_input(self):
@@ -511,7 +511,7 @@ class TestParseOutputs:
 
         output_interface = list(parse_outputs_to_interface(DEMO_OUTPUTS))
         assert len(output_interface) == nP
-        assert output_interface[0].from_ == "result[\"a\"]"
+        assert output_interface[0].from_ == 'result["a"]'
         assert output_interface[0].as_ == "state.a"
 
 

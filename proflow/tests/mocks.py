@@ -28,7 +28,8 @@ class Mock_Model_State_Shape:
     nested: Mock_Nested_State = field(default_factory=lambda: Mock_Nested_State())
     matrix: List[List[float]] = field(default_factory=lambda: [[1, 2, 3], [4, 5, 6]])
     nested_lst_obj: List[Mock_Nested_State] = field(
-        default_factory=lambda: [Mock_Nested_State(1, 2), Mock_Nested_State(3, 4)])
+        default_factory=lambda: [Mock_Nested_State(1, 2), Mock_Nested_State(3, 4)]
+    )
 
     logs: List[dict] = field(default_factory=lambda: [])
 
@@ -37,9 +38,7 @@ class Mock_Model_State_Shape:
 class Mock_Config_Shape:
     foo: int = 1
     bar: int = 3
-    roo: dict = field(default_factory=lambda: {
-        'abc': 5
-    })
+    roo: dict = field(default_factory=lambda: {"abc": 5})
     arr: List[int] = field(default_factory=lambda: [1, 2, 3])
 
 
@@ -47,9 +46,7 @@ class Mock_Config_Shape:
 class Mock_Parameters_Shape:
     foo: int = 1
     bar: int = 3
-    roo: dict = field(default_factory=lambda: {
-        'abc': 5
-    })
+    roo: dict = field(default_factory=lambda: {"abc": 5})
     arr: list = field(default_factory=lambda: [1, 2, 3])
 
 

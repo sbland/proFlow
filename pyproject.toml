@@ -39,6 +39,7 @@ build-backend = "hatchling.build"
 [tool.ruff]
 target-version = "py312"
 line-length = 100
+exclude = ["experiments"]
 
 [tool.ruff.lint.per-file-ignores]
 "_test.py" = ["D100", "D101", "D102", "D103", "D107"]

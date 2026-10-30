@@ -4,6 +4,7 @@ converts them into a process
 The process runner is then passed a list of processes that it runs in order
 updating the state at each step
 """
+
 from dataclasses import astuple, is_dataclass
 from proflow.helpers import rgetattr
 from typing import NamedTuple, List, Callable
@@ -27,11 +28,12 @@ from .errors import Run_Process_Error
 
 
 def format_with_variables(
-        config: Config_Shape,
-        state: Model_State_Shape,
-        external_state: External_State_Shape,
-        parameters: Parameters_Shape,
-        additional_inputs: dict) -> Callable:
+    config: Config_Shape,
+    state: Model_State_Shape,
+    external_state: External_State_Shape,
+    parameters: Parameters_Shape,
+    additional_inputs: dict,
+) -> Callable:
     """formats from and to string literals to replace variables
     Works the same as python string literals
     https://docs.python.org/3.6/reference/lexical_analysis.html#f-strings
@@ -43,18 +45,19 @@ def format_with_variables(
     format_data = {
         # Note additional inputs are expanded to allow easy access
         **additional_inputs,
-        'config': config,
-        'e_state': external_state,
-        'external_state': external_state,
-        'parameters': parameters,
-        'state': state,
+        "config": config,
+        "e_state": external_state,
+        "external_state": external_state,
+        "parameters": parameters,
+        "state": state,
     }
 
     def _format(string: str) -> str:
-        if '{' in string:
+        if "{" in string:
             return string.format(**format_data)
         else:
             return string
+
     return _format
 
 
@@ -63,7 +66,7 @@ def get_result_from_list(lst: list, k: List[int]) -> any:
     raise DeprecationWarning()
     result = lst
     for i in k:
-        if k == '_list':
+        if k == "_list":
             break
         result = result[int(i)]
     return result
@@ -79,29 +82,30 @@ def get_result(result, k):
     # TODO: Make clearer that we are getting the actual result value if result is a str, int or
     # float
     # TODO: Better error reporting when key not valid etc
-    if k == '_result':
+    if k == "_result":
         return result
     if isinstance(result, (str, int, float, bool)):
         return result
     if isinstance(result, dict):
         return result[k]
-    if isinstance(result, list) and k != '_list':
-        return get_result_from_list(result, k.split('.'))
-    if isinstance(result, list) and k == '_list':
+    if isinstance(result, list) and k != "_list":
+        return get_result_from_list(result, k.split("."))
+    if isinstance(result, list) and k == "_list":
         return result
-    if isinstance(result, np.ndarray) and k != '_list':
+    if isinstance(result, np.ndarray) and k != "_list":
         return result[int(k)]
-    if isinstance(result, np.ndarray) and k == '_list':
+    if isinstance(result, np.ndarray) and k == "_list":
         return result
     if is_dataclass(result):
         return getattr(result, k)
     if isNamedTuple(result):
         return result._asdict()[k]
-    raise ValueError(f'Could not determine type of {result}')
+    raise ValueError(f"Could not determine type of {result}")
 
 
 def validate_input(DEBUG: bool = False) -> Callable[[any, bool, str], any]:
-    raise DeprecationWarning('Depreciated')
+    raise DeprecationWarning("Depreciated")
+
     def validate_input_(
         input: I,
         value: any,
@@ -109,18 +113,19 @@ def validate_input(DEBUG: bool = False) -> Callable[[any, bool, str], any]:
         if not DEBUG:
             return value
         if input.required and value is None:
-            raise ValueError(f'Input is required: {input.from_}')
+            raise ValueError(f"Input is required: {input.from_}")
         return value
+
     return validate_input_
 
 
 def get_key_values(
-        f: Callable,
-        data: any,
-        input_keys: List[I],
-        DEBUG: bool = False,
+    f: Callable,
+    data: any,
+    input_keys: List[I],
+    DEBUG: bool = False,
 ) -> List[tuple]:  # noqa: E741
-    raise DeprecationWarning('Depreciated')
+    raise DeprecationWarning("Depreciated")
     """gets the key value pairs from named tuples using the input keys from and keys as
 
     Inputs
@@ -162,9 +167,11 @@ def get_key_values(
     # -- 64.6 %
     # get the values from the data matching the from_keys
     input_values = [get_nested_val(data, key) for key in from_keys]
-    validated_input_values = [
-        validate_input(DEBUG)(kd, v) for kd, v in zip(input_keys, input_values)] \
-        if DEBUG else input_values
+    validated_input_values = (
+        [validate_input(DEBUG)(kd, v) for kd, v in zip(input_keys, input_values)]
+        if DEBUG
+        else input_values
+    )
 
     # if DEBUG:
     #     if not all([validate_input(DEBUG)(kd, v) for kd, v in zip(input_keys, input_values)]):
@@ -186,7 +193,7 @@ def get_process_inputs(
     DEBUG_MODE: bool = False,
 ) -> dict:
     """Get inputs from sources based on process input lists"""
-    raise DeprecationWarning('Depreciated')
+    raise DeprecationWarning("Depreciated")
     # get inputs from process
     config_inputs: List[I] = process.config_inputs
     parameters_inputs: List[I] = process.parameters_inputs
@@ -199,19 +206,20 @@ def get_process_inputs(
 
     # -- 17.3%
     # create function that formats the key.as_ and key.from_
-    f = format_with_variables(config, prev_state, external_state,
-                              parameters, dict(additional_inputs_tuples))
+    f = format_with_variables(
+        config, prev_state, external_state, parameters, dict(additional_inputs_tuples)
+    )
 
     # -- 85.57 %
     # get key value inputs to pass to function
-    key_values_config, args_config \
-        = get_key_values(f, config, config_inputs, DEBUG=DEBUG_MODE)
-    key_values_parameters, args_parameters \
-        = get_key_values(f, parameters, parameters_inputs, DEBUG=DEBUG_MODE)
-    key_values_state, args_state \
-        = get_key_values(f, prev_state, state_inputs, DEBUG=DEBUG_MODE)
-    key_values_e_state, args_e_state \
-        = get_key_values(f, external_state, e_state_inputs, DEBUG=DEBUG_MODE)
+    key_values_config, args_config = get_key_values(f, config, config_inputs, DEBUG=DEBUG_MODE)
+    key_values_parameters, args_parameters = get_key_values(
+        f, parameters, parameters_inputs, DEBUG=DEBUG_MODE
+    )
+    key_values_state, args_state = get_key_values(f, prev_state, state_inputs, DEBUG=DEBUG_MODE)
+    key_values_e_state, args_e_state = get_key_values(
+        f, external_state, e_state_inputs, DEBUG=DEBUG_MODE
+    )
 
     # -- 2.81 %
     # Merge inputs into a single dictionary that represents the kwargs of the process func
@@ -220,7 +228,8 @@ def get_process_inputs(
         + key_values_config  # noqa: W503
         + key_values_parameters
         + key_values_state  # noqa: W503
-        + additional_inputs_tuples)  # noqa: W503
+        + additional_inputs_tuples
+    )  # noqa: W503
 
     # -- 0.24 %
     args = process.args + args_config + args_parameters + args_state + args_e_state
@@ -228,12 +237,13 @@ def get_process_inputs(
 
 
 def run_process(
-        prev_state: NamedTuple,  # Can be state or parameter
-        process: Process,
-        config: Config_Shape,
-        parameters: Parameters_Shape,
-        external_state: External_State_Shape,
-        DEBUG_MODE: bool = False) -> NamedTuple:
+    prev_state: NamedTuple,  # Can be state or parameter
+    process: Process,
+    config: Config_Shape,
+    parameters: Parameters_Shape,
+    external_state: External_State_Shape,
+    DEBUG_MODE: bool = False,
+) -> NamedTuple:
     """Run a single process and output the updated state.
         The process object contains the function along with all the input
         and output targets.
@@ -264,26 +274,33 @@ def run_process(
     Run_Process_Error
         Catches error that occur when running the process
     """
-    raise DeprecationWarning('Depreciated')
+    raise DeprecationWarning("Depreciated")
     if not process.gate:
         return prev_state
     try:
-        row_index = rgetattr(prev_state, 'temporal.row_index', 0)
+        row_index = rgetattr(prev_state, "temporal.row_index", 0)
         config_args = process.config_inputs(config)
         # parameters_args = process.parameters_inputs(parameters)
         # TODO: we need a better way of accessing current row index
         external_state_args = process.external_state_inputs(
-            external_state, row_index,
+            external_state,
+            row_index,
         )
         additional_args = process.additional_inputs()
         state_args = process.state_inputs(prev_state)
         # additional_inputs_tuples = [astuple(a)[0:2] for a in additional_inputs]
         args = process.args
         # kwargs = {**config_args, **state_args} # fastest method
-        kwargs = {i.as_: i.from_ for i in config_args +
-                  state_args + additional_args + external_state_args if i.as_ is not None}
-        args = process.args + [i.from_ for i in config_args +
-                               state_args + additional_args + external_state_args if i.as_ is None]
+        kwargs = {
+            i.as_: i.from_
+            for i in config_args + state_args + additional_args + external_state_args
+            if i.as_ is not None
+        }
+        args = process.args + [
+            i.from_
+            for i in config_args + state_args + additional_args + external_state_args
+            if i.as_ is None
+        ]
         result = process.func(*args, **kwargs)
         # TODO: Implement new state out map
         # state_out = process.map_outputs(result, prev_state)
@@ -312,6 +329,7 @@ def run_process(
             #     print(f'result_val: {result_val}')
             #     print(f'f(out.as_): {f(out.as_)}')
             return _replace_recursive(prev_state, f(out.as_), result_val)
+
         new_state = reduce(update_state, output_map, prev_state)
         return new_state
 
