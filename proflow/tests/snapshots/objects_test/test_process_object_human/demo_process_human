@@ -17,6 +17,6 @@
         "y": "state.a"
     },
     "state_outputs": {
-        "result": "state.\"x\""
+        "result": "state.x"
     }
 }

@@ -99,13 +99,35 @@ def extract_output_lines(map_inputs_fn: Callable[[object], list[str]]) -> list[s
         if outputs_source[0 : len("def GET_INPUT_FACTORY_INNER")] == "def GET_INPUT_FACTORY_INNER":
             return []
 
-        r_list = re.compile(r"lambda result.*?:.*?\[(?P<con>.*)\]", re.DOTALL | re.MULTILINE)
-        output_map_raw = r_list.search(outputs_source).groups()[0]
-        # Get lines
-        r = re.compile(r"(?: |\[|^)\((.*?)\)(?:,|$| for .*)$", re.DOTALL | re.MULTILINE)
-        matches = r.finditer(output_map_raw)
-        lines = (g for match in matches if match is not None for g in match.groups())
-        return lines
+        source_code = textwrap.dedent(outputs_source)
+        syntax_tree = ast.parse(source_code)
+        output_lambda = next(
+            (
+                node
+                for node in ast.walk(syntax_tree)
+                if isinstance(node, ast.Lambda)
+                and node.args.args
+                and node.args.args[0].arg == "result"
+                and isinstance(node.body, (ast.List, ast.ListComp))
+            ),
+            None,
+        )
+        if output_lambda is None:
+            return []
+
+        def collect_pairs(node: ast.expr) -> list[str]:
+            if isinstance(node, ast.List):
+                return [line for elt in node.elts for line in collect_pairs(elt)]
+            if isinstance(node, ast.ListComp):
+                return collect_pairs(node.elt)
+            if isinstance(node, ast.Tuple) and len(node.elts) == 2:
+                left = ast.get_source_segment(source_code, node.elts[0])
+                right = ast.get_source_segment(source_code, node.elts[1])
+                if left is not None and right is not None:
+                    return [f"{left}, {right}"]
+            return []
+
+        return collect_pairs(output_lambda.body)
     except AttributeError as error:
         warnings.warn(
             Warning(f"""Failed to parse output lines
@@ -155,7 +177,8 @@ def parse_key(k: str) -> str:
         elif x.groups()[3] is not None:
             return f".[{x.groups()[3]}]."
         else:
-            return 'INVALID_KEY!'
+            return "INVALID_KEY!"
+
     # step 1. Find state or config
     find_square_brackets = r"\[(\d*?)\]|\[\'(\D*?)\'\]|\[\"(\D*?)\"\]|\[(\D*?)\]"
     r = re.compile(find_square_brackets, re.DOTALL)
@@ -169,7 +192,7 @@ def parse_key(k: str) -> str:
 
 
 def rm_inv_comma(string: str):
-    return re.sub('^\'|\'$|^"|"$', '', string)
+    return re.sub("^'|'$|^\"|\"$", "", string)
 
 
 def parse_inputs_to_interface(
@@ -717,6 +740,9 @@ def parse_inputs(
     allow_errors: bool = True,
     silent=False,
 ) -> dict:
+    if map_inputs_fn is list:
+        return {}
+
     source_code = textwrap.dedent(inspect.getsource(map_inputs_fn))
     ast_tree = ast.parse(source_code)
     if source_code[0:5] == "field":

@@ -363,7 +363,7 @@ class TestExtractOutputLines:
             (result.a.foo[0], "y"),
         ]
         out = list(extract_output_lines(DEMO_OUTPUTS))
-        assert out == ["result.a.foo.bar, \"x\"", "result.a.foo[0], \"y\""]
+        assert out == ['result.a.foo.bar, "x"', 'result.a.foo[0], "y"']
 
     def test_extract_output_lines_dict_result(self):
         """Test parse_inputs returns correct value."""
@@ -394,8 +394,8 @@ class TestExtractOutputLines:
         out = list(extract_output_lines(DEMO_OUTPUTS))
         # TODO: We are stripping out the for loop here. Can we include it
         assert out == [
-            "result[iL][iLC], f\"foo.{iL}.{iLC}.bar\"",
-            "result.a.foo.bar, \"x\"",
+            'result[iL][iLC], f"foo.{iL}.{iLC}.bar"',
+            'result.a.foo.bar, "x"',
         ]
 
     def test_extract_output_lines_complex_02(self):
@@ -403,7 +403,7 @@ class TestExtractOutputLines:
         DEMO_OUTPUTS = lambda result: [(result["hr"], "temporal.hr")]
         out = list(extract_output_lines(DEMO_OUTPUTS))
         # TODO: We are stripping out the for loop here. Can we include it
-        assert out == ["result[\"hr\"], \"temporal.hr\""]
+        assert out == ['result["hr"], "temporal.hr"']
 
     @pytest.mark.skip(reason="Star not implemented")
     def test_extract_output_lines_with_star(self):
@@ -427,7 +427,7 @@ usefulinfo
 
 def test_parse_key():
     """Test parse_key returns correct value."""
-    out = parse_key("config.a.foo[0][var][\"bar\"]")
+    out = parse_key('config.a.foo[0][var]["bar"]')
     assert out == "config.a.foo.0.[var].bar"
 
 
@@ -447,7 +447,7 @@ def test_parse_outputs_list_comprehension():
         (result[iL][iLC], f"foo.{iL}.{iLC}.bar") for iL in range(3) for iLC in range(3)
     ]
     out = parse_outputs(DEMO_OUTPUTS)
-    assert out == {"result.[iL].[iLC]": "state.f\"foo.{iL}.{iLC}.bar"}
+    assert out == {"result.[iL].[iLC]": 'state.f"foo.{iL}.{iLC}.bar'}
 
 
 def test_parse_outputs_list_comprehension_inputed_index():
@@ -457,7 +457,7 @@ def test_parse_outputs_list_comprehension_inputed_index():
         (result[iL][iLC], f"foo.{iL}.{iLC}.bar") for iL in range(3)
     ]
     out = parse_outputs(DEMO_OUTPUTS, False)
-    assert out == {"result.[iL].[iLC]": "state.f\"foo.{iL}.{iLC}.bar"}
+    assert out == {"result.[iL].[iLC]": 'state.f"foo.{iL}.{iLC}.bar'}
 
 
 @pytest.mark.skip(reason="functions in output section not currently supported")
@@ -676,13 +676,3 @@ class TestParseArg:
         )
         out = parse_arg(attr)
         assert out == (["foo,bar"], {"op": "And"})
-
-
-def test_regex_speach():
-    import re
-
-    pattern = r".*\[(?:\"|\')(.*)(?:\"|\')\].*"
-    line = "result.a.[\"foo\"].['bar'] = x"
-    match = re.match(pattern, line)
-    assert match.groups() == ("foo", "bar")
-    assert False

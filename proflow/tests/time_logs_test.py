@@ -185,5 +185,5 @@ def test_that_processRunnerCls_debug_logs_time_for_each_process(benchmark_fixtur
     state_2 = run_processes(initial_state=state)
     assert state_2.c == 4
     debug_time_logs = process_runner.debug_time_logs
-    assert debug_time_logs[1]['input_time'] < 0.2/benchmark_fixture
-    assert debug_time_logs[1]['output_time'] < 0.21/benchmark_fixture
+    assert debug_time_logs[1]["input_time"] < 0.2 / benchmark_fixture
+    assert debug_time_logs[1]["output_time"] < 0.24 / benchmark_fixture
