@@ -1,8 +1,9 @@
 from dataclasses import dataclass, field
-import numpy as np
 from timeit import repeat
-from ..helpers import rgetattr, rsetattr
 
+import numpy as np
+
+from ..helpers import rgetattr, rsetattr
 
 # def test_get_key_values():
 #     data = {'key_from': 123}

@@ -1,13 +1,15 @@
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable, List, Tuple
 from enum import Enum
+
 import dill as pickle
 
-from proflow.external_state import External_State_Shape
-from proflow.parameters import Parameters_Shape
 from proflow.config import Config_Shape
-from proflow.process_inspector import parse_inputs, parse_outputs, fieldNotEmpty
+from proflow.external_state import External_State_Shape
 from proflow.internal_state import Model_State_Shape
+from proflow.parameters import Parameters_Shape
+from proflow.process_inspector import fieldNotEmpty, parse_inputs, parse_outputs
+
 from .Interface import I
 
 
@@ -76,17 +78,17 @@ class Process:
     group: str = None  # group tag
     # Inputs to function
     # TODO: The below objects could be set as the actual State Shape objects instead
-    state_inputs: Callable[[Model_State_Shape], List[I]] = field(default_factory=GET_INPUT_FACTORY)
-    config_inputs: Callable[[Config_Shape], List[I]] = field(default_factory=GET_INPUT_FACTORY)
-    parameters_inputs: Callable[[Parameters_Shape], List[I]] = field(
+    state_inputs: Callable[[Model_State_Shape], list[I]] = field(default_factory=GET_INPUT_FACTORY)
+    config_inputs: Callable[[Config_Shape], list[I]] = field(default_factory=GET_INPUT_FACTORY)
+    parameters_inputs: Callable[[Parameters_Shape], list[I]] = field(
         default_factory=GET_INPUT_FACTORY
     )
-    external_state_inputs: Callable[[External_State_Shape, int], List[I]] = field(
+    external_state_inputs: Callable[[External_State_Shape, int], list[I]] = field(
         default_factory=GET_INPUT_FACTORY
     )
-    additional_inputs: Callable[[], List[I]] = field(default_factory=GET_INPUT_FACTORY)
-    state_outputs: Callable[[any], List[Tuple]] = field(default_factory=GET_INPUT_FACTORY)
-    args: List[any] = field(default_factory=list)  # additional args
+    additional_inputs: Callable[[], list[I]] = field(default_factory=GET_INPUT_FACTORY)
+    state_outputs: Callable[[any], list[tuple]] = field(default_factory=GET_INPUT_FACTORY)
+    args: list[any] = field(default_factory=list)  # additional args
     format_output: bool = False  # If true we process the target output string
 
     def __repr__(self) -> str:

@@ -1,7 +1,7 @@
 from ..helpers import rsetattr
-from ..process_ins_and_outs import get_inputs_from_process, map_result_to_state
 from ..Objects.Interface import I
 from ..Objects.Process import Process
+from ..process_ins_and_outs import get_inputs_from_process, map_result_to_state
 from .mocks import (
     Mock_Config_Shape,
     Mock_External_State_Shape,

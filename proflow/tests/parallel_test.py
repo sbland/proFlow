@@ -1,8 +1,8 @@
-from proflow.Objects.Interface import I
-from proflow.Objects.Process import Process
+import pickle
 from dataclasses import dataclass, field
 
-import pickle
+from proflow.Objects.Interface import I
+from proflow.Objects.Process import Process
 
 
 def example_func(x, y, z):

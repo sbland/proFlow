@@ -1,14 +1,15 @@
 import numpy as np
 
-from .mocks import Mock_Model_State_Shape
-from ..Objects.Interface import I
-from ..Objects.Process import Process
 from proflow.process_state_modifiers import (
     build_up_args,
     get_new_val_fn,
-    replace_state_val,
     map_result_to_state_fn,
+    replace_state_val,
 )
+
+from ..Objects.Interface import I
+from ..Objects.Process import Process
+from .mocks import Mock_Model_State_Shape
 
 
 def test_get_new_val():
@@ -50,7 +51,7 @@ def test_build_up_args():
     nxt = build_up_args(
         acc={"ghi": 3},
         i=1,
-        target_split="abc.def.ghi".split("."),
+        target_split=["abc", "def", "ghi"],
         initial_state=state,
     )
     assert nxt == {
@@ -66,7 +67,7 @@ def test_build_up_args():
             },
         },
         i=0,
-        target_split="abc.def.ghi".split("."),
+        target_split=["abc", "def", "ghi"],
         initial_state=state,
     )
 

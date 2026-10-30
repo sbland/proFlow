@@ -1,6 +1,6 @@
 import json
-from data_helpers.encoders import AdvancedJsonEncoder
 
+from data_helpers.encoders import AdvancedJsonEncoder
 
 MAX_ERROR_STRING_LENGTH = 1000
 new_line = "\n"
@@ -29,7 +29,7 @@ class Run_Process_Error(Exception):
         return f"""{self.message}
 ---------- Python Error ----------
 
-{str(self.error)}
+{self.error!s}
 
 ------------ Inputs ------------
 

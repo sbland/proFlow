@@ -1,8 +1,8 @@
+from proflow.logger import log_values
 from proflow.Objects.Interface import I
 from proflow.Objects.Process import Process
-from proflow.logger import log_values
-from proflow.tests.mocks import Mock_Model_State_Shape
 from proflow.ProcessRunnerCls import ProcessRunner
+from proflow.tests.mocks import Mock_Model_State_Shape
 
 
 def test_log_values():

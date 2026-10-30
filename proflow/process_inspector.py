@@ -1,10 +1,11 @@
-from collections import namedtuple
-from typing import List, Tuple, TYPE_CHECKING, Callable, Union, Dict
+import ast
 import inspect
 import re
-import warnings
-import ast
 import textwrap
+import warnings
+from collections import namedtuple
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from proflow.Objects.Interface import I
 
@@ -83,7 +84,7 @@ class ProflowParsingAstError(Exception):
 
 
 #: Mapping of argument to the value
-ArgMap = Dict[str, str]
+ArgMap = dict[str, str]
 
 
 def strip_out_comments(string: str) -> str:
@@ -91,7 +92,7 @@ def strip_out_comments(string: str) -> str:
     return r.sub("", string)
 
 
-def extract_output_lines(map_inputs_fn: Callable[[object], List[str]]) -> List[str]:
+def extract_output_lines(map_inputs_fn: Callable[[object], list[str]]) -> list[str]:
     outputs_source = None
     try:
         outputs_source = strip_out_comments(inspect.getsource(map_inputs_fn))
@@ -172,9 +173,9 @@ def rm_inv_comma(string: str):
 
 
 def parse_inputs_to_interface(
-    process_inputs: Callable[[any], List[I]],
+    process_inputs: Callable[[any], list[I]],
     allow_errors=True,
-) -> List[I]:
+) -> list[I]:
     try:
         inputs_map = parse_inputs(process_inputs)
         input_objects = [I(v, as_=k) for k, v in inputs_map.items()]
@@ -190,7 +191,7 @@ def parse_inputs_to_interface(
     return input_objects
 
 
-def parse_output_line(output_line: str) -> List[str]:
+def parse_output_line(output_line: str) -> list[str]:
     output_args = output_line.split(",")
     if len(output_args) != 2:
         raise ProflowParsingLineError("Failed to parse output line", output_line)
@@ -198,9 +199,9 @@ def parse_output_line(output_line: str) -> List[str]:
 
 
 def parse_outputs_to_interface(
-    process_outputs: Callable[[any], List[I]],
+    process_outputs: Callable[[any], list[I]],
     allow_errors=True,
-) -> List[I]:
+) -> list[I]:
     output_lines_row = None
     try:
         parse_outputs_b(process_outputs)
@@ -244,7 +245,7 @@ def get_inputs_list_from_function_def(input_tree: ast.FunctionDef) -> ast.List:
         )
 
 
-def get_inputs_list(input_tree: Union[ast.Assign, ast.FunctionDef]) -> ast.List:
+def get_inputs_list(input_tree: ast.Assign | ast.FunctionDef) -> ast.List:
     if isinstance(input_tree, ast.Assign):
         return get_inputs_list_from_lambda_fn(input_tree)
     elif isinstance(input_tree, ast.FunctionDef):
@@ -275,7 +276,7 @@ def parse_bin_op(attr: ast.BinOp):
     return arg_list, additional_args
 
 
-def parse_arg_val(v: ast.Index) -> Tuple[str, ArgMap]:
+def parse_arg_val(v: ast.Index) -> tuple[str, ArgMap]:
     """Parse a argument.
 
     Parameters
@@ -316,7 +317,7 @@ def parse_arg_val(v: ast.Index) -> Tuple[str, ArgMap]:
         raise ProflowParsingAstError(f"AST value type not implemented: {type(v)}", v)
 
 
-def parse_arg_index(i: Union[ast.Index, ast.Slice]) -> Tuple[str, ArgMap]:
+def parse_arg_index(i: ast.Index | ast.Slice) -> tuple[str, ArgMap]:
     """Parse an ast Index.
 
     If the index is a constant value it just returns it as a string.
@@ -398,7 +399,7 @@ def parse_list_comp(attr: ast.ListComp):
     return ["(" + ",".join(list_comp_ids) + ")"], additional_args
 
 
-def parse_list(attr: ast.List) -> Tuple[List[str], dict]:
+def parse_list(attr: ast.List) -> tuple[list[str], dict]:
     out = ""
     for i, elt in enumerate(attr.elts):
         parsed_arg, _additional_args = parse_arg(elt)
@@ -408,17 +409,17 @@ def parse_list(attr: ast.List) -> Tuple[List[str], dict]:
     return out, _additional_args
 
 
-def parse_fn_getattr(attr: ast.Call) -> Tuple[List[str], dict]:
+def parse_fn_getattr(attr: ast.Call) -> tuple[list[str], dict]:
     key = attr.args[0].id
     args, additional_args = parse_arg(attr.args[1])
     return [[*args, key], additional_args]
 
 
-def parse_fn_len(attr: ast.Call) -> Tuple[List[str], dict]:
+def parse_fn_len(attr: ast.Call) -> tuple[list[str], dict]:
     return parse_arg(attr.args[0])
 
 
-def parse_fn(attr: ast.Call) -> Tuple[List[str], dict]:
+def parse_fn(attr: ast.Call) -> tuple[list[str], dict]:
     arg_list = []
     additional_args = {}
     if attr.func.id == "getattr":
@@ -490,7 +491,7 @@ def parse_fn(attr: ast.Call) -> Tuple[List[str], dict]:
     return arg_list, additional_args
 
 
-def parse_arg(attr: ast.Attribute) -> Tuple[List[str], ArgMap]:
+def parse_arg(attr: ast.Attribute) -> tuple[list[str], ArgMap]:
     """Takes a parameter path such as config.a.b and recursively pulls out the string rep.
 
     E.g.
@@ -569,13 +570,7 @@ def parse_arg(attr: ast.Attribute) -> Tuple[List[str], ArgMap]:
     elif isinstance(attr, ast.IfExp):
         # TODO: Implement this
         arg_list.append("AST PARSE NOT_IMPLEMENTED")
-    elif isinstance(attr, ast.Tuple):
-        for elt in attr.elts:
-            parsed_arg, _additional_args = parse_arg(elt)
-            additional_args = {**additional_args, **_additional_args}
-            arg_list = arg_list + parsed_arg
-
-    elif isinstance(attr, ast.List):  # NOTE: Not currently supported
+    elif isinstance(attr, ast.Tuple) or isinstance(attr, ast.List):
         for elt in attr.elts:
             parsed_arg, _additional_args = parse_arg(elt)
             additional_args = {**additional_args, **_additional_args}
@@ -597,7 +592,7 @@ def parse_arg(attr: ast.Attribute) -> Tuple[List[str], ArgMap]:
     return arg_list, additional_args
 
 
-def parse_input_element(inp: ast.Call) -> Tuple[List[str], ArgMap]:
+def parse_input_element(inp: ast.Call) -> tuple[list[str], ArgMap]:
     """Pull input string from an I object.
 
     E.g
@@ -687,7 +682,7 @@ def parse_output_target(out_el):
         raise NotImplementedError(f"Ast type not implemented: {type(out_el)}")
 
 
-def parse_output(inp: ast.Tuple) -> Tuple[str, str]:
+def parse_output(inp: ast.Tuple) -> tuple[str, str]:
     assert isinstance(inp, ast.Tuple)
     assert len(inp.elts) == 2, f"Expected only 2 elements in tuple but got {len(inp.elts)}"
     result, target = inp.elts
@@ -718,7 +713,7 @@ def get_outputs_from_lambda_body(input_list: ast.List):
 
 
 def parse_inputs(
-    map_inputs_fn: Callable[[any], List[I]],
+    map_inputs_fn: Callable[[any], list[I]],
     allow_errors: bool = True,
     silent=False,
 ) -> dict:
@@ -775,7 +770,7 @@ def parse_inputs(
             return "FAILED_TO_PARSE_PROCESS"
 
 
-def parse_outputs_b(map_inputs_fn: Callable[[any], List[I]]) -> dict:
+def parse_outputs_b(map_inputs_fn: Callable[[any], list[I]]) -> dict:
     source_code = textwrap.dedent(inspect.getsource(map_inputs_fn))
     try:
         ast_tree = ast.parse(source_code)
@@ -787,7 +782,7 @@ def parse_outputs_b(map_inputs_fn: Callable[[any], List[I]]) -> dict:
 
 
 def parse_outputs(
-    map_outputs_fn: Callable[[any], List[I]],
+    map_outputs_fn: Callable[[any], list[I]],
     allow_errors: bool = True,
     silent=True,
 ) -> dict:
@@ -805,7 +800,7 @@ def parse_outputs(
             return "UNKNOWN"
 
 
-def fieldNotEmpty(f: Union[any, Callable]) -> bool:
+def fieldNotEmpty(f: any | Callable) -> bool:
     return f and callable(f)
 
 

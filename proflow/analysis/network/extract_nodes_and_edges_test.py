@@ -1,15 +1,15 @@
 from proflow.tests.demodata import DEMO_PROCESSES
+
 from .extract_nodes_and_edges import (
+    Edge,
+    Node,
+    Node_Link_Data,
     get_process_link_data,
     get_successive_edges,
     process_to_node,
     processes_to_nodes,
-    Node_Link_Data,
-    Edge,
-    Node,
     processes_to_nodes_and_edges,
 )
-
 
 DEMO_STATE_INPUTS = [
     Node_Link_Data(node_index=0, state_key="state.info.today"),

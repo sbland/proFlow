@@ -1,13 +1,12 @@
 """Functions that modify state without mutation."""
 
+from copy import deepcopy
 from dataclasses import is_dataclass, replace
 from functools import partial, reduce
-from typing import List
-from copy import deepcopy
 
 from .helpers import rgetattr
-from .Objects.Interface import I
 from .internal_state import Model_State_Shape
+from .Objects.Interface import I
 
 
 def get_new_val_fn(attr, acc):
@@ -53,7 +52,7 @@ def get_new_val_fn(attr, acc):
 def build_up_args(
     acc: dict,
     i: int,
-    target_split: List[str],
+    target_split: list[str],
     initial_state: object,
 ) -> dict:
     """Part of iterator to replace part of object starting at bottom.
@@ -102,7 +101,7 @@ def replace_state_val(initial_state, target, val):
 # TODO: Find optimized version of implementing non mutable version
 def map_result_to_state_fn(
     prev_state: Model_State_Shape,
-    output_map: List[I],
+    output_map: list[I],
     result,
 ) -> Model_State_Shape:
     """Update the state based on an output mapping.

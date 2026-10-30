@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import List
 
 
 @dataclass
@@ -24,14 +23,14 @@ class Mock_Model_State_Shape:
     d: float = 0
     ind: int = 0
     target: str = "a"
-    lst: List[str] = None
+    lst: list[str] = None
     nested: Mock_Nested_State = field(default_factory=lambda: Mock_Nested_State())
-    matrix: List[List[float]] = field(default_factory=lambda: [[1, 2, 3], [4, 5, 6]])
-    nested_lst_obj: List[Mock_Nested_State] = field(
+    matrix: list[list[float]] = field(default_factory=lambda: [[1, 2, 3], [4, 5, 6]])
+    nested_lst_obj: list[Mock_Nested_State] = field(
         default_factory=lambda: [Mock_Nested_State(1, 2), Mock_Nested_State(3, 4)]
     )
 
-    logs: List[dict] = field(default_factory=lambda: [])
+    logs: list[dict] = field(default_factory=list)
 
 
 @dataclass
@@ -39,7 +38,7 @@ class Mock_Config_Shape:
     foo: int = 1
     bar: int = 3
     roo: dict = field(default_factory=lambda: {"abc": 5})
-    arr: List[int] = field(default_factory=lambda: [1, 2, 3])
+    arr: list[int] = field(default_factory=lambda: [1, 2, 3])
 
 
 @dataclass
@@ -52,5 +51,5 @@ class Mock_Parameters_Shape:
 
 @dataclass
 class Mock_External_State_Shape:
-    data_a: List[int] = field(default_factory=lambda: [1, 1, 2, 3])
-    data_b: List[int] = field(default_factory=lambda: [5, 1, 2, 3])
+    data_a: list[int] = field(default_factory=lambda: [1, 1, 2, 3])
+    data_b: list[int] = field(default_factory=lambda: [5, 1, 2, 3])

@@ -5,26 +5,25 @@ The process runner is then passed a list of processes that it runs in order
 updating the state at each step
 """
 
+from collections.abc import Callable
 from dataclasses import astuple, is_dataclass
-from proflow.helpers import rgetattr
-from typing import NamedTuple, List, Callable
 from functools import reduce
-
-from data_helpers.dictionary_helpers import get_nested_val
+from typing import NamedTuple
 
 import numpy as np
-
-from data_helpers.comparisons import isNamedTuple
 from data_helpers.cls_parsing import _replace_recursive
+from data_helpers.comparisons import isNamedTuple
+from data_helpers.dictionary_helpers import get_nested_val
 
-from .Objects.Process import Process
-from .Objects.Interface import I
+from proflow.helpers import rgetattr
+
 from .config import Config_Shape
-from .parameters import Parameters_Shape
+from .errors import Run_Process_Error
 from .external_state import External_State_Shape
 from .internal_state import Model_State_Shape
-
-from .errors import Run_Process_Error
+from .Objects.Interface import I
+from .Objects.Process import Process
+from .parameters import Parameters_Shape
 
 
 def format_with_variables(
@@ -61,7 +60,7 @@ def format_with_variables(
     return _format
 
 
-def get_result_from_list(lst: list, k: List[int]) -> any:
+def get_result_from_list(lst: list, k: list[int]) -> any:
     """Recursively gets the value from the input list using the ints in k"""
     raise DeprecationWarning()
     result = lst
@@ -122,9 +121,9 @@ def validate_input(DEBUG: bool = False) -> Callable[[any, bool, str], any]:
 def get_key_values(
     f: Callable,
     data: any,
-    input_keys: List[I],
+    input_keys: list[I],
     DEBUG: bool = False,
-) -> List[tuple]:  # noqa: E741
+) -> list[tuple]:
     raise DeprecationWarning("Depreciated")
     """gets the key value pairs from named tuples using the input keys from and keys as
 
@@ -195,10 +194,10 @@ def get_process_inputs(
     """Get inputs from sources based on process input lists"""
     raise DeprecationWarning("Depreciated")
     # get inputs from process
-    config_inputs: List[I] = process.config_inputs
-    parameters_inputs: List[I] = process.parameters_inputs
-    state_inputs: List[I] = process.state_inputs
-    e_state_inputs: List[I] = process.external_state_inputs
+    config_inputs: list[I] = process.config_inputs
+    parameters_inputs: list[I] = process.parameters_inputs
+    state_inputs: list[I] = process.state_inputs
+    e_state_inputs: list[I] = process.external_state_inputs
     additional_inputs = process.additional_inputs
 
     # convert additional inputs to key value tuples

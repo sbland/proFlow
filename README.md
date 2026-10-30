@@ -29,28 +29,33 @@ def run_process(prev_state, process):
     and pass to next function"""
     return process(prev_state)
 
+
 def run_hour(processes):
     """Take a set of processes and return the process runner"""
+
     def run_processes(initial_state: Model_State_Shape, hr: int) -> Model_State_Shape:
-        """ Takes the initial state at start of hour and the hour number"""
+        """Takes the initial state at start of hour and the hour number"""
         new_state = reduce(run_process, processes, initial_state)
         return new_state
+
     return run_processes
 ```
 
 To use the runner:
 ``` python
-
 def example_process(prev_state):
     # do some stuff to the state
     return new_state
 
+
 initial_state = Model_State_Shape(1)
 hr = 1
 
-output_state = run_hour([
-    example_process,
-])(initial_state, hr)
+output_state = run_hour(
+    [
+        example_process,
+    ]
+)(initial_state, hr)
 ```
 
 # Example State
@@ -65,58 +70,54 @@ processes = [
         func=lambda x, y, z: x + y + z,
         comment="Demo process a",
         config_inputs=[
-            I('foo.bar', as_='x'),
+            I("foo.bar", as_="x"),
         ],
-        state_inputs=[
-            I('info.today', as_='y'),
-            I('info.hour', as_='z')
-        ],
+        state_inputs=[I("info.today", as_="y"), I("info.hour", as_="z")],
         state_outputs=[
-            I('_result', as_='info.tomorrow'),
-        ]
+            I("_result", as_="info.tomorrow"),
+        ],
     ),
     Process(
         func=lambda x, y: x + y,
         comment="Demo process b",
         config_inputs=[
-            I('foo.bar', as_='x'),
+            I("foo.bar", as_="x"),
         ],
         state_inputs=[
-            I('info.tomorrow', as_='y'),
+            I("info.tomorrow", as_="y"),
         ],
         state_outputs=[
-            I('_result', as_='info.today'),
-        ]
+            I("_result", as_="info.today"),
+        ],
     ),
     Process(
         func=lambda x, y: x + y,
         comment="Demo process c with a really long comment and info",
         config_inputs=[
-            I('foo.bar', as_='x'),
+            I("foo.bar", as_="x"),
         ],
         state_inputs=[
-            I('info.tomorrow', as_='y'),
+            I("info.tomorrow", as_="y"),
         ],
         state_outputs=[
-            I('_result', as_='info.today'),
-        ]
+            I("_result", as_="info.today"),
+        ],
     ),
     Process(
         func=lambda x, y: x + y,
         comment="Demo process d",
         config_inputs=[
-            I('foo.bar', as_='x'),
+            I("foo.bar", as_="x"),
         ],
         state_inputs=[
-            I('info.today', as_='y'),
+            I("info.today", as_="y"),
         ],
         state_outputs=[
-            I('_result', as_='info.tomorrow'),
-            I('_result', as_='log.extra'),
-        ]
+            I("_result", as_="info.tomorrow"),
+            I("_result", as_="log.extra"),
+        ],
     ),
 ]
-
 ```
 
 # Process Attributes:

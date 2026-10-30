@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import List, Tuple
 
 from proflow.Objects.Process import Process
 from proflow.process_inspector import inspect_process_to_interfaces
@@ -28,8 +27,8 @@ class Node_Link_Data:
 
 
 def get_process_link_data(
-    processes: List[Process],
-) -> Tuple[List[Node_Link_Data]]:
+    processes: list[Process],
+) -> tuple[list[Node_Link_Data]]:
     process_links = [inspect_process_to_interfaces(process) for process in processes]
     # TODO: Handle config and other inputs here
     state_inputs_link_data = [
@@ -45,9 +44,9 @@ def get_process_link_data(
 
 
 def get_successive_edges(
-    state_inputs: List[Node_Link_Data],
-    state_outputs: List[Node_Link_Data],
-) -> List[Edge]:
+    state_inputs: list[Node_Link_Data],
+    state_outputs: list[Node_Link_Data],
+) -> list[Edge]:
     """Get a link from 1 process to the next using its modification to the state."""
     links = []
     for i, s_input in enumerate(state_inputs):
@@ -83,12 +82,12 @@ def process_to_node(p: Process, i: int) -> Node:
     )
 
 
-def processes_to_nodes(processes: List[Process]) -> List[Node]:
+def processes_to_nodes(processes: list[Process]) -> list[Node]:
     nodes = [process_to_node(p, i) for i, p in enumerate(processes)]
     return nodes
 
 
-def processes_to_nodes_and_edges(processes: List[Process]) -> Tuple[List[Node], List[Edge]]:
+def processes_to_nodes_and_edges(processes: list[Process]) -> tuple[list[Node], list[Edge]]:
     nodes = processes_to_nodes(processes)
     edges = get_successive_edges(*get_process_link_data(processes))
     return nodes, edges

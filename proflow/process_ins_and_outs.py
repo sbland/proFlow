@@ -1,12 +1,13 @@
 """Functions that get input args from the process and modify state from outputs in process."""
 
-from typing import Any, Callable, List
+from collections.abc import Callable
+from typing import Any
 
-from .helpers import rsetattr
-from .Objects.Process import Process
-from .internal_state import Model_State_Shape
 from .config import Config_Shape
 from .external_state import External_State_Shape
+from .helpers import rsetattr
+from .internal_state import Model_State_Shape
+from .Objects.Process import Process
 from .parameters import Parameters_Shape
 
 
@@ -17,7 +18,7 @@ def get_inputs_from_process(
     parameters: Parameters_Shape,
     external_state: External_State_Shape,
     row_index: int,
-) -> List[Any]:
+) -> list[Any]:
     """Get the args and kwargs from the Process.
 
     Parameters

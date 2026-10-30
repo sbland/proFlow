@@ -1,6 +1,7 @@
-from .Objects.Process import Process
-from typing import Any, Union, List, Optional
 from functools import reduce
+from typing import Any
+
+from .Objects.Process import Process
 
 
 def check_types(self):
@@ -8,7 +9,7 @@ def check_types(self):
     for field, field_type in self.__annotations__.items():
         actual_field_type = getattr(self, field)
         if actual_field_type is not None and not isinstance(actual_field_type, field_type):
-            raise TypeError("{} must be {} but is {}".format(field, field_type, actual_field_type))
+            raise TypeError(f"{field} must be {field_type} but is {actual_field_type}")
     return self
 
 
@@ -43,7 +44,7 @@ def print_process(**kwargs) -> Process:
     return Process(func=log_value, **kwargs)
 
 
-def rgetattr(obj: object, attr: Union[str, List[str]], *args):
+def rgetattr(obj: object, attr: str | list[str], *args):
     """Get nested properties with dot notation or list of string path.
 
     https://stackoverflow.com/questions/31174295/getattr-and-setattr-on-nested-subobjects-chained-properties
@@ -71,7 +72,7 @@ def rgetattr(obj: object, attr: Union[str, List[str]], *args):
     return reduce(_getattr, [obj] + attr_list)
 
 
-def rsetattr(obj: object, attr: Union[str, List[str]], val: Any):
+def rsetattr(obj: object, attr: str | list[str], val: Any):
     """Set nested attributes with dot string path or string list
 
     https://stackoverflow.com/questions/31174295/getattr-and-setattr-on-nested-subobjects-chained-properties
@@ -102,7 +103,7 @@ def rsetattr(obj: object, attr: Union[str, List[str]], val: Any):
     return obj_copy
 
 
-def lget(v: Optional[List[any]], i: int, fallback_value=None) -> any:
+def lget(v: list[any] | None, i: int, fallback_value=None) -> any:
     """Safely get a value from a list with index and fallback value.
 
     Parameters

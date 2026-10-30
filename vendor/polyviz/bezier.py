@@ -1,7 +1,7 @@
 """https://stackoverflow.com/questions/12643079/b%C3%A9zier-curve-fitting-with-scipy"""
 
-from scipy.special import comb
 import numpy as np
+from scipy.special import comb
 
 
 def bernstein_poly(i, n, t):
@@ -30,7 +30,7 @@ def bezier_curve_4pt(x1, y1, x2, y2, s=10, nTimes=10):
 
     t = np.linspace(0.0, 1.0, nTimes)
 
-    polynomial_array = np.array([bernstein_poly(i, nPoints - 1, t) for i in range(0, nPoints)])
+    polynomial_array = np.array([bernstein_poly(i, nPoints - 1, t) for i in range(nPoints)])
 
     xvals = np.dot(xPoints, polynomial_array)
     yvals = np.dot(yPoints, polynomial_array)

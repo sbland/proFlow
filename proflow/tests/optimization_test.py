@@ -1,20 +1,20 @@
-import pytest
 from timeit import repeat
+from unittest.mock import patch
+
+import pytest
+from data_helpers.list_helpers import flatten_list
 
 from proflow.helpers import rgetattr
-
+from proflow.ProcessRunnerCls import ProcessRunner
 from proflow.tests.mocks import (
     Mock_Config_Shape,
     Mock_External_State_Shape,
     Mock_Model_State_Shape,
     Mock_Parameters_Shape,
 )
-from proflow.ProcessRunnerCls import ProcessRunner
-from unittest.mock import patch
-from data_helpers.list_helpers import flatten_list
 
-from ..Objects.Process import Process
 from ..Objects.Interface import I
+from ..Objects.Process import Process
 
 
 def process_add(x, y):

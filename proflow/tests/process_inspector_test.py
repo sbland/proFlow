@@ -1,23 +1,24 @@
 """Tests for the process inspector."""
 
 import ast
-import pytest
-from proflow.process_inspector import (
-    inspect_process,
-    parse_arg,
-    parse_outputs,
-    parse_outputs_to_interface,
-    parse_inputs,
-    parse_key,
-    inspect_process_to_interfaces,
-    extract_output_lines,
-    strip_out_comments,
-    reset_id,
-)
 
+import pytest
+
+from proflow.helpers import lget
 from proflow.Objects.Interface import I
 from proflow.Objects.Process import Process
-from proflow.helpers import lget
+from proflow.process_inspector import (
+    extract_output_lines,
+    inspect_process,
+    inspect_process_to_interfaces,
+    parse_arg,
+    parse_inputs,
+    parse_key,
+    parse_outputs,
+    parse_outputs_to_interface,
+    reset_id,
+    strip_out_comments,
+)
 
 
 def DEMO_FUNC(x, y, z):
@@ -28,6 +29,7 @@ DEMO_PROCESS = Process(
     func=DEMO_FUNC,
     comment="This is the process comment",
     gate=True,
+    config_inputs=lambda config: [
     config_inputs=lambda config: [
         I(config.a, as_="x"),
     ],
@@ -81,7 +83,7 @@ def test_inspect_process_empty():
         gate=True,
         config_inputs=lambda config: [],
         state_inputs=lambda state: [],
-        additional_inputs=lambda: [],
+        additional_inputs=list,
         state_outputs=lambda result: [
             (result, "x"),
         ],
@@ -106,7 +108,7 @@ def test_inspect_process_ifelse():
         gate=True,
         config_inputs=lambda config: [] if False else [],
         state_inputs=lambda state: [],
-        additional_inputs=lambda: [],
+        additional_inputs=list,
         state_outputs=lambda result: [
             (result, "x"),
         ],
@@ -229,10 +231,7 @@ class TestParseInputs:
 
     def test_parse_inputs_sum_of_listcomp_multi_gen(self):
         DEMO_INPUTS = lambda config: [
-            I(
-                sum([i + v for i in range(config.bar) for v in range(config.foo)]),
-                as_="x",
-            ),
+            I(sum([i + v for i in range(config.bar) for v in range(config.foo)]), as_="x"),
         ]
 
         out = parse_inputs(DEMO_INPUTS, False)
@@ -253,10 +252,7 @@ class TestParseInputs:
     @pytest.mark.skip(reason="NOT IMPLEMENTED")
     def test_parse_inputs_sum_of_listcomp_multi_gen_nested(self):
         DEMO_INPUTS = lambda config: [
-            I(
-                sum([[i + v for i in range(config.bar)] for v in range(config.foo)]),
-                as_="x",
-            ),
+            I(sum([[i + v for i in range(config.bar)] for v in range(config.foo)]), as_="x"),
         ]
 
         out = parse_inputs(DEMO_INPUTS, False)
@@ -336,7 +332,7 @@ class TestParseInputs:
     def test_example(self):
         k = 1
         DEMO_INPUTS = lambda state, k=k: [
-            I(len(getattr(state, "row_index")), as_="row_count"),
+            I(len(state.row_index), as_="row_count"),
         ]
         out = parse_inputs(DEMO_INPUTS, False)
         assert out == {
@@ -393,11 +389,7 @@ class TestExtractOutputLines:
     def test_extract_output_lines_complex_01(self):
         """Test parse_inputs returns correct value."""
         DEMO_OUTPUTS = lambda result: [
-            [
-                (result[iL][iLC], f"foo.{iL}.{iLC}.bar")
-                for iL in range(3)
-                for iLC in range(3)
-            ],
+            [(result[iL][iLC], f"foo.{iL}.{iLC}.bar") for iL in range(3) for iLC in range(3)],
             (result.a.foo.bar, "x"),
         ]
         out = list(extract_output_lines(DEMO_OUTPUTS))
@@ -492,7 +484,7 @@ class TestParseOutputs:
         assert output_interface[0].as_ == "state.a"
 
     def test_parse_outputs_returns_invalid_for_unknown_input(self):
-        DEMO_OUTPUTS = lambda result: [  # noqa: E731
+        DEMO_OUTPUTS = lambda result: [
             # This setup is not valid
             (["some info", ["other into"]], "a"),
         ]
@@ -505,7 +497,7 @@ class TestParseOutputs:
     @pytest.mark.skip(reason="Not implemented")
     def test_parse_with_star_arg(self):
         nP = 3
-        DEMO_OUTPUTS = lambda result: [  # noqa: E731
+        DEMO_OUTPUTS = lambda result: [
             *[(result, iP) for iP in range(nP)],
         ]
 

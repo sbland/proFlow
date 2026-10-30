@@ -1,7 +1,9 @@
 """Tests associated with the Objects.py file."""
 
 import json
+
 from data_helpers.encoders import AdvancedJsonEncoder
+
 from proflow.Objects.Interface import I
 from proflow.Objects.Process import Process
 

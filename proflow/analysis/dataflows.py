@@ -1,10 +1,8 @@
-from collections import namedtuple
-from typing import List
 import re
-
-from vendor.polyviz.bezier import bezier_curve_4pt
+from collections import namedtuple
 
 from proflow.Objects import Process
+from vendor.polyviz.bezier import bezier_curve_4pt
 
 
 def get_all_unique_inputs(processes):
@@ -52,7 +50,7 @@ def t_wrap(text: str, max_length: int = 4) -> str:
 
 def link_processes_to_state(
     canvas,
-    processes: List[Process],
+    processes: list[Process],
     seperation: int = 300,
     process_node_width: int = 200,
     process_node_height: int = 70,
@@ -154,8 +152,9 @@ if __name__ == "__main__":
     if module_path not in sys.path:
         sys.path.append(module_path)
 
-    from proflow.Objects import Process, I
     from ipycanvas import Canvas
+
+    from proflow.Objects import I, Process
 
     def demo_func(x, y):
         """DEMO FUNC"""

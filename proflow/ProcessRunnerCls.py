@@ -1,17 +1,19 @@
+from collections.abc import Callable
 from copy import deepcopy
 from datetime import datetime
 from functools import partial, reduce
-from proflow.internal_state import Model_State_Shape
-from proflow.TimeManager import TimeManager, TimeScale
-from proflow.process_state_modifiers import map_result_to_state_fn
-from proflow.process_ins_and_outs import get_inputs_from_process, map_result_to_state
-from typing import Callable, List, NamedTuple
+from typing import NamedTuple
 
-from .parameters import Parameters_Shape
-from .external_state import External_State_Shape
+from proflow.internal_state import Model_State_Shape
+from proflow.process_ins_and_outs import get_inputs_from_process, map_result_to_state
+from proflow.process_state_modifiers import map_result_to_state_fn
+from proflow.TimeManager import TimeManager, TimeScale
+
 from .config import Config_Shape
-from .Objects.Process import Process, ProcessType
 from .errors import Run_Process_Error
+from .external_state import External_State_Shape
+from .Objects.Process import Process, ProcessType
+from .parameters import Parameters_Shape
 
 
 class ProcessRunner:
@@ -45,7 +47,7 @@ class ProcessRunner:
     # Define the process runner
     def run_processes(
         self,
-        processes: List[Process] = None,
+        processes: list[Process] = None,
         initial_state: NamedTuple = None,  # initial state or parameters
     ) -> NamedTuple:
         """Takes the initial state and a list of processes
@@ -59,7 +61,7 @@ class ProcessRunner:
         self.current_state = reduce(self.process_switcher, processes, _initial_state)
         return self.current_state
 
-    def initialize_processes(self, processes: List[Process]) -> Callable[[NamedTuple], NamedTuple]:
+    def initialize_processes(self, processes: list[Process]) -> Callable[[NamedTuple], NamedTuple]:
         """HOC component to assign processes to the run_processes function
         which can then be ran later with the state"""
         return partial(self.run_processes, processes)

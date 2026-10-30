@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
-class I:  # noqa: E742
+class I:
     """interface Named Tuple"""
 
     from_: str

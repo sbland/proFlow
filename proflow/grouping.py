@@ -1,8 +1,9 @@
-from typing import List, Callable
+from collections.abc import Callable
+
 from .Objects.Process import Process
 
 
-def group(name: str) -> Callable[[List[Process]], List[Process]]:
+def group(name: str) -> Callable[[list[Process]], list[Process]]:
     """Decorator to group processes returned by a function."""
 
     def decorator(fn):

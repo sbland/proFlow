@@ -1,7 +1,8 @@
 import pytest
 from data_helpers.list_helpers import flatten_list
-from proflow.ProcessRunnerCls import ProcessRunner
+
 from proflow.ProcessRunner import I, Process, Run_Process_Error
+from proflow.ProcessRunnerCls import ProcessRunner
 from proflow.tests.mocks import (
     Mock_Config_Shape,
     Mock_External_State_Shape,

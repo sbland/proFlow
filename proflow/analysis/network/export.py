@@ -1,11 +1,12 @@
 import json
 from dataclasses import asdict
-from typing import List
+
 import networkx as nx
+
 from proflow.analysis.network.extract_nodes_and_edges import Edge, Node
 
 
-def asjson(nodes: List[Node], edges: List[Edge], output_file: str):
+def asjson(nodes: list[Node], edges: list[Edge], output_file: str):
     G = nx.MultiDiGraph()
     for n in nodes:
         G.add_node(n.index, **asdict(n))

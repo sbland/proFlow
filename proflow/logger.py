@@ -1,8 +1,8 @@
-from typing import Callable, List
+from collections.abc import Callable
 
 from .internal_state import Model_State_Shape
-from .Objects.Process import Process, ProcessType
 from .Objects.Interface import I
+from .Objects.Process import Process, ProcessType
 
 
 def merge_logs(logs, index, **kwargs):
@@ -13,8 +13,8 @@ def merge_logs(logs, index, **kwargs):
 
 
 def log_values(
-    state_inputs: Callable[[Model_State_Shape], List[I]],
-    additional_inputs: Callable[[List[I]], None] = lambda: [],
+    state_inputs: Callable[[Model_State_Shape], list[I]],
+    additional_inputs: Callable[[list[I]], None] = list,
 ):
     return Process(
         func=merge_logs,
