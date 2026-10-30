@@ -43,7 +43,7 @@ def run_process(
 
 
         note: args from process are not garuanteed to be in the correct order
-    """  
+    """
     kwargs = process.map_inputs(config, prev_state)
     result = process.func(**dict(kwargs))
     state_out = process.map_outputs(result, prev_state)
@@ -83,7 +83,7 @@ demo_process = Process(
 state_out = run_process(state, demo_process, config)
 print(state_out)
 
-# %% 
+# %%
 
 # Compare timeings
 from timeit import repeat

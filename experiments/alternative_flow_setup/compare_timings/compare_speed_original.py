@@ -58,7 +58,7 @@ state_out = run_process(state, demo_process, config, None, None)
 
 print(state_out)
 
-# %% 
+# %%
 
 # Compare timeings
 from timeit import repeat

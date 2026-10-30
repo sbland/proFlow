@@ -89,7 +89,7 @@ def run_process(
 
 
         note: args from process are not garuanteed to be in the correct order
-    """  
+    """
     kwargs = process.map_inputs(config, prev_state)
     result = process.func(**dict(kwargs))
     state_out = process.map_outputs(result, prev_state)
@@ -156,7 +156,7 @@ def clean_key(k: str):
     stripped = k.strip()[1:-1]
     return stripped
 
-    
+
 def clean_val(v: str):
     """Clean the value component.
 
@@ -228,9 +228,3 @@ pprint(convert_val("state['foo']['bar'] + 1"))
 
 # print(parse_inputs(demo_process))
 # print(parse_inputs(demo_process).keys())
-
-
-
-
-
-
