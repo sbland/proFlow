@@ -274,16 +274,16 @@ class TestParseInputs:
             "RANGE_ARG_0.0": "config.bar",
             "RANGE_ARG_1.0": "config.foo",
         }
-        {
-            "x": "(LIST_COMP(list_comp_0))._SUM()",
-            "ELT": "(LIST_COMP(list_comp_0))",
-            "RANGE_ARG_0.0": "config.bar",
-            "i": "GEN_0",
-            "GEN_0": "RANGE_ARG_1._RANGE()",
-            "LIST_COMP(list_comp_0)": "ELT.0",
-            "RANGE_ARG_1.0": "config.foo",
-            "v": "GEN_0",
-        }
+        # {
+        #     "x": "(LIST_COMP(list_comp_0))._SUM()",
+        #     "ELT": "(LIST_COMP(list_comp_0))",
+        #     "RANGE_ARG_0.0": "config.bar",
+        #     "i": "GEN_0",
+        #     "GEN_0": "RANGE_ARG_1._RANGE()",
+        #     "LIST_COMP(list_comp_0)": "ELT.0",
+        #     "RANGE_ARG_1.0": "config.foo",
+        #     "v": "GEN_0",
+        # }
 
     def test_parse_inputs_range(self):
         DEMO_INPUTS = lambda config: [
@@ -392,7 +392,7 @@ class TestExtractOutputLines:
 
     def test_extract_output_lines_complex_01(self):
         """Test parse_inputs returns correct value."""
-        DEMO_OUTPUTS = lambda result: [  # noqa E731
+        DEMO_OUTPUTS = lambda result: [
             [
                 (result[iL][iLC], f"foo.{iL}.{iLC}.bar")
                 for iL in range(3)
@@ -492,7 +492,7 @@ class TestParseOutputs:
         assert output_interface[0].as_ == "state.a"
 
     def test_parse_outputs_returns_invalid_for_unknown_input(self):
-        DEMO_OUTPUTS = lambda result: [
+        DEMO_OUTPUTS = lambda result: [  # noqa: E731
             # This setup is not valid
             (["some info", ["other into"]], "a"),
         ]
@@ -505,7 +505,7 @@ class TestParseOutputs:
     @pytest.mark.skip(reason="Not implemented")
     def test_parse_with_star_arg(self):
         nP = 3
-        DEMO_OUTPUTS = lambda result: [
+        DEMO_OUTPUTS = lambda result: [  # noqa: E731
             *[(result, iP) for iP in range(nP)],
         ]
 
@@ -685,3 +685,13 @@ class TestParseArg:
         )
         out = parse_arg(attr)
         assert out == (["foo,bar"], {"op": "And"})
+
+
+def test_regex_speach():
+    import re
+
+    pattern = r".*\[(?:\"|\')(.*)(?:\"|\')\].*"
+    line = "result.a.[\"foo\"].['bar'] = x"
+    match = re.match(pattern, line)
+    assert match.groups() == ("foo", "bar")
+    assert False

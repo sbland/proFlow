@@ -9,12 +9,12 @@ from proflow.helpers import rgetattr
 from typing import NamedTuple, List, Callable
 from functools import reduce
 
-from vendor.helpers.dictionary_helpers import get_nested_val
+from data_helpers.dictionary_helpers import get_nested_val
 
 import numpy as np
 
-from vendor.helpers.comparisons import isNamedTuple
-from vendor.helpers.named_tuple_helpers import _replace_recursive
+from data_helpers.comparisons import isNamedTuple
+from data_helpers.cls_parsing import _replace_recursive
 
 from .Objects.Process import Process
 from .Objects.Interface import I

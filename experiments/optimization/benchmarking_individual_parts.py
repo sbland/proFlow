@@ -7,7 +7,7 @@ from pstats import SortKey
 from timeit import repeat
 import pstats
 import cProfile
-from vendor.helpers.list_helpers import flatten_list
+from data_helpers.list_helpers import flatten_list
 from proflow.ProcessRunnerCls import ProcessRunner
 from proflow.tests.mocks import Mock_Model_State_Shape, Mock_Config_Shape, Mock_External_State_Shape, Mock_Nested_State
 # from proflow.process_ins_and_outs import map_result_to_state

@@ -1,5 +1,7 @@
 """Tests associated with the Objects.py file."""
 
+import json
+from data_helpers.encoders import AdvancedJsonEncoder
 from proflow.Objects.Interface import I
 from proflow.Objects.Process import Process
 
@@ -25,7 +27,7 @@ def test_Process_object(snapshot):
             (result, 'x'),
         ]
     )
-    # snapshot.assert_match(demo_process, 'demo_process')
+    snapshot.assert_match(str(demo_process), 'demo_process')
 
 
 def test_process_object_human(snapshot):
@@ -50,4 +52,4 @@ def test_process_object_human(snapshot):
         ]
     )
 
-    # snapshot.assert_match(demo_process.human(), 'demo_process_human')
+    snapshot.assert_match(json.dumps(demo_process.human(), indent=4, cls=AdvancedJsonEncoder, sort_keys=True), 'demo_process_human')
