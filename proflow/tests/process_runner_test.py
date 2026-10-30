@@ -5,6 +5,8 @@ import pytest
 from data_helpers.list_helpers import filter_none, flatten_list
 
 from proflow.helpers import rgetattr
+from proflow.objects.interface import I
+from proflow.objects.process import Process
 from proflow.process_runner import ProcessRunner, advance_time_step_process
 from proflow.tests.mocks import (
     Mock_Config_Shape,
@@ -13,9 +15,6 @@ from proflow.tests.mocks import (
     Mock_Nested_State,
     Mock_Parameters_Shape,
 )
-
-from proflow.objects.interface import I
-from proflow.objects.process import Process
 
 
 def process_add(x, y):
