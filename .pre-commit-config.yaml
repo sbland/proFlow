@@ -5,18 +5,18 @@ repos:
       - id: check-merge-conflict
       - id: debug-statements
       - id: trailing-whitespace
-        exclude: ^main/static/assets/
+        exclude: ^experiments/
       - id: end-of-file-fixer
-        exclude: ^main/static/assets/
+        exclude: ^experiments/
       - id: pretty-format-json
-        exclude: ^main/static/assets/
+        exclude: ^experiments/
         args: [--autofix, --indent, '4', --no-sort]
   - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
     rev: v2.16.0
     hooks:
       - id: pretty-format-yaml
         args: [--autofix, --indent, '2', --offset, '2']
-        exclude: manage.py|^main/static/assets/
+        exclude: ^experiments/
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.38.2
     hooks:
