@@ -18,7 +18,7 @@ def test_log_values():
         ],
     )
     processes = [log_process]
-    assert type(log_process) == Process
+    assert type(log_process) is Process
     process_runner = ProcessRunner()
     assert len(process_runner.state_logs) == 1
     process_runner.run_processes(processes, state)

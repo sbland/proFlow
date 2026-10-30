@@ -81,7 +81,7 @@ def link_processes_to_state(
     unique_inputs = get_all_unique_inputs(processes)
     filter_re = (
         filter_state_string
-        if type(filter_state_string) == re.Pattern
+        if type(filter_state_string) is re.Pattern
         else re.compile(f".*{filter_state_string}.*" or ".*")
     )
     filtered_inputs = [i for i in unique_inputs if filter_re.match(i)]
