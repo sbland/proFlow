@@ -226,6 +226,15 @@ dependencies = [
 ]
 
 [package.dev-dependencies]
+ci = [
+    { name = "decorator" },
+    { name = "pytest" },
+    { name = "pytest-benchmark" },
+    { name = "pytest-cov" },
+    { name = "pytest-mock" },
+    { name = "pytest-snapshot" },
+    { name = "ruff" },
+]
 dev = [
     { name = "bump2version" },
     { name = "decorator" },
@@ -253,6 +262,15 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
+ci = [
+    { name = "decorator", specifier = ">=5.0.0" },
+    { name = "pytest", specifier = ">=8.3.3" },
+    { name = "pytest-benchmark", specifier = ">=3.4.1" },
+    { name = "pytest-cov", specifier = ">=5.0.0" },
+    { name = "pytest-mock", specifier = ">=3.14.0" },
+    { name = "pytest-snapshot", specifier = ">=0.9.0" },
+    { name = "ruff", specifier = ">=0.17.0" },
+]
 dev = [
     { name = "bump2version", specifier = ">=1.0.1" },
     { name = "decorator", specifier = ">=5.0.0" },
