@@ -1,0 +1,133 @@
+# Process analysis and network diagrams
+
+The `proflow.analysis` package separates building process networks from
+rendering diagrams:
+
+- `proflow.analysis.network` produces process nodes and state-dependency
+  edges. The `process_state` module also builds the state/link data used by the
+  canvas diagram. The network can be exported as NetworkX node-link JSON.
+- `proflow.analysis.canvas` draws process and state nodes directly onto an
+  `ipycanvas` canvas.
+
+Both workflows use each process's `state_inputs` and `state_outputs`. Config,
+parameter, external-state, and additional inputs are not included in the
+network links.
+
+## Define processes
+
+The examples below use `I(from_, as_)` to describe state mappings. For an
+input, `from_` is the state key read by the process. For an output, `as_` is
+the state key written by the process.
+
+```python
+from proflow.objects import I, Process
+
+
+def add_today_and_hour(today, hour):
+    return today + hour
+
+
+processes = [
+    Process(
+        func=add_today_and_hour,
+        comment="Calculate tomorrow",
+        state_inputs=[
+            I("state.info.today", as_="today"),
+            I("state.info.hour", as_="hour"),
+        ],
+        state_outputs=[I("_result", as_="state.info.tomorrow")],
+    ),
+    Process(
+        func=lambda tomorrow: tomorrow * 2,
+        comment="Calculate the next value",
+        state_inputs=[I("state.info.tomorrow", as_="tomorrow")],
+        state_outputs=[I("_result", as_="state.info.next")],
+    ),
+]
+```
+
+Keep the process order meaningful: the network workflow looks for the most
+recent earlier process that outputs each input state key.
+
+## Draw processes and state with a canvas
+
+`link_processes_to_state` draws process rectangles, state rectangles, and
+curved links onto a canvas-like object. State inputs are shown with blue links;
+state outputs use red links. The function returns the canvas. Canvas rendering
+is a separate workflow from building/exporting the process network.
+
+```python
+from ipycanvas import Canvas
+from proflow.analysis.canvas import render_process_state_network
+from proflow.analysis.network.process_state import processes_to_state_network
+
+network = processes_to_state_network(processes)
+canvas = Canvas(width=900, height=500)
+render_process_state_network(canvas, processes, network, seperation=300)
+```
+
+For convenience, `link_processes_to_state(canvas, processes, ...)` combines
+those two steps. Existing imports from `proflow.analysis.dataflows` continue
+to work; new code should import network construction from
+`proflow.analysis.network.process_state` and rendering from
+`proflow.analysis.canvas`.
+
+The optional arguments control the layout and labels:
+
+- `seperation`: horizontal gap between process and state columns.
+- `process_node_width`, `process_node_height`: process rectangle dimensions.
+- `state_node_width`, `state_node_height`: state rectangle dimensions.
+- `LP`, `TP`, `FONT_SIZE`: left/top padding and label font size.
+- `filter_state_string` on `processes_to_state_network`: a regular-expression
+  pattern used to select state keys; by default all state keys are included.
+  A compiled regular expression can also be passed.
+
+This helper expects an `ipycanvas`-compatible canvas. Display the resulting
+canvas using the interface of the environment in which it is running, such as
+a Jupyter notebook.
+
+## Build nodes and edges
+
+For applications that need graph data rather than an immediate canvas drawing,
+use `processes_to_nodes_and_edges`:
+
+```python
+from proflow.analysis.network.extract_nodes_and_edges import (
+    processes_to_nodes_and_edges,
+)
+
+nodes, edges = processes_to_nodes_and_edges(processes)
+```
+
+Each `Node` has an index matching its position in `processes`, the function
+name, and the process comment. Each `Edge` represents one state input. Its
+`name` is the state key, `source` is the consuming process index, and `target`
+is the index of the most recent earlier process that wrote that key. A
+`target` of `-1` means no earlier output for that state key was found.
+
+## Export graph data as JSON
+
+`asjson` converts the node and edge records into NetworkX node-link data and
+writes that data to a JSON file:
+
+```python
+from proflow.analysis.network.export import asjson
+
+graph_data = asjson(nodes, edges, "process-network.json")
+```
+
+The exported graph uses producer-to-consumer direction for its links, even
+though an `Edge` record's `source` field identifies the consumer and its
+`target` field identifies the producer. Edges without a preceding producer
+(`target == -1`) are omitted from the exported graph. The function returns
+the same node-link data it writes.
+
+## Dependencies
+
+The canvas workflow requires `ipycanvas`. JSON export requires `networkx`.
+These are not declared as core project dependencies, so install the package
+needed for the workflow you use, for example:
+
+```bash
+python -m pip install ipycanvas networkx
+```
