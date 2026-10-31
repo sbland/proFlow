@@ -1,3 +1,4 @@
+from copy import deepcopy
 from timeit import repeat
 from unittest.mock import patch
 
@@ -5,6 +6,7 @@ import pytest
 from data_helpers.list_helpers import flatten_list
 
 from proflow.helpers import rgetattr
+from proflow.process_ins_and_outs import get_inputs_from_process, map_result_to_state
 from proflow.process_runner import ProcessRunner
 from proflow.tests.mocks import (
     Mock_Config_Shape,
@@ -105,6 +107,109 @@ def test_process_runner_time():
     time = min(repeat(lambda: run_processes(initial_state=state), number=2000, repeat=5))
     # assert 0.220 < time < 0.26 # Times with old method
     assert 0.01 < time < 0.08
+
+
+@pytest.mark.parametrize("debug_mode", [False, True])
+def test_immutable_mode_preserves_input_state_and_shares_untouched_fields(debug_mode):
+    state = Mock_Model_State_Shape(a=2.1, b=4.1)
+    process = Process(
+        func=lambda value: value + 1,
+        state_inputs=lambda state: [I(state.a, as_="value")],
+        state_outputs=lambda result: [(result, "nested.na")],
+    )
+    process_runner = ProcessRunner(
+        Mock_Config_Shape(),
+        Mock_External_State_Shape(),
+        Mock_Parameters_Shape(),
+        DEBUG_MODE=debug_mode,
+        IMMUTABLE_MODE=True,
+    )
+
+    updated_state = process_runner.initialize_processes([process])(initial_state=state)
+
+    assert updated_state is not state
+    assert updated_state.nested is not state.nested
+    assert updated_state.nested.na == 3.1
+    assert state.nested.na == 7
+    assert updated_state.matrix is state.matrix
+    assert updated_state.logs is state.logs
+
+
+def test_immutable_mode_runs_faster_than_copying_the_entire_state():
+    state = Mock_Model_State_Shape(a=2.1, b=4.1)
+    state.logs = [{"index": i, "values": [i, i + 1]} for i in range(10_000)]
+    process = Process(
+        func=lambda value: value + 1,
+        state_inputs=lambda state: [I(state.a, as_="value")],
+        state_outputs=lambda result: [(result, "a")],
+    )
+    process_runner = ProcessRunner(
+        Mock_Config_Shape(),
+        Mock_External_State_Shape(),
+        Mock_Parameters_Shape(),
+        IMMUTABLE_MODE=True,
+    )
+    run_optimized = process_runner.initialize_processes([process])
+
+    def run_with_full_state_copy():
+        modified_state = deepcopy(state)
+        args, kwargs = get_inputs_from_process(
+            process,
+            modified_state,
+            process_runner.config,
+            process_runner.parameters,
+            process_runner.external_state,
+            process_runner.tm.row_index,
+        )
+        result = process.func(*args, **kwargs)
+        return map_result_to_state(modified_state, process.state_outputs, result)
+
+    optimized_time = min(repeat(lambda: run_optimized(initial_state=state), number=5, repeat=3))
+    full_copy_time = min(repeat(run_with_full_state_copy, number=5, repeat=3))
+
+    assert optimized_time < full_copy_time / 2
+
+
+def test_immutable_mode_speed_compared_to_mutable_mode():
+    def make_state():
+        state = Mock_Model_State_Shape(a=0, b=0)
+        state.logs = [{"index": i, "values": [i, i + 1]} for i in range(10_000)]
+        return state
+
+    process = Process(
+        func=lambda: 1,
+        state_outputs=lambda result: [(result, "a")],
+    )
+    immutable_runner = ProcessRunner(
+        Mock_Config_Shape(),
+        Mock_External_State_Shape(),
+        Mock_Parameters_Shape(),
+        IMMUTABLE_MODE=True,
+    ).initialize_processes([process])
+    mutable_runner = ProcessRunner(
+        Mock_Config_Shape(),
+        Mock_External_State_Shape(),
+        Mock_Parameters_Shape(),
+        IMMUTABLE_MODE=False,
+    ).initialize_processes([process])
+    immutable_state = make_state()
+    mutable_state = make_state()
+
+    assert immutable_runner(initial_state=immutable_state).a == 1
+    assert mutable_runner(initial_state=mutable_state).a == 1
+    assert immutable_state.a == 0
+    assert mutable_state.a == 1
+
+    immutable_time = min(
+        repeat(lambda: immutable_runner(initial_state=immutable_state), number=1_000, repeat=5)
+    )
+    mutable_time = min(
+        repeat(lambda: mutable_runner(initial_state=mutable_state), number=1_000, repeat=5)
+    )
+
+    assert mutable_time < immutable_time / 3, (
+        f"mutable mode took {mutable_time:.6f}s; immutable mode took {immutable_time:.6f}s"
+    )
 
 
 # TODO: Below is depreciated

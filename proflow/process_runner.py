@@ -1,5 +1,4 @@
 from collections.abc import Callable
-from copy import deepcopy
 from datetime import datetime
 from functools import partial, reduce
 from typing import NamedTuple
@@ -153,10 +152,9 @@ class ProcessRunner:
         IMMUTABLE_MODE: bool = self.IMMUTABLE_MODE
         row_index: int = self.tm.row_index
 
-        modified_state = deepcopy(prev_state) if IMMUTABLE_MODE else prev_state
-
         if not process.gate:
-            return modified_state
+            return prev_state
+        modified_state = prev_state
         args, kwargs = get_inputs_from_process(
             process,
             modified_state,
@@ -170,9 +168,9 @@ class ProcessRunner:
         result = process.func(*args, **kwargs)
 
         output_state = (
-            map_result_to_state(modified_state, process.state_outputs, result)
-            if not process.format_output
-            else map_result_to_state_fn(modified_state, process.state_outputs, result)
+            map_result_to_state_fn(modified_state, process.state_outputs, result)
+            if IMMUTABLE_MODE or process.format_output
+            else map_result_to_state(modified_state, process.state_outputs, result)
         )
 
         return output_state
@@ -226,7 +224,7 @@ class ProcessRunner:
         if not process.gate:
             return prev_state
         try:
-            modified_state = deepcopy(prev_state) if IMMUTABLE_MODE else prev_state
+            modified_state = prev_state
             process_id = process.comment or getattr(process.func, "__name__", "Unknown")
             start_time_input_setup = datetime.now()
 
@@ -257,9 +255,9 @@ class ProcessRunner:
 
             # TODO: This is expensive!
             output_state = (
-                map_result_to_state(modified_state, process.state_outputs, result)
-                if not process.format_output
-                else map_result_to_state_fn(modified_state, process.state_outputs, result)
+                map_result_to_state_fn(modified_state, process.state_outputs, result)
+                if IMMUTABLE_MODE or process.format_output
+                else map_result_to_state(modified_state, process.state_outputs, result)
             )
 
             end_time_output_setup = datetime.now()

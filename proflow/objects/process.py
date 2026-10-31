@@ -42,7 +42,7 @@ class Process:
 
     Parameters:
         func: Callable
-            The function to call with the process
+            The function to call with the process. This should be a pure function.
         ptype: ProcessType
             The type of process. Acts as a switch to decide how we run it
         gate: bool
