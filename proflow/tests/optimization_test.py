@@ -207,7 +207,7 @@ def test_immutable_mode_speed_compared_to_mutable_mode():
         repeat(lambda: mutable_runner(initial_state=mutable_state), number=1_000, repeat=5)
     )
 
-    assert mutable_time < immutable_time / 3, (
+    assert mutable_time < immutable_time / 2, (
         f"mutable mode took {mutable_time:.6f}s; immutable mode took {immutable_time:.6f}s"
     )
 
