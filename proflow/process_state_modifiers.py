@@ -98,6 +98,77 @@ def replace_state_val(initial_state, target, val):
     return final_state
 
 
+_OUTPUT_VALUE = object()
+
+
+def _build_update_tree(updates):
+    """Build a path tree, returning None when targets overlap."""
+    tree = {}
+    for value, target in updates:
+        node = tree
+        for segment in target.split("."):
+            if _OUTPUT_VALUE in node:
+                return None
+            node = node.setdefault(segment, {})
+        if node:
+            return None
+        node[_OUTPUT_VALUE] = value
+    return tree
+
+
+def _apply_update_tree(current, tree, detached=False):
+    """Apply a path trie, copying each mutable container only once.
+
+    Descendants of a detached container can be updated in place; dataclasses
+    along the updated paths are rebuilt with ``replace``.
+    """
+    if _OUTPUT_VALUE in tree:
+        return tree[_OUTPUT_VALUE]
+
+    is_list = isinstance(current, list)
+    is_dict = isinstance(current, dict)
+    is_numpy = type(current).__module__ == "numpy"
+    if (is_list or is_dict or is_numpy) and not detached:
+        current = deepcopy(current)
+        detached = True
+
+    changes = {}
+    for key, child_tree in tree.items():
+        if key is _OUTPUT_VALUE:
+            continue
+
+        child_is_value = _OUTPUT_VALUE in child_tree
+        if child_is_value:
+            child_value = child_tree[_OUTPUT_VALUE]
+        else:
+            child = (
+                current[int(key)]
+                if is_list or is_numpy
+                else current[key]
+                if is_dict
+                else getattr(current, key)
+            )
+            child_value = _apply_update_tree(child, child_tree, detached)
+
+        if is_list:
+            if key == "+" and child_is_value:
+                current.append(child_value)
+            else:
+                current[int(key)] = child_value
+        elif is_numpy:
+            current[int(key)] = child_value
+        elif is_dict:
+            current[key] = child_value
+        else:
+            changes[key] = child_value
+
+    if is_dataclass(current):
+        return replace(current, **changes)
+    if changes:
+        return get_new_val_fn(current, changes)
+    return current
+
+
 # TODO: Find optimized version of implementing non mutable version
 def map_result_to_state_fn(
     prev_state: Model_State_Shape,
@@ -126,13 +197,15 @@ def map_result_to_state_fn(
     Model_State_Shape
         [description]
     """
-    active_state = prev_state
-    for from_, as_ in output_map(result):
-        # NOTE: Below is depreciated. We now get result directly in process definition
-        # we recursively get the nested value
-        # result_item = rgetattr(result, from_) if from_ != '_result' else result
+    updates = list(output_map(result))
+    if not updates:
+        return prev_state
+    update_tree = _build_update_tree(updates)
+    if update_tree is not None:
+        return _apply_update_tree(prev_state, update_tree)
 
-        # Then recursively set the new value at each level as a copy (This is expensive!)
+    active_state = prev_state
+    for from_, as_ in updates:
         active_state = replace_state_val(active_state, as_, from_)
     return active_state
 
