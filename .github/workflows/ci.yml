@@ -1,0 +1,49 @@
+name: CI - Lint and Test
+
+on:
+  push:
+    branches:
+      - main
+      - ci-test
+  pull_request:
+    branches:
+      - main
+      - ci-test
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  lint-and-format:
+    name: Ruff Lint and Format Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Python Env
+        uses: ./.github/actions/setup-python-env
+        with:
+          uv-extra-groups: ci
+      - name: Check formatting
+        run: |
+          source .venv/bin/activate
+          ruff format . --check
+      - name: Run lint checks
+        run: |
+          source .venv/bin/activate
+          ruff check .
+
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+      - name: Setup Python Env
+        uses: ./.github/actions/setup-python-env
+        with:
+          uv-extra-groups: ci
+      - name: Run tests
+        run: |
+          source .venv/bin/activate
+          python -m pytest
