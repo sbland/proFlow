@@ -75,4 +75,4 @@ When responding, explicitly confirm completion of each requirement.
 
 ## Testing
 
-- Use `uv run pytest` for running all tests in the project.
+- Use `.venv/bin/python -m pytest` for running all tests in the project.
