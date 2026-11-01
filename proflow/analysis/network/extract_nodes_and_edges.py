@@ -49,9 +49,11 @@ def get_successive_edges(
 ) -> list[Edge]:
     """Get a link from 1 process to the next using its modification to the state."""
     links = []
-    for i, s_input in enumerate(state_inputs):
-        # get state outputs before this node
-        lookup_state_outputs = list(state_outputs[:i])[::-1]
+    for s_input in state_inputs:
+        # Find outputs from earlier processes, newest first.
+        lookup_state_outputs = [
+            output for output in reversed(state_outputs) if output.node_index < s_input.node_index
+        ]
         try:
             # Find the most recent node to output this input
             target_output_index = next(
@@ -62,7 +64,6 @@ def get_successive_edges(
         except StopIteration:
             # If not found link is null
             target_output_index = -1
-            print("No target output found; using null link.")
         # print(n)
         edge = Edge(source=s_input.node_index, target=target_output_index, name=s_input.state_key)
         links.append(edge)

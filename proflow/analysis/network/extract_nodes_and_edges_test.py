@@ -57,6 +57,25 @@ def test_get_successive_edges():
     assert out == DEMO_EDGES
 
 
+def test_get_successive_edges_uses_process_order():
+    state_inputs = [
+        Node_Link_Data(node_index=1, state_key="state.first"),
+        Node_Link_Data(node_index=1, state_key="state.second"),
+        Node_Link_Data(node_index=2, state_key="state.first"),
+    ]
+    state_outputs = [
+        Node_Link_Data(node_index=0, state_key="state.first"),
+        Node_Link_Data(node_index=0, state_key="state.second"),
+        Node_Link_Data(node_index=1, state_key="state.first"),
+    ]
+
+    assert get_successive_edges(state_inputs, state_outputs) == [
+        Edge(source=1, target=0, name="state.first"),
+        Edge(source=1, target=0, name="state.second"),
+        Edge(source=2, target=1, name="state.first"),
+    ]
+
+
 def test_process_to_node():
     """Test process_to_node returns correct data."""
     out = process_to_node(DEMO_PROCESSES[0], 0)
