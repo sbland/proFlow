@@ -41,6 +41,10 @@ ci = [
   "decorator>=5.0.0",
 ]
 
+web = [
+  "flask>=2.3.0",
+]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
