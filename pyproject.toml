@@ -1,6 +1,6 @@
 [project]
 name = "proflow"
-version = "0.6.5"
+version = "0.7.0"
 description = "Functional micro pipeline manager"
 authors = [{ "name" = "Sam Bland" }]
 readme = "README.md"
