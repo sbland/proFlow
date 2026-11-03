@@ -20,4 +20,5 @@ def run(port=8000, datalocation="force/data.json"):
     app.run(port=port)
 
 
-run()
+if __name__ == "__main__":
+    run()
