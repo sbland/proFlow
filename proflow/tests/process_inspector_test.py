@@ -442,47 +442,43 @@ def test_parse_key():
     assert out == "config.a.foo.0.[var].bar"
 
 
-def test_parse_outputs():
-    """Test parse_outputs returns correct value."""
-    DEMO_OUTPUTS = lambda result: [
-        (result.a.foo.bar, "x"),
-        (result.a.foo[0], "y"),
-    ]
-    out = parse_outputs(DEMO_OUTPUTS)
-    assert out == {"result.a.foo.bar": "state.x", "result.a.foo.0": "state.y"}
-
-
-def test_parse_outputs_list_comprehension():
-    """Test parse_outputs returns correct value."""
-    DEMO_OUTPUTS = lambda result: [
-        (result[iL][iLC], f"foo.{iL}.{iLC}.bar") for iL in range(3) for iLC in range(3)
-    ]
-    out = parse_outputs(DEMO_OUTPUTS)
-    assert out == {"result.[iL].[iLC]": 'state.f"foo.{iL}.{iLC}.bar'}
-
-
-def test_parse_outputs_list_comprehension_inputed_index():
-    """Test parse_outputs returns correct value."""
-    iLC = 0
-    DEMO_OUTPUTS = lambda result, iLC=iLC: [
-        (result[iL][iLC], f"foo.{iL}.{iLC}.bar") for iL in range(3)
-    ]
-    out = parse_outputs(DEMO_OUTPUTS, False)
-    assert out == {"result.[iL].[iLC]": 'state.f"foo.{iL}.{iLC}.bar'}
-
-
-@pytest.mark.skip(reason="functions in output section not currently supported")
-def test_parse_outputs_deep_copy():
-    """Test parse_outputs returns correct output."""
-    deepcopy = lambda: None
-    DEMO_OUTPUTS = lambda result: [
-        (deepcopy(result["a"]), "a"),
-    ]
-    out = parse_outputs(DEMO_OUTPUTS, False)
-    assert out == {"deepcopy(result.a.)": "state.a"}
-
-
 class TestParseOutputs:
+    def test_parse_outputs(self):
+        """Test parse_outputs returns correct value."""
+        DEMO_OUTPUTS = lambda result: [
+            (result.a.foo.bar, "x"),
+            (result.a.foo[0], "y"),
+        ]
+        out = parse_outputs(DEMO_OUTPUTS)
+        assert out == {"result.a.foo.bar": "state.x", "result.a.foo.0": "state.y"}
+
+    def test_parse_outputs_list_comprehension(self):
+        """Test parse_outputs returns correct value."""
+        DEMO_OUTPUTS = lambda result: [
+            (result[iL][iLC], f"foo.{iL}.{iLC}.bar") for iL in range(3) for iLC in range(3)
+        ]
+        out = parse_outputs(DEMO_OUTPUTS)
+        assert out == {"result.[iL].[iLC]": 'state.f"foo.{iL}.{iLC}.bar'}
+
+    def test_parse_outputs_list_comprehension_inputed_index(self):
+        """Test parse_outputs returns correct value."""
+        iLC = 0
+        DEMO_OUTPUTS = lambda result, iLC=iLC: [
+            (result[iL][iLC], f"foo.{iL}.{iLC}.bar") for iL in range(3)
+        ]
+        out = parse_outputs(DEMO_OUTPUTS, False)
+        assert out == {"result.[iL].[iLC]": 'state.f"foo.{iL}.{iLC}.bar'}
+
+    @pytest.mark.skip(reason="functions in output section not currently supported")
+    def test_parse_outputs_deep_copy(self):
+        """Test parse_outputs returns correct output."""
+        deepcopy = lambda: None
+        DEMO_OUTPUTS = lambda result: [
+            (deepcopy(result["a"]), "a"),
+        ]
+        out = parse_outputs(DEMO_OUTPUTS, False)
+        assert out == {"deepcopy(result.a.)": "state.a"}
+
     def test_parse_outputs_to_interface(self):
         DEMO_OUTPUTS = lambda result: [
             (result["a"], "a"),
@@ -515,6 +511,19 @@ class TestParseOutputs:
         assert len(output_interface) == nP
         assert output_interface[0].from_ == 'result["a"]'
         assert output_interface[0].as_ == "state.a"
+
+    def test_parse_outputs_with_dynamic_key(self):
+        """Test parse_outputs with dynamic key.
+
+        This doesn't work perfectly as we just use the variable name "k" instead of its value.
+        """
+        k = "key1"
+        state_outputs = lambda result, k=k: [
+            (result, k),
+        ]
+
+        out = parse_outputs(state_outputs, allow_errors=False)
+        assert out == {"result": "state.k"}
 
 
 class TestParseArg:

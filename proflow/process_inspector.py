@@ -706,6 +706,8 @@ def parse_output_target(out_el):
     elif isinstance(out_el, ast.JoinedStr):
         elts = list(map(parse_output_target, out_el.values))
         return ".".join(elts)
+    elif isinstance(out_el, ast.Name):
+        return out_el.id
     else:
         raise NotImplementedError(f"Ast type not implemented: {type(out_el)}")
 
