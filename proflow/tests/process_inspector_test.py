@@ -338,6 +338,17 @@ class TestParseInputs:
             "row_count": "state.row_index",
         }
 
+    def test_not_using_as(self):
+        DEMO_INPUTS = lambda config: [
+            I(config.foo, "bar"),
+        ]
+
+        out = parse_inputs(DEMO_INPUTS, False)
+
+        assert out == {
+            "bar": "config.foo",
+        }
+
     # def test_parse_inputs_check(self):
     #     nL = 1
     #     nLC = 2
