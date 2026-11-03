@@ -1,179 +1,116 @@
+# proFlow
 
-# Build Steps
-1. Run build_and_deploy.sh
+proFlow is a Python library for running an ordered sequence of processes against
+an application state. Each process is a function whose inputs are selected from
+state (and optionally configuration, parameters, or external data) and whose
+result is mapped back to state.
 
-## Process Runners to update state
-Pure functions should not modify the state. Instead they should return a copy of the state.
+Processes should be pure functions: they compute and return values rather than
+modifying the input state directly. This makes process behavior easier to test
+and reason about.
 
-Each function should take the input state and output a modified copy of that state without effecting the original state. The global state can be then set to equal this new state. This ensures that we can easily test each process and be explicit on what it is modifying.
+## Features
 
+- Run an ordered list of reusable process definitions.
+- Map process inputs and outputs using state attributes and dotted paths.
+- Supply configuration, parameters, external state, and additional inputs.
+- Optionally update supported state objects without mutating the original.
+- Inspect process dependencies and visualize data flows with the analysis tools.
 
-### Process runner
-```
-Initial State ===> [Process 1] ====> New state
-New State ===> [Process 2] ====> New state
-New State ===> [Process 3] ====> New state
-New State ===> [Process 4] ====> Output State
-```
+## Installation
 
-Through the use of functools.reduce we can create a process runner that will run a
-set of processes in turn on a state.
+proFlow requires Python 3.14 or newer and is available on PyPI:
 
-The process runner takes a list of processes and returns a function that takes the previous state and current process id.
-
-Example runner:
-``` python
-def run_process(prev_state, process):
-    """used in a reduce function to take previous state
-    and pass to next function"""
-    return process(prev_state)
-
-
-def run_hour(processes):
-    """Take a set of processes and return the process runner"""
-
-    def run_processes(initial_state: Model_State_Shape, hr: int) -> Model_State_Shape:
-        """Takes the initial state at start of hour and the hour number"""
-        new_state = reduce(run_process, processes, initial_state)
-        return new_state
-
-    return run_processes
+```shell
+python -m pip install proflow
 ```
 
-To use the runner:
-``` python
-def example_process(prev_state):
-    # do some stuff to the state
-    return new_state
+## Quick start
+
+Define a state, a function, and a `Process` that maps the state value into the
+function and maps its result back to the state. `IMMUTABLE_MODE=True` makes the
+runner return an updated dataclass without modifying the original.
+
+```python
+from dataclasses import dataclass
+
+from proflow.objects.interface import I
+from proflow.objects.process import Process
+from proflow.process_runner import ProcessRunner
 
 
-initial_state = Model_State_Shape(1)
-hr = 1
+@dataclass(frozen=True)
+class State:
+    count: int = 0
 
-output_state = run_hour(
-    [
-        example_process,
-    ]
-)(initial_state, hr)
+
+def increment(count: int) -> int:
+    return count + 1
+
+
+increment_process = Process(
+    func=increment,
+    state_inputs=lambda state: [I(state.count, as_="count")],
+    state_outputs=lambda result: [(result, "count")],
+)
+
+runner = ProcessRunner(IMMUTABLE_MODE=True)
+initial_state = State()
+result = runner.run_processes([increment_process], initial_state=initial_state)
+
+assert result.count == 1
+assert initial_state.count == 0
 ```
 
-# Example State
-...
+## How it works
 
-# Example Processes
-```Python
-from proflow.Objects import Process, I
+`ProcessRunner` runs processes in order, passing the state returned by one
+process to the next. A `Process` describes the function to call and how its
+inputs and outputs connect to the surrounding data:
 
-processes = [
-    Process(
-        func=lambda x, y, z: x + y + z,
-        comment="Demo process a",
-        config_inputs=[
-            I("foo.bar", as_="x"),
-        ],
-        state_inputs=[I("info.today", as_="y"), I("info.hour", as_="z")],
-        state_outputs=[
-            I("_result", as_="info.tomorrow"),
-        ],
-    ),
-    Process(
-        func=lambda x, y: x + y,
-        comment="Demo process b",
-        config_inputs=[
-            I("foo.bar", as_="x"),
-        ],
-        state_inputs=[
-            I("info.tomorrow", as_="y"),
-        ],
-        state_outputs=[
-            I("_result", as_="info.today"),
-        ],
-    ),
-    Process(
-        func=lambda x, y: x + y,
-        comment="Demo process c with a really long comment and info",
-        config_inputs=[
-            I("foo.bar", as_="x"),
-        ],
-        state_inputs=[
-            I("info.tomorrow", as_="y"),
-        ],
-        state_outputs=[
-            I("_result", as_="info.today"),
-        ],
-    ),
-    Process(
-        func=lambda x, y: x + y,
-        comment="Demo process d",
-        config_inputs=[
-            I("foo.bar", as_="x"),
-        ],
-        state_inputs=[
-            I("info.today", as_="y"),
-        ],
-        state_outputs=[
-            I("_result", as_="info.tomorrow"),
-            I("_result", as_="log.extra"),
-        ],
-    ),
-]
+- **Inputs** are provided with callables such as `state_inputs`. Each returns
+  `I(value, as_="argument_name")` entries; the `as_` value becomes the
+  corresponding keyword argument to the function.
+- **Outputs** are provided by `state_outputs`. The callable receives the
+  function result and returns `(value, "target.path")` pairs to write into
+  state.
+- **Other input sources** include `config_inputs`, `parameters_inputs`,
+  `external_state_inputs`, and `additional_inputs`.
+- **Process options** include `gate` to skip a process, `comment` and `group`
+  for descriptions, and `args` for additional positional arguments.
+
+By default, output mapping updates state in place. Set
+`ProcessRunner(IMMUTABLE_MODE=True)` to use the non-mutating update path for
+supported dataclasses, dictionaries, and lists.
+
+## API and examples
+
+The main entry points are:
+
+- [`Process`](./proflow/objects/process.py) defines a function and its input and
+  output mappings.
+- [`I`](./proflow/objects/interface.py) describes an input value and optional
+  function argument name.
+- [`ProcessRunner`](./proflow/process_runner.py) configures and runs processes.
+- [`proflow/analysis`](./proflow/analysis) contains process and data-flow
+  inspection tools.
+- [`proflow/tests/demodata.py`](./proflow/tests/demodata.py) contains a small
+  example process sequence; the [experiments](./experiments) directory has
+  analysis and visualization examples.
+
+## Development
+
+Clone the repository, install the project and development dependencies, then
+run the tests and style checks:
+
+```shell
+uv sync --all-groups
+source .venv/bin/activate
+python -m pytest
+ruff check .
+ruff format . --check
 ```
 
-# Process Attributes:
+## License
 
-## func
-**Callable[[Model_State_Shape], Model_State_Shape]**
-
-The function to call
-
----
-## gate
-`bool default = True`
-
-if False process is skipped
-
----
-## comment
-`str default = ""`
-used for logging
-
----
-## config_inputs
-`List[I] default = []`
-Dot notation config inputs
-
----
-## parameters_inputs
-`List[I] default = []`
-
----
-## external_state_inputs
-`List[I] default = []`
-
----
-## additional_inputs
-`List[tuple] default = []`
-
----
-## state_inputs
-`List[I] default = []`
-
----
-## state_outputs
-`List[I] default = []`
-
----
-## args
-`List[any] default = []`
-
----
-additional args
-
-
-# Analysis Of Processes
-In the experiments directory are some example of using the analysis tools
-
-## Link state and processes
-<img src="experiments/data_flow.png"
-     alt="Data flow diagram"
-     height=800 width=600 />
+proFlow is distributed under the terms of the [MIT License](./LICENSE).

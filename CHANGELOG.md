@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-11-03
+
+- Date: 2026-11-03
+- Summary: Restructure the README as user-focused Python library documentation.
+- Added:
+  - A feature overview, installation instructions, and an end-to-end quick start.
+  - Guidance on process inputs, outputs, state updates, API entry points, and development.
+- Changed:
+  - Reorganized the README into standard library documentation sections and replaced the
+    outdated runner example.
+- Fixed:
+  - None.
+- Docs:
+  - Updated README.md to align examples and package requirements with the current API.
+- Tests:
+  - Not applicable; documentation-only change.
+- Lint/Format:
+  - Ruff checks run; not applicable to Markdown formatting.
+- Credits: Copilot SDK in VS Code.
+
 ## 2026-11-02
 
 - Date: 2026-11-02
