@@ -12,7 +12,7 @@ git add pyproject.toml
 git add uv.lock
 
 VERSION=$(python -c 'import proflow.version as v; print(v.version)')
-git commit -m "Update lock file"
+git commit -m "Updated to version $VERSION"
 echo "Updated to version $VERSION"
 
 # create tag for new version
