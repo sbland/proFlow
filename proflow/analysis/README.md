@@ -122,6 +122,21 @@ though an `Edge` record's `source` field identifies the consumer and its
 (`target == -1`) are omitted from the exported graph. The function returns
 the same node-link data it writes.
 
+## Explore a network in the web view
+
+The optional Flask web view displays the process network as an interactive
+force-directed graph. Install Flask if needed, then run it from the project root:
+
+```bash
+python -m pip install flask
+python -m proflow.analysis.webview.run_app
+```
+
+Open the printed local URL and use the **Search nodes** field to match node IDs,
+function names, or process descriptions without regard to case. The graph hides
+nonmatching nodes and links that connect to hidden nodes; clearing the search
+restores the full network.
+
 ## Dependencies
 
 The canvas workflow requires `ipycanvas`. JSON export requires `networkx`.

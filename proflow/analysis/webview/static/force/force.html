@@ -14,7 +14,18 @@
     <link type="text/css" rel="stylesheet" href="force/force.css"/>
   </head>
   <body>
-    <svg width="1280" height="1080"></svg>
+    <aside class="control-panel" aria-labelledby="control-panel-title">
+      <h1 id="control-panel-title">Node filter</h1>
+      <label for="node-filter">Search nodes</label>
+      <input
+        id="node-filter"
+        type="search"
+        placeholder="Search by name, description, or ID"
+        autocomplete="off"
+      />
+      <p id="filter-summary" aria-live="polite">Loading nodes...</p>
+    </aside>
+    <svg width="1280" height="1080" role="img" aria-label="Process network graph"></svg>
     <script type="text/javascript" src="force/force.js"></script>
   </body>
 </html>

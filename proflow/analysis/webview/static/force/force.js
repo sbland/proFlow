@@ -96,7 +96,12 @@ var svg = d3.select("svg"),
     height = +svg.attr("height"),
     node,
     link,
-    pathInvis;
+    pathInvis,
+    pathLabel;
+
+var nodeFilter = d3.select("#node-filter"),
+    filterSummary = d3.select("#filter-summary"),
+    totalNodeCount = 0;
 
 svg.append('defs')
     .append('marker')
@@ -132,6 +137,8 @@ d3.json("/data", function (error, graph) {
 });
 
 function update(links, nodes) {
+    totalNodeCount = nodes.length;
+
     link = svg.selectAll(".link")
         .data(links)
         .enter()
@@ -153,7 +160,7 @@ function update(links, nodes) {
         })
         .attr("class", "pathInvis")
 
-    var pathLabel = svg.selectAll(".pathLabel")
+    pathLabel = svg.selectAll(".pathLabel")
         .data(links)
         .enter()
         // .append("g")
@@ -196,6 +203,42 @@ function update(links, nodes) {
 
     simulation.force("link")
         .links(links);
+
+    nodeFilter.on("input", applyNodeFilter);
+    applyNodeFilter();
+}
+
+/**
+ * Show nodes matching the search and only links between visible nodes.
+ */
+function applyNodeFilter() {
+    var query = nodeFilter.property("value").trim().toLowerCase();
+    var visibleIds = new Set();
+
+    node.each(function (d) {
+        var matches = !query ||
+            [d.id, d.name, d.text].join(" ").toLowerCase().includes(query);
+        if (matches) {
+            visibleIds.add(d.id);
+        }
+        d3.select(this).style("display", matches ? null : "none");
+    });
+
+    /** Return whether both endpoints are currently visible. */
+    function linkIsVisible(d) {
+        return visibleIds.has(d.source.id) && visibleIds.has(d.target.id);
+    }
+
+    link.style("display", function (d) {
+        return linkIsVisible(d) ? null : "none";
+    });
+    pathInvis.style("display", function (d) {
+        return linkIsVisible(d) ? null : "none";
+    });
+    pathLabel.style("display", function (d) {
+        return linkIsVisible(d) ? null : "none";
+    });
+    filterSummary.text(visibleIds.size + " of " + totalNodeCount + " nodes shown");
 }
 
 
