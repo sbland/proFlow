@@ -6,7 +6,7 @@ authors = [{ "name" = "Sam Bland" }]
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "data-helpers-v2>=0.2.1",
+    "data-helpers>=0.2.1",
     "dill>=0.4.1",
     "numpy>=1.18.3",
 ]
