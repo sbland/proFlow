@@ -72,8 +72,7 @@ inputs and outputs connect to the surrounding data:
   `I(value, as_="argument_name")` entries; the `as_` value becomes the
   corresponding keyword argument to the function.
 - **Outputs** are provided by `state_outputs`. The callable receives the
-  function result and returns `(value, "target.path")` pairs to write into
-  state.
+  function result and returns `(value, "target.path")` pairs to write int state.
 - **Other input sources** include `config_inputs`, `parameters_inputs`,
   `external_state_inputs`, and `additional_inputs`.
 - **Process options** include `gate` to skip a process, `comment` and `group`
@@ -114,3 +113,11 @@ ruff format . --check
 ## License
 
 proFlow is distributed under the terms of the [MIT License](./LICENSE).
+
+## Build and Publish
+
+The publish workflow builds the distributions and publishes them to PyPI using trusted publishing.
+
+Use `build_and_deploy.sh patch|minor|major` to bump the version and trigger the publish workflow.
+
+Configure a PyPI trusted publisher for this GitHub repository with workflow filename `publish.yml` and environment `pypi` before pushing the tag. No PyPI API token is needed.
