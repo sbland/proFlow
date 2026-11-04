@@ -3,6 +3,25 @@
 ## 2026-11-04
 
 - Date: 2026-11-04
+- Summary: Render web-view links as perpendicular Bézier curves.
+- Added:
+  - Cubic Bézier paths for process-network links.
+- Changed:
+  - Box links leave the source's right edge and meet the target's left edge
+    horizontally.
+- Fixed:
+  - Link paths no longer meet box edges at an angle.
+- Docs:
+  - Documented perpendicular Bézier links in the process analysis guide.
+- Tests:
+  - Verified rendered box-link endpoints and horizontal endpoint tangents in the browser.
+- Lint/Format:
+  - Not applicable to JavaScript and Markdown changes.
+- Credits: Copilot SDK in VS Code.
+
+## 2026-11-04
+
+- Date: 2026-11-04
 - Summary: Keep node labels visible above their shapes in the web view.
 - Added:
   - None.

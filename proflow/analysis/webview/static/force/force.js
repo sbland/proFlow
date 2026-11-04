@@ -92,34 +92,47 @@ function nodeBoundaryPoints(d) {
     };
 }
 
-function arcPath(leftHand, d) {
-    // var isOddLink = d.linkindex % 2 === 0;
+/**
+ * Build a Bézier link with endpoint tangents matching the selected node shape.
+ * @param {boolean} leftHand Whether to draw from the source toward the target.
+ * @param {Object} d The graph link datum containing source and target nodes.
+ * @returns {string} SVG path data for the link.
+ */
+function bezierPath(leftHand, d) {
     var endpoints = nodeBoundaryPoints(d),
-        x1 = (leftHand) ? endpoints.source.x : endpoints.target.x,
-        y1 = (leftHand) ? endpoints.source.y : endpoints.target.y,
-        x2 = (leftHand) ? endpoints.target.x : endpoints.source.x,
-        y2 = (leftHand) ? endpoints.target.y : endpoints.source.y,
-        dx = x2 - x1,
-        dy = y2 - y1,
-        dr = Math.sqrt(dx * dx + dy * dy);
+        start = leftHand ? endpoints.source : endpoints.target,
+        end = leftHand ? endpoints.target : endpoints.source,
+        startNode = leftHand ? d.source : d.target,
+        endNode = leftHand ? d.target : d.source,
+        dx = endNode.x - startNode.x,
+        dy = endNode.y - startNode.y,
+        distance = Math.sqrt(dx * dx + dy * dy) || 1,
+        controlDistance = Math.max(NODE_WIDTH / 2, Math.abs(dx) / 2) +
+            (d.linkindex - 1) * 12,
+        control1,
+        control2;
 
-    var sweep = (leftHand) ? 0 : 1;
-
-    xRotation = 0,
-        largeArc = 0;
-
-    var dx = d.target.x - d.source.x,
-        dy = d.target.y - d.source.y,
-        dr = Math.sqrt(dx * dx + dy * dy);
-
-    // get the total link numbers between source and target node
-    var siblingCount = mLinkNum[d.source.id + "," + d.target.id] || mLinkNum[d.target.id + "," + d.source.id];
-    if (siblingCount > 1) {
-        // if there are multiple links between these two nodes, we need generate different dr for each path
-        dr = dr / (1 + (1 / (siblingCount)) * (d.linkindex - 1 - sweep));
+    if (currentNodeShape === "box") {
+        var direction = leftHand ? 1 : -1;
+        control1 = { x: start.x + direction * controlDistance, y: start.y };
+        control2 = { x: end.x - direction * controlDistance, y: end.y };
+    } else {
+        var unitX = dx / distance,
+            unitY = dy / distance;
+        control1 = {
+            x: start.x + unitX * controlDistance,
+            y: start.y + unitY * controlDistance
+        };
+        control2 = {
+            x: end.x - unitX * controlDistance,
+            y: end.y - unitY * controlDistance
+        };
     }
 
-    return "M" + x1 + "," + y1 + "A" + dr + ", " + dr + " " + xRotation + ", " + largeArc + ", " + sweep + " " + x2 + "," + y2;
+    return "M" + start.x + "," + start.y +
+        "C" + control1.x + "," + control1.y +
+        " " + control2.x + "," + control2.y +
+        " " + end.x + "," + end.y;
 }
 
 var colors = d3.scaleOrdinal(d3.schemeCategory10);
@@ -305,11 +318,11 @@ function applyNodeFilter() {
 
 function ticked() {
     link.attr("d", function (d) {
-        return arcPath(true, d);
+        return bezierPath(true, d);
     });
 
     pathInvis.attr("d", function (d) {
-        return arcPath(d.source.x < d.target.x, d);
+        return bezierPath(d.source.x < d.target.x, d);
     });
 
     node.attr("transform", function (d) { return "translate(" + d.x + ", " + d.y + ")"; });

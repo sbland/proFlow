@@ -137,8 +137,8 @@ function names, or process descriptions without regard to case. The graph hides
 nonmatching nodes and links that connect to hidden nodes; clearing the search
 restores the full network. Use **Node shape** to switch between labeled boxes
 (the default) and dots. In box mode, incoming links connect to the left edge
-and outgoing links leave the right edge. Node labels remain visible in both
-modes.
+and outgoing links leave the right edge, with cubic Bézier curves that leave
+and meet the boxes perpendicularly. Node labels remain visible in both modes.
 
 ## Dependencies
 
