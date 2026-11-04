@@ -56,6 +56,34 @@ svg {
     border: 0;
 }
 
+.zoom-controls {
+    margin: 14px 0 0;
+    padding: 0;
+    border: 0;
+}
+
+.zoom-controls legend {
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.zoom-control-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.zoom-control-buttons button {
+    flex: 1;
+    padding: 6px 8px;
+    border: 1px solid #aeb5bd;
+    border-radius: 4px;
+    background: #f8fafc;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+}
+
 .force-options {
     margin: 14px 0 0;
     padding: 0;
@@ -103,7 +131,8 @@ svg {
     padding: 0;
 }
 
-.control-panel input:focus-visible {
+.control-panel input:focus-visible,
+.control-panel button:focus-visible {
     outline: 2px solid #2563eb;
     outline-offset: 2px;
 }

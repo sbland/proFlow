@@ -140,6 +140,8 @@ var colors = d3.scaleOrdinal(d3.schemeCategory10);
 var svg = d3.select("svg"),
     width = +svg.attr("width"),
     height = +svg.attr("height"),
+    graph,
+    zoom,
     node,
     link,
     pathInvis,
@@ -169,6 +171,21 @@ svg.append('defs')
     .attr('fill', '#999')
     .style('stroke', 'none');
 
+graph = svg.append("g").attr("class", "graph-content");
+zoom = d3.zoom()
+    .scaleExtent([0.2, 4])
+    .filter(function () {
+        var event = d3.event,
+            startsNodeDrag = (event.type === "mousedown" || event.type === "touchstart") &&
+                event.target.closest(".node");
+        return !event.button && (!event.ctrlKey || event.type === "wheel") && !startsNodeDrag;
+    })
+    .on("zoom", zoomed);
+svg.call(zoom);
+
+d3.select("#zoom-in").on("click", function () { zoomBy(1.2); });
+d3.select("#zoom-out").on("click", function () { zoomBy(1 / 1.2); });
+d3.select("#zoom-reset").on("click", resetZoom);
 
 var simulation = d3.forceSimulation()
     .force("link", d3.forceLink().id(function (d) { return d.id; }).distance(500).strength(0.5))
@@ -188,7 +205,7 @@ d3.json("/data", function (error, graph) {
 function update(links, nodes) {
     totalNodeCount = nodes.length;
 
-    link = svg.selectAll(".link")
+    link = graph.selectAll(".link")
         .data(links)
         .enter()
         // .append("line")
@@ -199,7 +216,7 @@ function update(links, nodes) {
     link.append("title")
         .text(function (d) { return d.name; });
 
-    pathInvis = svg.selectAll(".pathInvis")
+    pathInvis = graph.selectAll(".pathInvis")
         .data(links)
         .enter()
         // .append("line")
@@ -209,7 +226,7 @@ function update(links, nodes) {
         })
         .attr("class", "pathInvis")
 
-    pathLabel = svg.selectAll(".pathLabel")
+    pathLabel = graph.selectAll(".pathLabel")
         .data(links)
         .enter()
         // .append("g")
@@ -224,7 +241,7 @@ function update(links, nodes) {
         .style("fill", "#cccccc")
         .style("font-size", 10)
         .text(function (d) { return d.name; });
-    node = svg.selectAll(".node")
+    node = graph.selectAll(".node")
         .data(nodes)
         .enter()
         .append("g")
@@ -253,6 +270,21 @@ function update(links, nodes) {
     nodeFilter.on("input", applyNodeFilter);
     applyNodeFilter();
     forceControl.on("change", toggleForces);
+}
+
+/** Apply D3's current zoom transform to all graph elements together. */
+function zoomed() {
+    graph.attr("transform", d3.event.transform);
+}
+
+/** Adjust zoom from a control button while keeping the viewport center fixed. */
+function zoomBy(factor) {
+    svg.call(zoom.scaleBy, factor);
+}
+
+/** Restore the graph's original, unzoomed view. */
+function resetZoom() {
+    svg.call(zoom.transform, d3.zoomIdentity);
 }
 
 /** Render the selected node shape and redraw links to match its boundaries. */

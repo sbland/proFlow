@@ -3,6 +3,26 @@
 ## 2026-11-04
 
 - Date: 2026-11-04
+- Summary: Add zooming and panning to the analysis web view.
+- Added:
+  - Mouse/touch zoom, canvas panning, and accessible zoom-in, zoom-out, and
+    reset buttons.
+- Changed:
+  - Graph elements share a transformed SVG group while controls stay fixed.
+- Fixed:
+  - None.
+- Docs:
+  - Documented graph navigation controls and gestures in the analysis guide.
+- Tests:
+  - Browser-verified button and wheel zoom, zoom bounds, reset, canvas panning,
+    and stationary controls.
+- Lint/Format:
+  - Not applicable to JavaScript, CSS, and Markdown changes.
+- Credits: Copilot SDK in VS Code.
+
+## 2026-11-04
+
+- Date: 2026-11-04
 - Summary: Add a control-panel toggle for the graph forces.
 - Added:
   - An accessible checkbox to pause and resume the force-directed layout.

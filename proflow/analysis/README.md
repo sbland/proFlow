@@ -138,6 +138,11 @@ nonmatching nodes and links that connect to hidden nodes; clearing the search
 restores the full network. Use **Enable forces** to pause or resume the
 force-directed layout, and **Node shape** to switch between labeled boxes (the
 default) and dots. Dragging nodes remains available while forces are paused.
+Use the mouse wheel or a touch gesture to zoom, and drag empty canvas to pan.
+The **Zoom in**, **Zoom out**, and **Reset** buttons provide equivalent controls;
+reset returns to the original view. Zoom is bounded so the graph cannot become
+arbitrarily small or large. Panning and zooming do not interfere with dragging
+nodes.
 In box mode, incoming links connect to the left edge and outgoing links leave
 the right edge, with cubic Bézier curves that leave and meet the boxes
 perpendicularly. Node labels remain visible in both modes.
