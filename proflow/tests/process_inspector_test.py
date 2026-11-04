@@ -19,29 +19,7 @@ from proflow.process_inspector import (
     reset_id,
     strip_out_comments,
 )
-
-
-def DEMO_FUNC(x, y, z):
-    return x + y + z
-
-
-DEMO_PROCESS = Process(
-    func=DEMO_FUNC,
-    comment="This is the process comment",
-    gate=True,
-    config_inputs=lambda config: [
-        I(config.a, as_="x"),
-    ],
-    state_inputs=lambda state: [
-        I(state.a, as_="y"),
-    ],
-    additional_inputs=lambda: [
-        I(10, as_="z"),
-    ],
-    state_outputs=lambda result: [
-        (result, "x"),
-    ],
-)
+from proflow.tests.mock_data import DEMO_PROCESS
 
 
 @pytest.fixture(autouse=True)
@@ -51,11 +29,6 @@ def clear_id():
 
 def test_inspect_process():
     process_inputs = inspect_process(DEMO_PROCESS)
-    # assert process_inputs.additional_inputs == {\"10\": \"z\"}
-    # assert process_inputs.config_inputs == {\"config.a\": \"x\"}
-    # assert process_inputs.parameter_inputs == {\"state.a\": \"y\"}
-    # assert process_inputs.state_inputs == {\"state.a\": \"y\"}
-    # assert process_inputs.state_outputs == {\"result\": \"state.x\"}
     assert process_inputs.additional_inputs == {"z": "10"}
     assert process_inputs.config_inputs == {"x": "config.a"}
     assert process_inputs.parameter_inputs == {"y": "state.a"}
