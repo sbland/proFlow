@@ -1,5 +1,62 @@
 # Changelog
 
+## 2026-11-04
+
+- Date: 2026-11-04
+- Summary: Keep node labels visible above their shapes in the web view.
+- Added:
+  - None.
+- Changed:
+  - Node shapes are inserted before labels in SVG rendering order.
+- Fixed:
+  - Rectangle nodes no longer cover their labels.
+- Docs:
+  - Clarified that labels remain visible in both node-shape modes.
+- Tests:
+  - Verified node SVG stacking and visible labels in the browser.
+- Lint/Format:
+  - Not applicable to JavaScript and Markdown changes.
+- Credits: Copilot SDK in VS Code.
+
+## 2026-11-03
+
+- Date: 2026-11-03
+- Summary: Add a control-panel switch for box and dot graph nodes.
+- Added:
+  - Accessible radio controls for selecting the node shape.
+- Changed:
+  - The graph redraws node shapes, labels, and link endpoints when the selection
+    changes.
+- Fixed:
+  - None.
+- Docs:
+  - Documented the node-shape switch in the process analysis guide.
+- Tests:
+  - Verified switching between boxes and dots, plus their link endpoints, in
+    the browser.
+- Lint/Format:
+  - Not applicable to JavaScript, CSS, and Markdown changes.
+- Credits: Copilot SDK in VS Code.
+
+## 2026-11-03
+
+- Date: 2026-11-03
+- Summary: Render web-view process nodes as boxes with directional edge ports.
+- Added:
+  - Rectangular process nodes with centered labels.
+- Changed:
+  - Incoming links connect to the left side of a node and outgoing links leave
+    from its right side.
+- Fixed:
+  - None.
+- Docs:
+  - Documented the box and edge direction in the process analysis guide.
+- Tests:
+  - Verified rendered node shapes and directional link endpoints in the browser.
+- Lint/Format:
+  - Not applicable to JavaScript, CSS, and Markdown changes.
+- Credits: Copilot SDK in VS Code.
+
 ## 2026-11-03
 
 - Date: 2026-11-03

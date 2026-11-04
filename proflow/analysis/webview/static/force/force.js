@@ -7,6 +7,10 @@ https://bl.ocks.org/mattkohl/146d301c0fc20d89d85880df537de7b0
 http://bl.ocks.org/fancellu/2c782394602a93921faff74e594d1bb1
 */
 
+var NODE_WIDTH = 180,
+    NODE_HEIGHT = 48,
+    NODE_DOT_RADIUS = 5,
+    currentNodeShape = "box";
 
 function sortLinks(lks) {
     lks.sort(function (a, b) {
@@ -60,12 +64,41 @@ var getSiblingLinks = function (source, target) {
     };
     return siblings;
 };
+/**
+ * Get source and target edge coordinates for the currently selected node shape.
+ */
+function nodeBoundaryPoints(d) {
+    var dx = d.target.x - d.source.x,
+        dy = d.target.y - d.source.y,
+        distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (currentNodeShape === "dot") {
+        var offset = distance ? NODE_DOT_RADIUS / distance : 0;
+        return {
+            source: {
+                x: d.source.x + dx * offset,
+                y: d.source.y + dy * offset
+            },
+            target: {
+                x: d.target.x - dx * offset,
+                y: d.target.y - dy * offset
+            }
+        };
+    }
+
+    return {
+        source: { x: d.source.x + NODE_WIDTH / 2, y: d.source.y },
+        target: { x: d.target.x - NODE_WIDTH / 2, y: d.target.y }
+    };
+}
+
 function arcPath(leftHand, d) {
     // var isOddLink = d.linkindex % 2 === 0;
-    var x1 = (leftHand) ? d.source.x : d.target.x,
-        y1 = (leftHand) ? d.source.y : d.target.y,
-        x2 = (leftHand) ? d.target.x : d.source.x,
-        y2 = (leftHand) ? d.target.y : d.source.y,
+    var endpoints = nodeBoundaryPoints(d),
+        x1 = (leftHand) ? endpoints.source.x : endpoints.target.x,
+        y1 = (leftHand) ? endpoints.source.y : endpoints.target.y,
+        x2 = (leftHand) ? endpoints.target.x : endpoints.source.x,
+        y2 = (leftHand) ? endpoints.target.y : endpoints.source.y,
         dx = x2 - x1,
         dy = y2 - y1,
         dr = Math.sqrt(dx * dx + dy * dy);
@@ -100,6 +133,7 @@ var svg = d3.select("svg"),
     pathLabel;
 
 var nodeFilter = d3.select("#node-filter"),
+    nodeShapeControl = d3.selectAll('input[name="node-shape"]'),
     filterSummary = d3.select("#filter-summary"),
     totalNodeCount = 0;
 
@@ -186,15 +220,10 @@ function update(links, nodes) {
             //.on("end", dragended)
         );
 
-    node.append("circle")
-        .attr("r", 5)
-        .style("fill", function (d, i) { return colors(i); })
-
     node.append("title")
         .text(function (d) { return d.id; });
 
     node.append("text")
-        .attr("dy", -3)
         .text(function (d) { return d.name + ":" + d.text; });
 
     simulation
@@ -204,8 +233,40 @@ function update(links, nodes) {
     simulation.force("link")
         .links(links);
 
+    nodeShapeControl.on("change", renderNodeShape);
+    renderNodeShape();
     nodeFilter.on("input", applyNodeFilter);
     applyNodeFilter();
+}
+
+/** Render the selected node shape and redraw links to match its boundaries. */
+function renderNodeShape() {
+    currentNodeShape = nodeShapeControl
+        .filter(function () { return this.checked; })
+        .property("value");
+    node.selectAll(".node-shape").remove();
+
+    if (currentNodeShape === "box") {
+        node.insert("rect", "title")
+            .attr("class", "node-shape")
+            .attr("x", -NODE_WIDTH / 2)
+            .attr("y", -NODE_HEIGHT / 2)
+            .attr("width", NODE_WIDTH)
+            .attr("height", NODE_HEIGHT)
+            .attr("rx", 4)
+            .style("fill", function (d, i) { return colors(i); });
+    } else {
+        node.insert("circle", "title")
+            .attr("class", "node-shape")
+            .attr("r", NODE_DOT_RADIUS)
+            .style("fill", function (d, i) { return colors(i); });
+    }
+
+    node.select("text")
+        .attr("x", currentNodeShape === "box" ? 0 : NODE_DOT_RADIUS + 4)
+        .attr("dy", currentNodeShape === "box" ? 4 : -3)
+        .attr("text-anchor", currentNodeShape === "box" ? "middle" : "start");
+    ticked();
 }
 
 /**

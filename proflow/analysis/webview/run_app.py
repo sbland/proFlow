@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 import flask
@@ -6,7 +7,7 @@ import flask
 WEBVIEW_STATIC_FOLDER = Path(__file__).resolve().parent / "static"
 
 
-def run(port=8000, datalocation="force/data.json"):
+def run(port=8000, datalocation=f"{WEBVIEW_STATIC_FOLDER}/force/data.json"):
     app = flask.Flask(__name__, static_folder=WEBVIEW_STATIC_FOLDER)
 
     @app.route("/")
@@ -19,6 +20,11 @@ def run(port=8000, datalocation="force/data.json"):
 
     @app.route("/data")
     def data_file():
+        if not Path(datalocation).exists():
+            print(f"Data file not found at {datalocation}")
+            print(os.getcwd())
+            print(os.listdir(os.getcwd()))
+            return flask.jsonify({"error": "Data file not found"}), 404
         with open(datalocation) as f:
             data = json.load(f)
         return flask.jsonify(data)

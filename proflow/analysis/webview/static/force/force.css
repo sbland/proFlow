@@ -41,13 +41,39 @@ svg {
     font-weight: 600;
 }
 
-.control-panel input {
+.control-panel input[type="search"] {
     box-sizing: border-box;
     width: 100%;
     padding: 9px 10px;
     border: 1px solid #aeb5bd;
     border-radius: 4px;
     font: inherit;
+}
+
+.node-style-options {
+    margin: 14px 0 0;
+    padding: 0;
+    border: 0;
+}
+
+.node-style-options legend {
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.node-style-options label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 12px 0 0;
+    font-weight: normal;
+}
+
+.node-style-options input[type="radio"] {
+    width: auto;
+    margin: 0;
+    padding: 0;
 }
 
 .control-panel input:focus-visible {
@@ -61,11 +87,21 @@ svg {
     font-size: 12px;
 }
 
-.nodes circle {
+.node rect {
     cursor: pointer;
-    fill: #3ace15;
     stroke: #000;
     stroke-width: .5px;
+}
+
+.node circle {
+    cursor: pointer;
+    stroke: #000;
+    stroke-width: .5px;
+}
+
+.node text {
+    font-size: 12px;
+    pointer-events: none;
 }
 
 .links line{
