@@ -147,6 +147,8 @@ var svg = d3.select("svg"),
 
 var nodeFilter = d3.select("#node-filter"),
     nodeShapeControl = d3.selectAll('input[name="node-shape"]'),
+    forceControl = d3.select("#forces-toggle"),
+    forcesEnabled = forceControl.property("checked"),
     filterSummary = d3.select("#filter-summary"),
     totalNodeCount = 0;
 
@@ -250,9 +252,20 @@ function update(links, nodes) {
     renderNodeShape();
     nodeFilter.on("input", applyNodeFilter);
     applyNodeFilter();
+    forceControl.on("change", toggleForces);
 }
 
 /** Render the selected node shape and redraw links to match its boundaries. */
+/** Start or stop the graph layout simulation based on the force control. */
+function toggleForces() {
+    forcesEnabled = this.checked;
+    if (forcesEnabled) {
+        simulation.alpha(1).restart();
+    } else {
+        simulation.stop();
+    }
+}
+
 function renderNodeShape() {
     currentNodeShape = nodeShapeControl
         .filter(function () { return this.checked; })
@@ -328,13 +341,20 @@ function ticked() {
     node.attr("transform", function (d) { return "translate(" + d.x + ", " + d.y + ")"; });
 }
 
+/** Pin a node when dragging, restarting the layout only when forces are enabled. */
 function dragstarted(d) {
-    if (!d3.event.active) simulation.alphaTarget(0.02).restart()
+    if (forcesEnabled && !d3.event.active) simulation.alphaTarget(0.02).restart()
     d.fx = d.x;
     d.fy = d.y;
 }
 
+/** Move a dragged node directly when the layout simulation is paused. */
 function dragged(d) {
     d.fx = d3.event.x;
     d.fy = d3.event.y;
+    if (!forcesEnabled) {
+        d.x = d.fx;
+        d.y = d.fy;
+        ticked();
+    }
 }

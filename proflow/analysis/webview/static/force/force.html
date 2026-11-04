@@ -15,7 +15,7 @@
   </head>
   <body>
     <aside class="control-panel" aria-labelledby="control-panel-title">
-      <h1 id="control-panel-title">Node filter</h1>
+      <h1 id="control-panel-title">Graph controls</h1>
       <label for="node-filter">Search nodes</label>
       <input
         id="node-filter"
@@ -23,6 +23,13 @@
         placeholder="Search by name, description, or ID"
         autocomplete="off"
       />
+      <fieldset class="force-options">
+        <legend>Graph layout</legend>
+        <label>
+          <input id="forces-toggle" type="checkbox" checked />
+          Enable forces
+        </label>
+      </fieldset>
       <fieldset class="node-style-options">
         <legend>Node shape</legend>
         <label>

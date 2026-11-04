@@ -3,6 +3,26 @@
 ## 2026-11-04
 
 - Date: 2026-11-04
+- Summary: Add a control-panel toggle for the graph forces.
+- Added:
+  - An accessible checkbox to pause and resume the force-directed layout.
+- Changed:
+  - The control-panel heading now describes the graph controls.
+  - Dragging nodes while forces are off moves them without restarting the
+    simulation.
+- Fixed:
+  - None.
+- Docs:
+  - Documented the force toggle in the process analysis guide.
+- Tests:
+  - Verified force simulation pause/resume and node dragging in the browser.
+- Lint/Format:
+  - Passed the configured pre-commit checks.
+- Credits: Copilot SDK in VS Code.
+
+## 2026-11-04
+
+- Date: 2026-11-04
 - Summary: Render web-view links as perpendicular Bézier curves.
 - Added:
   - Cubic Bézier paths for process-network links.

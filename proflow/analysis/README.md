@@ -135,10 +135,12 @@ python -m proflow.analysis.webview.run_app
 Open the printed local URL and use the **Search nodes** field to match node IDs,
 function names, or process descriptions without regard to case. The graph hides
 nonmatching nodes and links that connect to hidden nodes; clearing the search
-restores the full network. Use **Node shape** to switch between labeled boxes
-(the default) and dots. In box mode, incoming links connect to the left edge
-and outgoing links leave the right edge, with cubic Bézier curves that leave
-and meet the boxes perpendicularly. Node labels remain visible in both modes.
+restores the full network. Use **Enable forces** to pause or resume the
+force-directed layout, and **Node shape** to switch between labeled boxes (the
+default) and dots. Dragging nodes remains available while forces are paused.
+In box mode, incoming links connect to the left edge and outgoing links leave
+the right edge, with cubic Bézier curves that leave and meet the boxes
+perpendicularly. Node labels remain visible in both modes.
 
 ## Dependencies
 
