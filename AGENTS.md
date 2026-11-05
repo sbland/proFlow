@@ -76,3 +76,8 @@ When responding, explicitly confirm completion of each requirement.
 ## Testing
 
 - Use `.venv/bin/python -m pytest` for running all tests in the project.
+
+## Webview specific instructions
+
+- Use nvm to manage Node.js versions for the webview project.
+- Use pnpm to manage project dependencies for the webview project.

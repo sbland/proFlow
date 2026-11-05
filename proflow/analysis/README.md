@@ -149,7 +149,8 @@ perpendicularly. Node labels remain visible in both modes.
 
 ### Develop the webview frontend
 
-The frontend is a private Node ES-module package in [`webview`](../../webview).
+The frontend is a private Node ES-module package in
+[`proflow_webview`](../../proflow_webview).
 It uses TypeScript for strict type checking, Vite to build, Vitest for unit
 tests, and Playwright for browser tests. The Python package serves the compiled
 assets and provides graph data at `/data`; Node is needed only to develop and
@@ -158,7 +159,7 @@ build the frontend, not to run an installed Python package.
 Use Node 22 or newer and install frontend dependencies from the repository root:
 
 ```bash
-npm ci --prefix webview
+pnpm --dir proflow_webview install --frozen-lockfile
 ```
 
 For frontend development, start the Flask server in one terminal and Vite in
@@ -167,25 +168,25 @@ another. Vite proxies `/data` to the Flask server on port 8000:
 ```bash
 uv sync --locked --group web
 uv run --locked python -m proflow.analysis.webview.run_app
-npm --prefix webview run dev
+pnpm --dir proflow_webview dev
 ```
 
 Run the frontend checks and build compiled assets for the Flask server:
 
 ```bash
-npm --prefix webview run typecheck
-npm --prefix webview run lint
-npm --prefix webview run format:check
-npm --prefix webview test
-npm --prefix webview run build
+pnpm --dir proflow_webview typecheck
+pnpm --dir proflow_webview lint
+pnpm --dir proflow_webview format:check
+pnpm --dir proflow_webview test
+pnpm --dir proflow_webview build
 ```
 
 The build output is stored in
 `proflow/analysis/webview/static/force/frontend-dist` and included in Python
 source and binary distributions. The Playwright suite starts the Flask server
 automatically; install Chromium first with
-`npm --prefix webview run playwright:install`, then run
-`npm --prefix webview run test:e2e`. Python route tests are included in the
+`pnpm --dir proflow_webview playwright:install`, then run
+`pnpm --dir proflow_webview test:e2e`. Python route tests are included in the
 project pytest suite.
 
 ## Dependencies
