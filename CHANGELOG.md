@@ -1,5 +1,188 @@
 # Changelog
 
+## 2026-11-05
+
+- Date: 2026-11-05
+- Summary: Restore graph zoom and pan controls in the relocated webview frontend.
+- Added:
+  - Mouse/touch zoom, canvas panning, bounded zoom controls, and a reset button.
+- Changed:
+  - Graph content shares an SVG transform while controls remain fixed and node
+    dragging continues to work when zoomed.
+- Fixed:
+  - Restored navigation behavior lost during the frontend directory refactor.
+- Docs:
+  - Documented navigation controls
+- Tests:
+  - Frontend typecheck, unit tests, and zoom/pan browser coverage passed.
+- Lint/Format:
+  - Passed ESLint and Prettier checks.
+- Credits: Copilot SDK in VS Code.
+
+## 2026-11-04
+
+- Date: 2026-11-04
+- Summary: Isolate the process graph webview in a compiled Node package.
+- Added:
+  - A private TypeScript/Vite ES-module frontend package with a locked npm
+    dependency tree.
+  - Vitest unit tests, Playwright browser tests, and Flask route/distribution
+    tests.
+- Changed:
+  - The Flask host now serves compiled frontend assets while continuing to
+    provide graph data through `/data`.
+  - CI runs frontend checks and verifies compiled assets in Python
+    distributions.
+- Fixed:
+  - Frontend graph requests and invalid graph responses now surface accessible
+    errors instead of failing silently.
+- Docs:
+  - Documented frontend development, tests, build output, and Python runtime
+    boundaries.
+- Tests:
+  - 123 Python tests passed and 7 were skipped; 9 Vitest unit tests and 3
+    Playwright browser tests passed.
+  - Verified compiled frontend assets are present in both wheel and source
+    distributions.
+- Lint/Format:
+  - Passed ESLint, Prettier, Ruff lint, and Ruff formatting checks.
+- Credits: Copilot SDK in VS Code.
+
+## 2026-11-04
+
+- Date: 2026-11-04
+- Summary: Add zooming and panning to the analysis web view.
+- Added:
+  - Mouse/touch zoom, canvas panning, and accessible zoom-in, zoom-out, and
+    reset buttons.
+- Changed:
+  - Graph elements share a transformed SVG group while controls stay fixed.
+- Fixed:
+  - None.
+- Docs:
+  - Documented graph navigation controls and gestures in the analysis guide.
+- Tests:
+  - Browser-verified button and wheel zoom, zoom bounds, reset, canvas panning,
+    and stationary controls.
+- Lint/Format:
+  - Not applicable to JavaScript, CSS, and Markdown changes.
+- Credits: Copilot SDK in VS Code.
+
+## 2026-11-04
+
+- Date: 2026-11-04
+- Summary: Add a control-panel toggle for the graph forces.
+- Added:
+  - An accessible checkbox to pause and resume the force-directed layout.
+- Changed:
+  - The control-panel heading now describes the graph controls.
+  - Dragging nodes while forces are off moves them without restarting the
+    simulation.
+- Fixed:
+  - None.
+- Docs:
+  - Documented the force toggle in the process analysis guide.
+- Tests:
+  - Verified force simulation pause/resume and node dragging in the browser.
+- Lint/Format:
+  - Passed the configured pre-commit checks.
+- Credits: Copilot SDK in VS Code.
+
+## 2026-11-04
+
+- Date: 2026-11-04
+- Summary: Render web-view links as perpendicular Bézier curves.
+- Added:
+  - Cubic Bézier paths for process-network links.
+- Changed:
+  - Box links leave the source's right edge and meet the target's left edge
+    horizontally.
+- Fixed:
+  - Link paths no longer meet box edges at an angle.
+- Docs:
+  - Documented perpendicular Bézier links in the process analysis guide.
+- Tests:
+  - Verified rendered box-link endpoints and horizontal endpoint tangents in the browser.
+- Lint/Format:
+  - Not applicable to JavaScript and Markdown changes.
+- Credits: Copilot SDK in VS Code.
+
+## 2026-11-04
+
+- Date: 2026-11-04
+- Summary: Keep node labels visible above their shapes in the web view.
+- Added:
+  - None.
+- Changed:
+  - Node shapes are inserted before labels in SVG rendering order.
+- Fixed:
+  - Rectangle nodes no longer cover their labels.
+- Docs:
+  - Clarified that labels remain visible in both node-shape modes.
+- Tests:
+  - Verified node SVG stacking and visible labels in the browser.
+- Lint/Format:
+  - Not applicable to JavaScript and Markdown changes.
+- Credits: Copilot SDK in VS Code.
+
+## 2026-11-03
+
+- Date: 2026-11-03
+- Summary: Add a control-panel switch for box and dot graph nodes.
+- Added:
+  - Accessible radio controls for selecting the node shape.
+- Changed:
+  - The graph redraws node shapes, labels, and link endpoints when the selection
+    changes.
+- Fixed:
+  - None.
+- Docs:
+  - Documented the node-shape switch in the process analysis guide.
+- Tests:
+  - Verified switching between boxes and dots, plus their link endpoints, in
+    the browser.
+- Lint/Format:
+  - Not applicable to JavaScript, CSS, and Markdown changes.
+- Credits: Copilot SDK in VS Code.
+
+## 2026-11-03
+
+- Date: 2026-11-03
+- Summary: Render web-view process nodes as boxes with directional edge ports.
+- Added:
+  - Rectangular process nodes with centered labels.
+- Changed:
+  - Incoming links connect to the left side of a node and outgoing links leave
+    from its right side.
+- Fixed:
+  - None.
+- Docs:
+  - Documented the box and edge direction in the process analysis guide.
+- Tests:
+  - Verified rendered node shapes and directional link endpoints in the browser.
+- Lint/Format:
+  - Not applicable to JavaScript, CSS, and Markdown changes.
+- Credits: Copilot SDK in VS Code.
+
+## 2026-11-03
+
+- Date: 2026-11-03
+- Summary: Add node search controls to the process network web view.
+- Added:
+  - An accessible node search panel with a live count of visible nodes.
+- Changed:
+  - The web view hides nonmatching nodes and links connected to hidden nodes.
+- Fixed:
+  - None.
+- Docs:
+  - Documented how to run the web view and use its node filter.
+- Tests:
+  - Verified case-insensitive name matching, ID matching, edge filtering, and clearing the search in the browser.
+  - Project tests passed: 116 passed, 7 skipped.
+- Lint/Format:
+  - Ruff checks and formatting checks passed for the related Python modules.
+- Credits: Copilot SDK in VS Code.
+
 ## 2026-11-03
 
 - Date: 2026-11-03

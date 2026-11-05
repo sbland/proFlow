@@ -676,9 +676,14 @@ def parse_input_map_to_arg(inp: ast.Call) -> str:
         return ""
         # TODO: Should throw an error!
         raise NotImplementedError("Starred not implemented")
-    assert len(inp.keywords) >= 0 and inp.keywords[0].arg == "as_", "first keyword should be as_"
-    as_arg = inp.keywords[0]
-    return parse_as_arg(as_arg.value)
+
+    if len(inp.keywords) == 0 or inp.keywords[0].arg != "as_":
+        # Assume second arg is the as_ value
+        if len(inp.args) >= 2:
+            return parse_as_arg(inp.args[1])
+        return ""
+    else:
+        return parse_as_arg(inp.keywords[0].value)
 
 
 def get_inputs(input_list: ast.List) -> ArgMap:
@@ -701,6 +706,8 @@ def parse_output_target(out_el):
     elif isinstance(out_el, ast.JoinedStr):
         elts = list(map(parse_output_target, out_el.values))
         return ".".join(elts)
+    elif isinstance(out_el, ast.Name):
+        return out_el.id
     else:
         raise NotImplementedError(f"Ast type not implemented: {type(out_el)}")
 
@@ -796,7 +803,9 @@ def parse_inputs(
             return "FAILED_TO_PARSE_PROCESS"
 
 
-def parse_outputs_b(map_inputs_fn: Callable[[any], list[I]]) -> dict:
+def parse_outputs_b(
+    map_inputs_fn: Callable[[any], list[I]], allow_errors: bool = True, silent: bool = True
+) -> dict:
     source_code = textwrap.dedent(inspect.getsource(map_inputs_fn))
     try:
         ast_tree = ast.parse(source_code)
@@ -810,7 +819,7 @@ def parse_outputs_b(map_inputs_fn: Callable[[any], list[I]]) -> dict:
 def parse_outputs(
     map_outputs_fn: Callable[[any], list[I]],
     allow_errors: bool = True,
-    silent=True,
+    silent: bool = True,
 ) -> dict:
     try:
         output_lines = parse_outputs_to_interface(map_outputs_fn, allow_errors)
@@ -830,42 +839,43 @@ def fieldNotEmpty(f: any | Callable) -> bool:
     return f and callable(f)
 
 
-def inspect_process(process: "Process"):
-    Parsed = namedtuple(
-        "Parsed", "config_inputs state_inputs parameter_inputs additional_inputs state_outputs"
-    )
+Parsed = namedtuple(
+    "Parsed", "config_inputs state_inputs parameter_inputs additional_inputs state_outputs"
+)
+
+
+def inspect_process(process: "Process", allow_errors: bool = True, silent: bool = True) -> Parsed:
     try:
         return Parsed(
             config_inputs=fieldNotEmpty(process.config_inputs)
-            and parse_inputs(process.config_inputs),
-            state_inputs=fieldNotEmpty(process.state_inputs) and parse_inputs(process.state_inputs),
-            parameter_inputs=fieldNotEmpty(process.state_inputs)
-            and parse_inputs(process.state_inputs),
-            additional_inputs=fieldNotEmpty(process.additional_inputs)
-            and parse_inputs(process.additional_inputs),
-            state_outputs=fieldNotEmpty(process.state_outputs)
-            and parse_outputs(process.state_outputs),
-        )
-    except Exception as e:  # noqa: BLE001 - normalize parsing failures into the process-level error
-        raise ProflowParsingError(str(e), process)
-
-
-def inspect_process_to_interfaces(process: "Process"):
-    Parsed = namedtuple(
-        "Parsed", "config_inputs state_inputs parameter_inputs additional_inputs state_outputs"
-    )
-    try:
-        return Parsed(
-            config_inputs=fieldNotEmpty(process.config_inputs)
-            and parse_inputs_to_interface(process.config_inputs),
+            and parse_inputs(process.config_inputs, allow_errors, silent),
             state_inputs=fieldNotEmpty(process.state_inputs)
-            and parse_inputs_to_interface(process.state_inputs),
+            and parse_inputs(process.state_inputs, allow_errors, silent),
             parameter_inputs=fieldNotEmpty(process.state_inputs)
-            and parse_inputs_to_interface(process.state_inputs),
+            and parse_inputs(process.state_inputs, allow_errors, silent),
             additional_inputs=fieldNotEmpty(process.additional_inputs)
-            and parse_inputs_to_interface(process.additional_inputs),
+            and parse_inputs(process.additional_inputs, allow_errors, silent),
             state_outputs=fieldNotEmpty(process.state_outputs)
-            and parse_outputs_to_interface(process.state_outputs),
+            and parse_outputs(process.state_outputs, allow_errors, silent),
         )
-    except Exception as e:  # noqa: BLE001 - normalize parsing failures into the process-level error
-        raise ProflowParsingError(str(e), process)
+    except Exception as e:
+        raise ProflowParsingError(str(e), process) from e
+
+
+def inspect_process_to_interfaces(process: "Process", allow_errors: bool = True) -> Parsed:
+
+    try:
+        return Parsed(
+            config_inputs=fieldNotEmpty(process.config_inputs)
+            and parse_inputs_to_interface(process.config_inputs, allow_errors),
+            state_inputs=fieldNotEmpty(process.state_inputs)
+            and parse_inputs_to_interface(process.state_inputs, allow_errors),
+            parameter_inputs=fieldNotEmpty(process.state_inputs)
+            and parse_inputs_to_interface(process.state_inputs, allow_errors),
+            additional_inputs=fieldNotEmpty(process.additional_inputs)
+            and parse_inputs_to_interface(process.additional_inputs, allow_errors),
+            state_outputs=fieldNotEmpty(process.state_outputs)
+            and parse_outputs_to_interface(process.state_outputs, allow_errors),
+        )
+    except Exception as e:
+        raise ProflowParsingError(str(e), process) from e

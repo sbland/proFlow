@@ -19,29 +19,7 @@ from proflow.process_inspector import (
     reset_id,
     strip_out_comments,
 )
-
-
-def DEMO_FUNC(x, y, z):
-    return x + y + z
-
-
-DEMO_PROCESS = Process(
-    func=DEMO_FUNC,
-    comment="This is the process comment",
-    gate=True,
-    config_inputs=lambda config: [
-        I(config.a, as_="x"),
-    ],
-    state_inputs=lambda state: [
-        I(state.a, as_="y"),
-    ],
-    additional_inputs=lambda: [
-        I(10, as_="z"),
-    ],
-    state_outputs=lambda result: [
-        (result, "x"),
-    ],
-)
+from proflow.tests.mock_data import DEMO_PROCESS
 
 
 @pytest.fixture(autouse=True)
@@ -51,11 +29,6 @@ def clear_id():
 
 def test_inspect_process():
     process_inputs = inspect_process(DEMO_PROCESS)
-    # assert process_inputs.additional_inputs == {\"10\": \"z\"}
-    # assert process_inputs.config_inputs == {\"config.a\": \"x\"}
-    # assert process_inputs.parameter_inputs == {\"state.a\": \"y\"}
-    # assert process_inputs.state_inputs == {\"state.a\": \"y\"}
-    # assert process_inputs.state_outputs == {\"result\": \"state.x\"}
     assert process_inputs.additional_inputs == {"z": "10"}
     assert process_inputs.config_inputs == {"x": "config.a"}
     assert process_inputs.parameter_inputs == {"y": "state.a"}
@@ -338,6 +311,17 @@ class TestParseInputs:
             "row_count": "state.row_index",
         }
 
+    def test_not_using_as(self):
+        DEMO_INPUTS = lambda config: [
+            I(config.foo, "bar"),
+        ]
+
+        out = parse_inputs(DEMO_INPUTS, False)
+
+        assert out == {
+            "bar": "config.foo",
+        }
+
     # def test_parse_inputs_check(self):
     #     nL = 1
     #     nLC = 2
@@ -431,47 +415,43 @@ def test_parse_key():
     assert out == "config.a.foo.0.[var].bar"
 
 
-def test_parse_outputs():
-    """Test parse_outputs returns correct value."""
-    DEMO_OUTPUTS = lambda result: [
-        (result.a.foo.bar, "x"),
-        (result.a.foo[0], "y"),
-    ]
-    out = parse_outputs(DEMO_OUTPUTS)
-    assert out == {"result.a.foo.bar": "state.x", "result.a.foo.0": "state.y"}
-
-
-def test_parse_outputs_list_comprehension():
-    """Test parse_outputs returns correct value."""
-    DEMO_OUTPUTS = lambda result: [
-        (result[iL][iLC], f"foo.{iL}.{iLC}.bar") for iL in range(3) for iLC in range(3)
-    ]
-    out = parse_outputs(DEMO_OUTPUTS)
-    assert out == {"result.[iL].[iLC]": 'state.f"foo.{iL}.{iLC}.bar'}
-
-
-def test_parse_outputs_list_comprehension_inputed_index():
-    """Test parse_outputs returns correct value."""
-    iLC = 0
-    DEMO_OUTPUTS = lambda result, iLC=iLC: [
-        (result[iL][iLC], f"foo.{iL}.{iLC}.bar") for iL in range(3)
-    ]
-    out = parse_outputs(DEMO_OUTPUTS, False)
-    assert out == {"result.[iL].[iLC]": 'state.f"foo.{iL}.{iLC}.bar'}
-
-
-@pytest.mark.skip(reason="functions in output section not currently supported")
-def test_parse_outputs_deep_copy():
-    """Test parse_outputs returns correct output."""
-    deepcopy = lambda: None
-    DEMO_OUTPUTS = lambda result: [
-        (deepcopy(result["a"]), "a"),
-    ]
-    out = parse_outputs(DEMO_OUTPUTS, False)
-    assert out == {"deepcopy(result.a.)": "state.a"}
-
-
 class TestParseOutputs:
+    def test_parse_outputs(self):
+        """Test parse_outputs returns correct value."""
+        DEMO_OUTPUTS = lambda result: [
+            (result.a.foo.bar, "x"),
+            (result.a.foo[0], "y"),
+        ]
+        out = parse_outputs(DEMO_OUTPUTS)
+        assert out == {"result.a.foo.bar": "state.x", "result.a.foo.0": "state.y"}
+
+    def test_parse_outputs_list_comprehension(self):
+        """Test parse_outputs returns correct value."""
+        DEMO_OUTPUTS = lambda result: [
+            (result[iL][iLC], f"foo.{iL}.{iLC}.bar") for iL in range(3) for iLC in range(3)
+        ]
+        out = parse_outputs(DEMO_OUTPUTS)
+        assert out == {"result.[iL].[iLC]": 'state.f"foo.{iL}.{iLC}.bar'}
+
+    def test_parse_outputs_list_comprehension_inputed_index(self):
+        """Test parse_outputs returns correct value."""
+        iLC = 0
+        DEMO_OUTPUTS = lambda result, iLC=iLC: [
+            (result[iL][iLC], f"foo.{iL}.{iLC}.bar") for iL in range(3)
+        ]
+        out = parse_outputs(DEMO_OUTPUTS, False)
+        assert out == {"result.[iL].[iLC]": 'state.f"foo.{iL}.{iLC}.bar'}
+
+    @pytest.mark.skip(reason="functions in output section not currently supported")
+    def test_parse_outputs_deep_copy(self):
+        """Test parse_outputs returns correct output."""
+        deepcopy = lambda: None
+        DEMO_OUTPUTS = lambda result: [
+            (deepcopy(result["a"]), "a"),
+        ]
+        out = parse_outputs(DEMO_OUTPUTS, False)
+        assert out == {"deepcopy(result.a.)": "state.a"}
+
     def test_parse_outputs_to_interface(self):
         DEMO_OUTPUTS = lambda result: [
             (result["a"], "a"),
@@ -504,6 +484,19 @@ class TestParseOutputs:
         assert len(output_interface) == nP
         assert output_interface[0].from_ == 'result["a"]'
         assert output_interface[0].as_ == "state.a"
+
+    def test_parse_outputs_with_dynamic_key(self):
+        """Test parse_outputs with dynamic key.
+
+        This doesn't work perfectly as we just use the variable name "k" instead of its value.
+        """
+        k = "key1"
+        state_outputs = lambda result, k=k: [
+            (result, k),
+        ]
+
+        out = parse_outputs(state_outputs, allow_errors=False)
+        assert out == {"result": "state.k"}
 
 
 class TestParseArg:

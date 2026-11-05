@@ -122,6 +122,73 @@ though an `Edge` record's `source` field identifies the consumer and its
 (`target == -1`) are omitted from the exported graph. The function returns
 the same node-link data it writes.
 
+## Explore a network in the web view
+
+The optional Flask web view displays the process network as an interactive
+force-directed graph. Install Flask if needed, then run it from the project root:
+
+```bash
+python -m pip install flask
+python -m proflow.analysis.webview.run_app
+```
+
+Open the printed local URL and use the **Search nodes** field to match node IDs,
+function names, or process descriptions without regard to case. The graph hides
+nonmatching nodes and links that connect to hidden nodes; clearing the search
+restores the full network. Use **Enable forces** to pause or resume the
+force-directed layout, and **Node shape** to switch between labeled boxes (the
+default) and dots. Dragging nodes remains available while forces are paused.
+Use the mouse wheel or a touch gesture to zoom, and drag empty canvas to pan.
+The **Zoom in**, **Zoom out**, and **Reset** buttons provide equivalent controls;
+reset returns to the original view. Zoom is bounded so the graph cannot become
+arbitrarily small or large. Panning and zooming do not interfere with dragging
+nodes.
+In box mode, incoming links connect to the left edge and outgoing links leave
+the right edge, with cubic Bézier curves that leave and meet the boxes
+perpendicularly. Node labels remain visible in both modes.
+
+### Develop the webview frontend
+
+The frontend is a private Node ES-module package in
+[`proflow_webview`](../../proflow_webview).
+It uses TypeScript for strict type checking, Vite to build, Vitest for unit
+tests, and Playwright for browser tests. The Python package serves the compiled
+assets and provides graph data at `/data`; Node is needed only to develop and
+build the frontend, not to run an installed Python package.
+
+Use Node 22 or newer and install frontend dependencies from the repository root:
+
+```bash
+pnpm --dir proflow_webview install --frozen-lockfile
+```
+
+For frontend development, start the Flask server in one terminal and Vite in
+another. Vite proxies `/data` to the Flask server on port 8000:
+
+```bash
+uv sync --locked --group web
+uv run --locked python -m proflow.analysis.webview.run_app
+pnpm --dir proflow_webview dev
+```
+
+Run the frontend checks and build compiled assets for the Flask server:
+
+```bash
+pnpm --dir proflow_webview typecheck
+pnpm --dir proflow_webview lint
+pnpm --dir proflow_webview format:check
+pnpm --dir proflow_webview test
+pnpm --dir proflow_webview build
+```
+
+The build output is stored in
+`proflow/analysis/webview/static/force/frontend-dist` and included in Python
+source and binary distributions. The Playwright suite starts the Flask server
+automatically; install Chromium first with
+`pnpm --dir proflow_webview playwright:install`, then run
+`pnpm --dir proflow_webview test:e2e`. Python route tests are included in the
+project pytest suite.
+
 ## Dependencies
 
 The canvas workflow requires `ipycanvas`. JSON export requires `networkx`.

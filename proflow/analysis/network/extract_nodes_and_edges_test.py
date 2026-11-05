@@ -1,4 +1,4 @@
-from proflow.tests.demodata import DEMO_PROCESSES
+from proflow.tests.mock_data import DEMO_PROCESSES
 
 from .extract_nodes_and_edges import (
     Edge,

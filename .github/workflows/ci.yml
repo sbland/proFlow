@@ -20,10 +20,25 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: webview/.nvmrc
+          cache: npm
+          cache-dependency-path: webview/package-lock.json
       - name: Setup Python Env
         uses: ./.github/actions/setup-python-env
         with:
           uv-extra-groups: ci
+      - name: Install frontend dependencies
+        run: npm ci --prefix webview
+      - name: Check frontend quality
+        run: |
+          npm --prefix webview run typecheck
+          npm --prefix webview run lint
+          npm --prefix webview run format:check
+          npm --prefix webview test
+          npm --prefix webview run build
       - name: Check formatting
         run: |
           source .venv/bin/activate
@@ -39,10 +54,26 @@ jobs:
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v7
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: webview/.nvmrc
+          cache: npm
+          cache-dependency-path: webview/package-lock.json
       - name: Setup Python Env
         uses: ./.github/actions/setup-python-env
         with:
           uv-extra-groups: ci
+      - name: Install frontend dependencies
+        run: npm ci --prefix webview
+      - name: Build frontend assets
+        run: npm --prefix webview run build
+      - name: Install browser for end-to-end tests
+        run: npm --prefix webview run playwright:install
+      - name: Run browser tests
+        run: npm --prefix webview run test:e2e
+      - name: Build Python distributions
+        run: uv build
       - name: Run tests
         run: |
           source .venv/bin/activate
