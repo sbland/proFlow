@@ -51,6 +51,7 @@ svg {
   font: inherit;
 }
 
+.zoom-controls,
 .node-style-options,
 .force-options {
   margin: 14px 0 0;
@@ -58,11 +59,28 @@ svg {
   border: 0;
 }
 
+.zoom-controls legend,
 .node-style-options legend,
 .force-options legend {
   margin-bottom: 6px;
   font-size: 13px;
   font-weight: 600;
+}
+
+.zoom-control-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.zoom-control-buttons button {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid #aeb5bd;
+  border-radius: 4px;
+  background: #f8fafc;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
 }
 
 .node-style-options label,
@@ -81,7 +99,8 @@ svg {
   padding: 0;
 }
 
-.control-panel input:focus-visible {
+.control-panel input:focus-visible,
+.control-panel button:focus-visible {
   outline: 2px solid #2563eb;
   outline-offset: 2px;
 }

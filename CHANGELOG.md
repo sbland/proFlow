@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-11-05
+
+- Date: 2026-11-05
+- Summary: Restore graph zoom and pan controls in the relocated webview frontend.
+- Added:
+  - Mouse/touch zoom, canvas panning, bounded zoom controls, and a reset button.
+- Changed:
+  - Graph content shares an SVG transform while controls remain fixed and node
+    dragging continues to work when zoomed.
+- Fixed:
+  - Restored navigation behavior lost during the frontend directory refactor.
+- Docs:
+  - Documented navigation controls
+- Tests:
+  - Frontend typecheck, unit tests, and zoom/pan browser coverage passed.
+- Lint/Format:
+  - Passed ESLint and Prettier checks.
+- Credits: Copilot SDK in VS Code.
+
 ## 2026-11-04
 
 - Date: 2026-11-04

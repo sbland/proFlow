@@ -9,6 +9,9 @@ import {
   scaleOrdinal,
   schemeCategory10,
   type Selection,
+  zoom,
+  zoomIdentity,
+  type ZoomBehavior,
 } from "d3";
 import type { GraphData, GraphLink, GraphNode } from "./graph-data";
 
@@ -134,13 +137,17 @@ function sortAndIndexLinks(links: GraphLink[]): void {
   }
 }
 
-/** Render the graph and connect the search, shape, force, and drag controls. */
+/** Render the graph and connect its navigation and layout controls. */
 export function renderGraph(graph: GraphData): void {
   const svgElement = document.querySelector<SVGSVGElement>("svg");
   const filterElement =
     document.querySelector<HTMLInputElement>("#node-filter");
   const forceElement =
     document.querySelector<HTMLInputElement>("#forces-toggle");
+  const zoomInElement = document.querySelector<HTMLButtonElement>("#zoom-in");
+  const zoomOutElement = document.querySelector<HTMLButtonElement>("#zoom-out");
+  const zoomResetElement =
+    document.querySelector<HTMLButtonElement>("#zoom-reset");
   const summaryElement = document.querySelector<HTMLElement>("#filter-summary");
   const shapeElements = Array.from(
     document.querySelectorAll<HTMLInputElement>('input[name="node-shape"]'),
@@ -150,6 +157,9 @@ export function renderGraph(graph: GraphData): void {
     !svgElement ||
     !filterElement ||
     !forceElement ||
+    !zoomInElement ||
+    !zoomOutElement ||
+    !zoomResetElement ||
     !summaryElement ||
     shapeElements.length < 2
   ) {
@@ -182,6 +192,40 @@ export function renderGraph(graph: GraphData): void {
     .attr("fill", "#999")
     .style("stroke", "none");
 
+  const graphContent = svg.append("g").attr("class", "graph-content");
+  const zoomBehavior: ZoomBehavior<SVGSVGElement, unknown> = zoom<
+    SVGSVGElement,
+    unknown
+  >()
+    .scaleExtent([0.2, 4])
+    .filter((event: Event) => {
+      const startsNodeDrag =
+        (event.type === "mousedown" || event.type === "touchstart") &&
+        event.target instanceof Element &&
+        event.target.closest(".node") !== null;
+      const hasNonPrimaryButton =
+        "button" in event &&
+        typeof event.button === "number" &&
+        event.button !== 0;
+      const isUnmodifiedGesture =
+        !("ctrlKey" in event && event.ctrlKey === true) ||
+        event.type === "wheel";
+      return !hasNonPrimaryButton && isUnmodifiedGesture && !startsNodeDrag;
+    })
+    .on("zoom", (event) => {
+      graphContent.attr("transform", event.transform);
+    });
+  svg.call(zoomBehavior);
+  zoomInElement.addEventListener("click", () => {
+    svg.call(zoomBehavior.scaleBy, 1.2);
+  });
+  zoomOutElement.addEventListener("click", () => {
+    svg.call(zoomBehavior.scaleBy, 1 / 1.2);
+  });
+  zoomResetElement.addEventListener("click", () => {
+    svg.call(zoomBehavior.transform, zoomIdentity);
+  });
+
   const linkForce = forceLink<GraphNode, GraphLink>()
     .id((node) => node.id)
     .distance(500)
@@ -194,9 +238,9 @@ export function renderGraph(graph: GraphData): void {
   const linkSelection: Selection<
     SVGPathElement,
     GraphLink,
-    SVGSVGElement,
+    SVGGElement,
     unknown
-  > = svg
+  > = graphContent
     .selectAll<SVGPathElement, GraphLink>(".link")
     .data(graph.links)
     .enter()
@@ -208,9 +252,9 @@ export function renderGraph(graph: GraphData): void {
   const invisiblePathSelection: Selection<
     SVGPathElement,
     GraphLink,
-    SVGSVGElement,
+    SVGGElement,
     unknown
-  > = svg
+  > = graphContent
     .selectAll<SVGPathElement, GraphLink>(".pathInvis")
     .data(graph.links)
     .enter()
@@ -225,9 +269,9 @@ export function renderGraph(graph: GraphData): void {
   const labelSelection: Selection<
     SVGTextElement,
     GraphLink,
-    SVGSVGElement,
+    SVGGElement,
     unknown
-  > = svg
+  > = graphContent
     .selectAll<SVGTextElement, GraphLink>(".pathLabel")
     .data(graph.links)
     .enter()
@@ -246,36 +290,32 @@ export function renderGraph(graph: GraphData): void {
     .style("font-size", 10)
     .text((link) => link.name);
 
-  const nodeSelection: Selection<
-    SVGGElement,
-    GraphNode,
-    SVGSVGElement,
-    unknown
-  > = svg
-    .selectAll<SVGGElement, GraphNode>(".node")
-    .data(graph.nodes)
-    .enter()
-    .append("g")
-    .attr("class", "node")
-    .call(
-      drag<SVGGElement, GraphNode>()
-        .on("start", (event, node) => {
-          if (forcesEnabled && !event.active) {
-            simulation.alphaTarget(0.02).restart();
-          }
-          node.fx = node.x;
-          node.fy = node.y;
-        })
-        .on("drag", (event, node) => {
-          node.fx = event.x;
-          node.fy = event.y;
-          if (!forcesEnabled) {
-            node.x = event.x;
-            node.y = event.y;
-            ticked();
-          }
-        }),
-    );
+  const nodeSelection: Selection<SVGGElement, GraphNode, SVGGElement, unknown> =
+    graphContent
+      .selectAll<SVGGElement, GraphNode>(".node")
+      .data(graph.nodes)
+      .enter()
+      .append("g")
+      .attr("class", "node")
+      .call(
+        drag<SVGGElement, GraphNode>()
+          .on("start", (event, node) => {
+            if (forcesEnabled && !event.active) {
+              simulation.alphaTarget(0.02).restart();
+            }
+            node.fx = node.x;
+            node.fy = node.y;
+          })
+          .on("drag", (event, node) => {
+            node.fx = event.x;
+            node.fy = event.y;
+            if (!forcesEnabled) {
+              node.x = event.x;
+              node.y = event.y;
+              ticked();
+            }
+          }),
+      );
 
   nodeSelection.append("title").text((node) => String(node.id));
   nodeSelection.append("text").text((node) => `${node.name}:${node.text}`);
