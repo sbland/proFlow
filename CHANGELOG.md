@@ -3,6 +3,35 @@
 ## 2026-11-04
 
 - Date: 2026-11-04
+- Summary: Isolate the process graph webview in a compiled Node package.
+- Added:
+  - A private TypeScript/Vite ES-module frontend package with a locked npm
+    dependency tree.
+  - Vitest unit tests, Playwright browser tests, and Flask route/distribution
+    tests.
+- Changed:
+  - The Flask host now serves compiled frontend assets while continuing to
+    provide graph data through `/data`.
+  - CI runs frontend checks and verifies compiled assets in Python
+    distributions.
+- Fixed:
+  - Frontend graph requests and invalid graph responses now surface accessible
+    errors instead of failing silently.
+- Docs:
+  - Documented frontend development, tests, build output, and Python runtime
+    boundaries.
+- Tests:
+  - 123 Python tests passed and 7 were skipped; 9 Vitest unit tests and 3
+    Playwright browser tests passed.
+  - Verified compiled frontend assets are present in both wheel and source
+    distributions.
+- Lint/Format:
+  - Passed ESLint, Prettier, Ruff lint, and Ruff formatting checks.
+- Credits: Copilot SDK in VS Code.
+
+## 2026-11-04
+
+- Date: 2026-11-04
 - Summary: Add zooming and panning to the analysis web view.
 - Added:
   - Mouse/touch zoom, canvas panning, and accessible zoom-in, zoom-out, and

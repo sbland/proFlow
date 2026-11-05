@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>proFlow Process Network</title>
+    <script type="module" crossorigin src="/force/frontend-dist/assets/index-MfJ2VTOr.js"></script>
+    <link rel="stylesheet" crossorigin href="/force/frontend-dist/assets/index-C992pW2P.css">
+  </head>
+  <body>
+    <aside class="control-panel" aria-labelledby="control-panel-title">
+      <h1 id="control-panel-title">Graph controls</h1>
+      <label for="node-filter">Search nodes</label>
+      <input
+        id="node-filter"
+        type="search"
+        placeholder="Search by name, description, or ID"
+        autocomplete="off"
+      />
+      <fieldset class="force-options">
+        <legend>Graph layout</legend>
+        <label>
+          <input id="forces-toggle" type="checkbox" checked />
+          Enable forces
+        </label>
+      </fieldset>
+      <fieldset class="node-style-options">
+        <legend>Node shape</legend>
+        <label>
+          <input
+            id="node-shape-box"
+            type="radio"
+            name="node-shape"
+            value="box"
+            checked
+          />
+          Box
+        </label>
+        <label>
+          <input
+            id="node-shape-dot"
+            type="radio"
+            name="node-shape"
+            value="dot"
+          />
+          Dot
+        </label>
+      </fieldset>
+      <p id="filter-summary" aria-live="polite">Loading nodes...</p>
+      <p id="webview-error" role="alert" hidden></p>
+    </aside>
+    <svg
+      width="1280"
+      height="1080"
+      role="img"
+      aria-label="Process network graph"
+    ></svg>
+  </body>
+</html>
